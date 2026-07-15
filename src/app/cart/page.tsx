@@ -36,8 +36,10 @@ export default function CartPage() {
   if (lines.length === 0) {
     return (
       <div className="mx-auto max-w-3xl px-4 py-10">
-        <h1 className="mb-4 text-2xl font-semibold">Your cart</h1>
-        <p className="text-black/60 dark:text-white/60">
+        <h1 className="mb-4 font-serif text-2xl font-semibold text-brand-maroon">
+          Your cart
+        </h1>
+        <p className="text-brand-maroon-dark/60">
           Your cart is empty.{" "}
           <Link href="/" className="underline">
             Continue shopping
@@ -50,16 +52,18 @@ export default function CartPage() {
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10">
-      <h1 className="mb-6 text-2xl font-semibold">Your cart</h1>
+      <h1 className="mb-6 font-serif text-2xl font-semibold text-brand-maroon">
+        Your cart
+      </h1>
       <div className="flex flex-col gap-4">
         {lines.map((line) => (
           <div
             key={line.product.id}
-            className="flex items-center justify-between gap-4 border-b border-black/10 pb-4 dark:border-white/10"
+            className="flex items-center justify-between gap-4 border-b border-brand-line pb-4"
           >
             <div>
               <p className="font-medium">{line.product.name}</p>
-              <p className="text-sm text-black/60 dark:text-white/60">
+              <p className="text-sm text-brand-maroon-dark/60">
                 {formatPrice(line.product.price_cents)} each
               </p>
             </div>
@@ -71,14 +75,14 @@ export default function CartPage() {
                 onChange={(e) =>
                   setQuantity(line.product.id, Number(e.target.value) || 1)
                 }
-                className="w-16 rounded-md border border-black/10 px-2 py-1 text-sm dark:border-white/10"
+                className="w-16 rounded-md border border-brand-line px-2 py-1 text-sm"
               />
-              <p className="w-20 text-right text-sm font-medium">
+              <p className="w-20 text-right text-sm font-medium text-brand-maroon">
                 {formatPrice(line.product.price_cents * line.quantity)}
               </p>
               <button
                 onClick={() => removeItem(line.product.id)}
-                className="text-sm text-red-600 hover:underline"
+                className="text-sm text-brand-terracotta hover:underline"
               >
                 Remove
               </button>
@@ -89,7 +93,9 @@ export default function CartPage() {
 
       <div className="mt-6 flex items-center justify-between">
         <p className="text-lg font-semibold">Total</p>
-        <p className="text-lg font-semibold">{formatPrice(totalCents)}</p>
+        <p className="text-lg font-semibold text-brand-maroon">
+          {formatPrice(totalCents)}
+        </p>
       </div>
 
       {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
@@ -97,7 +103,7 @@ export default function CartPage() {
       <button
         onClick={handleCheckout}
         disabled={loading}
-        className="mt-6 w-full rounded-md bg-black px-4 py-3 text-sm font-medium text-white disabled:opacity-40 dark:bg-white dark:text-black"
+        className="mt-6 w-full rounded-md bg-brand-maroon px-4 py-3 text-sm font-medium text-brand-cream transition-colors hover:bg-brand-maroon-dark disabled:opacity-40"
       >
         {loading ? "Redirecting to checkout..." : "Checkout"}
       </button>

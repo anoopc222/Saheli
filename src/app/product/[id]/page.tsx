@@ -3,6 +3,8 @@ import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { Product } from "@/types/product";
 import { formatPrice } from "@/lib/format";
 import { AddToCartForm } from "@/components/AddToCartForm";
+import { ProductBadge } from "@/components/ProductBadge";
+import { RatingStars } from "@/components/RatingStars";
 
 export default async function ProductPage({
   params,
@@ -22,9 +24,10 @@ export default async function ProductPage({
   }
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-10">
-      <div className="grid gap-8 sm:grid-cols-2">
-        <div className="aspect-square w-full overflow-hidden rounded-md bg-black/5 dark:bg-white/5">
+    <div className="mx-auto max-w-4xl px-4 py-10">
+      <div className="grid gap-10 sm:grid-cols-2">
+        <div className="relative aspect-[3/4] w-full overflow-hidden rounded-xl bg-brand-line">
+          <ProductBadge badge={product.badge} />
           {product.image_url && (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -35,11 +38,26 @@ export default async function ProductPage({
           )}
         </div>
         <div>
-          <h1 className="text-2xl font-semibold">{product.name}</h1>
-          <p className="mt-2 text-lg text-black/60 dark:text-white/60">
-            {formatPrice(product.price_cents)}
+          <p className="text-xs uppercase tracking-wide text-brand-maroon-dark/60">
+            {product.fabric}
           </p>
-          <p className="mt-4 text-sm text-black/70 dark:text-white/70">
+          <h1 className="mt-1 font-serif text-3xl font-semibold text-brand-maroon">
+            {product.name}
+          </h1>
+          <div className="mt-2">
+            <RatingStars rating={product.rating} count={product.rating_count} />
+          </div>
+          <div className="mt-4 flex items-baseline gap-3">
+            <p className="text-xl font-semibold text-brand-maroon">
+              {formatPrice(product.price_cents)}
+            </p>
+            {product.compare_at_price_cents && (
+              <p className="text-brand-maroon-dark/40 line-through">
+                {formatPrice(product.compare_at_price_cents)}
+              </p>
+            )}
+          </div>
+          <p className="mt-4 text-sm leading-relaxed text-brand-maroon-dark/70">
             {product.description}
           </p>
           <AddToCartForm product={product} />

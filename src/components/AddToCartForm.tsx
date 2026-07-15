@@ -17,7 +17,7 @@ export function AddToCartForm({ product }: { product: Product }) {
         max={Math.max(product.stock, 1)}
         value={quantity}
         onChange={(e) => setQuantity(Number(e.target.value) || 1)}
-        className="w-16 rounded-md border border-black/10 px-2 py-2 text-sm dark:border-white/10"
+        className="w-16 rounded-md border border-brand-line px-2 py-2 text-sm"
       />
       <button
         onClick={() => {
@@ -26,7 +26,7 @@ export function AddToCartForm({ product }: { product: Product }) {
           setTimeout(() => setAdded(false), 1500);
         }}
         disabled={product.stock <= 0}
-        className="rounded-md bg-black px-4 py-2 text-sm font-medium text-white disabled:opacity-40 dark:bg-white dark:text-black"
+        className="rounded-md bg-brand-maroon px-4 py-2 text-sm font-medium text-brand-cream transition-colors hover:bg-brand-maroon-dark disabled:opacity-40"
       >
         {product.stock <= 0 ? "Out of stock" : added ? "Added!" : "Add to cart"}
       </button>

@@ -30,7 +30,7 @@ export async function POST(request: Request) {
     return {
       quantity: item.quantity,
       price_data: {
-        currency: "usd",
+        currency: "inr",
         unit_amount: product.price_cents,
         product_data: {
           name: product.name,
