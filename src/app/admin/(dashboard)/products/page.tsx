@@ -4,6 +4,8 @@ import { formatPrice } from "@/lib/format";
 import { deleteProductAction } from "@/lib/product-actions";
 import { Product } from "@/types/product";
 
+export const dynamic = "force-dynamic";
+
 export default async function AdminProductsPage() {
   const supabase = createBrowserSupabaseClient();
   const { data: products } = await supabase

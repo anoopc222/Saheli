@@ -6,6 +6,8 @@ import {
   deleteSubcategoryAction,
 } from "@/lib/category-actions";
 
+export const dynamic = "force-dynamic";
+
 type SubcategoryRow = { id: string; name: string; fabric: string };
 type CategoryRow = {
   id: string;
