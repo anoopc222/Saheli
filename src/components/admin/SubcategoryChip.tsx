@@ -5,6 +5,7 @@ import {
   updateSubcategoryAction,
   deleteSubcategoryAction,
 } from "@/lib/category-actions";
+import { ConfirmSubmitButton } from "@/components/admin/ConfirmSubmitButton";
 
 export function SubcategoryChip({
   id,
@@ -64,13 +65,13 @@ export function SubcategoryChip({
       </button>
       <form action={deleteSubcategoryAction}>
         <input type="hidden" name="id" value={id} />
-        <button
-          type="submit"
-          aria-label={`Delete ${name}`}
+        <ConfirmSubmitButton
+          confirmMessage={`Delete subcategory "${name}"?`}
+          ariaLabel={`Delete ${name}`}
           className="text-ink-muted hover:text-accent"
         >
           &times;
-        </button>
+        </ConfirmSubmitButton>
       </form>
     </div>
   );

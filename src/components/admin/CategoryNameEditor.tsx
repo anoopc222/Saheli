@@ -38,18 +38,18 @@ export function CategoryNameEditor({
         defaultValue={name}
         required
         autoFocus
-        className="rounded-lg border border-line bg-paper px-2 py-1 text-sm outline-none focus:border-accent"
+        className="min-w-0 flex-1 rounded-lg border border-line bg-paper px-2 py-1.5 text-sm outline-none focus:border-accent"
       />
       <button
         type="submit"
-        className="text-xs font-medium text-accent hover:underline"
+        className="shrink-0 text-xs font-medium text-accent hover:underline"
       >
         Save
       </button>
       <button
         type="button"
         onClick={() => setEditing(false)}
-        className="text-xs text-ink-muted hover:text-accent"
+        className="shrink-0 text-xs text-ink-muted hover:text-accent"
       >
         Cancel
       </button>

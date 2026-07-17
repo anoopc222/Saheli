@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { formatPrice } from "@/lib/format";
 import { deleteProductAction } from "@/lib/product-actions";
+import { ConfirmSubmitButton } from "@/components/admin/ConfirmSubmitButton";
 import { Product } from "@/types/product";
 
 export const dynamic = "force-dynamic";
@@ -43,7 +44,15 @@ export default async function AdminProductsPage() {
               <div>
                 <p className="text-sm font-medium text-ink">{product.name}</p>
                 <p className="text-xs text-ink-muted">
-                  {product.fabric} &middot; {formatPrice(product.price_cents)}{" "}
+                  {product.fabric} &middot;{" "}
+                  <span className="text-ink">
+                    {formatPrice(product.price_cents)}
+                  </span>
+                  {product.compare_at_price_cents && (
+                    <span className="ml-1 line-through">
+                      {formatPrice(product.compare_at_price_cents)}
+                    </span>
+                  )}{" "}
                   &middot; stock {product.stock}
                 </p>
               </div>
@@ -65,12 +74,12 @@ export default async function AdminProductsPage() {
                   .map((url) => (
                     <input key={url} type="hidden" name="image_urls" value={url} />
                   ))}
-                <button
-                  type="submit"
+                <ConfirmSubmitButton
+                  confirmMessage={`Delete "${product.name}"? This can't be undone.`}
                   className="text-sm text-ink-muted hover:text-accent"
                 >
                   Delete
-                </button>
+                </ConfirmSubmitButton>
               </form>
             </div>
           </div>

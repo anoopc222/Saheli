@@ -6,6 +6,7 @@ import {
 } from "@/lib/category-actions";
 import { CategoryNameEditor } from "@/components/admin/CategoryNameEditor";
 import { SubcategoryChip } from "@/components/admin/SubcategoryChip";
+import { ConfirmSubmitButton } from "@/components/admin/ConfirmSubmitButton";
 
 export const dynamic = "force-dynamic";
 
@@ -57,16 +58,16 @@ export default async function AdminCategoriesPage() {
             key={category.id}
             className="rounded-2xl border border-line bg-paper-raised p-4"
           >
-            <div className="mb-3 flex items-center justify-between">
+            <div className="mb-3 flex flex-col gap-1.5">
               <CategoryNameEditor id={category.id} name={category.name} />
-              <form action={deleteCategoryAction}>
+              <form action={deleteCategoryAction} className="self-end">
                 <input type="hidden" name="id" value={category.id} />
-                <button
-                  type="submit"
+                <ConfirmSubmitButton
+                  confirmMessage={`Delete "${category.name}" and all its subcategories? This can't be undone.`}
                   className="text-xs text-ink-muted hover:text-accent"
                 >
                   Delete category
-                </button>
+                </ConfirmSubmitButton>
               </form>
             </div>
 

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { Product } from "@/types/product";
+import { CategoryRow } from "@/lib/categories-data";
 
 const MAX_IMAGES = 4;
 const MAX_DIMENSION = 1200;
@@ -105,9 +106,11 @@ type NewImage = { file: File; previewUrl: string };
 export function ProductForm({
   action,
   product,
+  categories,
 }: {
   action: (formData: FormData) => void;
   product?: Product;
+  categories: CategoryRow[];
 }) {
   const [keptUrls, setKeptUrls] = useState<string[]>(
     product?.image_urls?.length
@@ -119,6 +122,15 @@ export function ProductForm({
   const [newImages, setNewImages] = useState<NewImage[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [categoryId, setCategoryId] = useState(product?.category_id ?? "");
+  const [subcategoryId, setSubcategoryId] = useState(
+    product?.subcategory_id ?? ""
+  );
+  const subcategoryOptions =
+    categories.find((c) => c.id === categoryId)?.subcategories ?? [];
+
+  const [priceError, setPriceError] = useState<string | null>(null);
 
   // Revoke every preview blob URL on unmount so selected-but-unsaved images
   // don't linger in memory after leaving the page.
@@ -169,8 +181,28 @@ export function ProductForm({
     setKeptUrls(keptUrls.filter((u) => u !== url));
   }
 
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    const form = e.currentTarget;
+    const price = Number(new FormData(form).get("price") || 0);
+    const comparePriceRaw = new FormData(form).get("compare_price");
+    const comparePrice = comparePriceRaw ? Number(comparePriceRaw) : null;
+
+    if (comparePrice !== null && comparePrice <= price) {
+      e.preventDefault();
+      setPriceError("Strike price must be higher than the selling price.");
+      return;
+    }
+    setPriceError(null);
+  }
+
   return (
-    <form action={action} className="flex flex-col gap-5">
+    <form action={action} onSubmit={handleSubmit} className="flex flex-col gap-5">
+      {priceError && (
+        <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">
+          {priceError}
+        </div>
+      )}
+
       <Section title="Details">
         <div>
           <FieldLabel>Name</FieldLabel>
@@ -187,6 +219,7 @@ export function ProductForm({
             name="description"
             defaultValue={product?.description}
             rows={3}
+            required
             className={inputClasses}
           />
         </div>
@@ -214,12 +247,56 @@ export function ProductForm({
             </select>
           </div>
         </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <FieldLabel>Category</FieldLabel>
+            <select
+              name="category_id"
+              required
+              value={categoryId}
+              onChange={(e) => {
+                setCategoryId(e.target.value);
+                setSubcategoryId("");
+              }}
+              className={inputClasses}
+            >
+              <option value="" disabled>
+                Select category
+              </option>
+              {categories.map((cat) => (
+                <option key={cat.id} value={cat.id}>
+                  {cat.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <FieldLabel>Subcategory</FieldLabel>
+            <select
+              name="subcategory_id"
+              required={subcategoryOptions.length > 0}
+              disabled={subcategoryOptions.length === 0}
+              value={subcategoryId}
+              onChange={(e) => setSubcategoryId(e.target.value)}
+              className={`${inputClasses} disabled:opacity-50`}
+            >
+              <option value="" disabled>
+                {subcategoryOptions.length === 0 ? "None available" : "Select subcategory"}
+              </option>
+              {subcategoryOptions.map((sub) => (
+                <option key={sub.id} value={sub.id}>
+                  {sub.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
       </Section>
 
       <Section title="Pricing & stock">
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <FieldLabel>Price (₹)</FieldLabel>
+            <FieldLabel>Selling price (₹)</FieldLabel>
             <input
               type="number"
               step="0.01"
@@ -231,7 +308,7 @@ export function ProductForm({
             />
           </div>
           <div>
-            <FieldLabel>Compare price (₹)</FieldLabel>
+            <FieldLabel>Strike price (₹)</FieldLabel>
             <input
               type="number"
               step="0.01"

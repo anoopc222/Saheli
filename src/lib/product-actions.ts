@@ -96,16 +96,25 @@ async function deleteManagedImages(imageUrls: (string | null | undefined)[]) {
 
 function parseProductFields(formData: FormData) {
   const comparePrice = formData.get("compare_price");
+  const priceCents = Math.round(Number(formData.get("price") || 0) * 100);
+  const compareAtPriceCents = comparePrice
+    ? Math.round(Number(comparePrice) * 100)
+    : null;
+
+  if (compareAtPriceCents !== null && compareAtPriceCents <= priceCents) {
+    throw new Error("Strike price must be higher than the selling price.");
+  }
+
   return {
     name: String(formData.get("name") || ""),
     description: String(formData.get("description") || ""),
     fabric: String(formData.get("fabric") || ""),
-    price_cents: Math.round(Number(formData.get("price") || 0) * 100),
-    compare_at_price_cents: comparePrice
-      ? Math.round(Number(comparePrice) * 100)
-      : null,
+    price_cents: priceCents,
+    compare_at_price_cents: compareAtPriceCents,
     badge: (formData.get("badge") as string) || null,
     stock: Number(formData.get("stock") || 0),
+    category_id: (formData.get("category_id") as string) || null,
+    subcategory_id: (formData.get("subcategory_id") as string) || null,
   };
 }
 
@@ -124,6 +133,7 @@ export async function createProductAction(formData: FormData) {
 
   revalidatePath("/admin/products");
   revalidatePath("/");
+  revalidatePath("/categories");
   redirect("/admin/products");
 }
 
@@ -158,6 +168,7 @@ export async function updateProductAction(
 
   revalidatePath("/admin/products");
   revalidatePath("/");
+  revalidatePath("/categories");
   redirect("/admin/products");
 }
 
@@ -172,4 +183,5 @@ export async function deleteProductAction(formData: FormData) {
 
   revalidatePath("/admin/products");
   revalidatePath("/");
+  revalidatePath("/categories");
 }

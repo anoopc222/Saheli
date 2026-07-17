@@ -13,4 +13,6 @@ export type Product = {
   image_url: string;
   image_urls: string[];
   stock: number;
+  category_id: string | null;
+  subcategory_id: string | null;
 };
