@@ -3,8 +3,9 @@ import {
   createCategoryAction,
   deleteCategoryAction,
   createSubcategoryAction,
-  deleteSubcategoryAction,
 } from "@/lib/category-actions";
+import { CategoryNameEditor } from "@/components/admin/CategoryNameEditor";
+import { SubcategoryChip } from "@/components/admin/SubcategoryChip";
 
 export const dynamic = "force-dynamic";
 
@@ -57,9 +58,7 @@ export default async function AdminCategoriesPage() {
             className="rounded-2xl border border-line bg-paper-raised p-4"
           >
             <div className="mb-3 flex items-center justify-between">
-              <p className="font-heading text-base font-semibold text-ink">
-                {category.name}
-              </p>
+              <CategoryNameEditor id={category.id} name={category.name} />
               <form action={deleteCategoryAction}>
                 <input type="hidden" name="id" value={category.id} />
                 <button
@@ -73,25 +72,12 @@ export default async function AdminCategoriesPage() {
 
             <div className="mb-3 flex flex-wrap gap-2">
               {category.subcategories.map((sub) => (
-                <div
+                <SubcategoryChip
                   key={sub.id}
-                  className="flex items-center gap-1.5 rounded-full border border-line px-3 py-1.5 text-xs text-ink"
-                >
-                  <span>
-                    {sub.name}{" "}
-                    <span className="text-ink-muted">({sub.fabric})</span>
-                  </span>
-                  <form action={deleteSubcategoryAction}>
-                    <input type="hidden" name="id" value={sub.id} />
-                    <button
-                      type="submit"
-                      aria-label={`Delete ${sub.name}`}
-                      className="text-ink-muted hover:text-accent"
-                    >
-                      &times;
-                    </button>
-                  </form>
-                </div>
+                  id={sub.id}
+                  name={sub.name}
+                  fabric={sub.fabric}
+                />
               ))}
             </div>
 

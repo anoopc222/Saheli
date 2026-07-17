@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { useFormStatus } from "react-dom";
 import { Product } from "@/types/product";
 
 const MAX_IMAGES = 4;
@@ -31,6 +32,29 @@ async function compressImageFile(file: File): Promise<File> {
   } catch {
     return file;
   }
+}
+
+function SubmitButton({
+  label,
+  disabledExtra,
+}: {
+  label: string;
+  disabledExtra: boolean;
+}) {
+  const { pending } = useFormStatus();
+  const disabled = pending || disabledExtra;
+  return (
+    <button
+      type="submit"
+      disabled={disabled}
+      className="mt-2 flex items-center justify-center gap-2 rounded-full bg-ink px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-accent disabled:opacity-50"
+    >
+      {pending && (
+        <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+      )}
+      {pending ? "Saving…" : label}
+    </button>
+  );
 }
 
 export function ProductForm({
@@ -240,13 +264,10 @@ export function ProductForm({
           {!isProcessing && remainingSlots === 0 && " Remove an image to add a different one."}
         </p>
       </div>
-      <button
-        type="submit"
-        disabled={isProcessing}
-        className="mt-2 rounded-full bg-ink px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-accent disabled:opacity-50"
-      >
-        {product ? "Save changes" : "Create product"}
-      </button>
+      <SubmitButton
+        label={product ? "Save changes" : "Create product"}
+        disabledExtra={isProcessing}
+      />
     </form>
   );
 }

@@ -33,6 +33,19 @@ export async function createCategoryAction(formData: FormData) {
   revalidateAll();
 }
 
+export async function updateCategoryAction(formData: FormData) {
+  const id = String(formData.get("id"));
+  const name = String(formData.get("name") || "").trim();
+  if (!name) return;
+  const supabase = createServiceRoleSupabaseClient();
+  const { error } = await supabase
+    .from("categories")
+    .update({ name, slug: slugify(name) })
+    .eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidateAll();
+}
+
 export async function deleteCategoryAction(formData: FormData) {
   const id = String(formData.get("id"));
   const supabase = createServiceRoleSupabaseClient();
@@ -57,6 +70,20 @@ export async function createSubcategoryAction(formData: FormData) {
     fabric,
     sort_order: (count ?? 0) + 1,
   });
+  if (error) throw new Error(error.message);
+  revalidateAll();
+}
+
+export async function updateSubcategoryAction(formData: FormData) {
+  const id = String(formData.get("id"));
+  const name = String(formData.get("name") || "").trim();
+  const fabric = String(formData.get("fabric") || "").trim();
+  if (!name || !fabric) return;
+  const supabase = createServiceRoleSupabaseClient();
+  const { error } = await supabase
+    .from("subcategories")
+    .update({ name, fabric })
+    .eq("id", id);
   if (error) throw new Error(error.message);
   revalidateAll();
 }
