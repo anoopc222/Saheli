@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Product } from "@/types/product";
+
+const MAX_IMAGES = 4;
 
 export function ProductForm({
   action,
@@ -10,9 +12,43 @@ export function ProductForm({
   action: (formData: FormData) => void;
   product?: Product;
 }) {
-  const [preview, setPreview] = useState<string | null>(
-    product?.image_url || null
+  const [keptUrls, setKeptUrls] = useState<string[]>(
+    product?.image_urls?.length
+      ? product.image_urls
+      : product?.image_url
+        ? [product.image_url]
+        : []
   );
+  const [newFiles, setNewFiles] = useState<File[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const remainingSlots = Math.max(0, MAX_IMAGES - keptUrls.length - newFiles.length);
+
+  function syncFileInput(files: File[]) {
+    const dataTransfer = new DataTransfer();
+    files.forEach((file) => dataTransfer.items.add(file));
+    if (fileInputRef.current) fileInputRef.current.files = dataTransfer.files;
+  }
+
+  function handleFilesSelected(selected: FileList | null) {
+    if (!selected) return;
+    const combined = [...newFiles, ...Array.from(selected)].slice(
+      0,
+      MAX_IMAGES - keptUrls.length
+    );
+    setNewFiles(combined);
+    syncFileInput(combined);
+  }
+
+  function removeNewFile(index: number) {
+    const next = newFiles.filter((_, i) => i !== index);
+    setNewFiles(next);
+    syncFileInput(next);
+  }
+
+  function removeKeptUrl(url: string) {
+    setKeptUrls(keptUrls.filter((u) => u !== url));
+  }
 
   return (
     <form action={action} className="flex flex-col gap-4">
@@ -112,29 +148,61 @@ export function ProductForm({
       </div>
       <div>
         <label className="mb-1 block text-sm font-medium text-ink">
-          Image
+          Images ({keptUrls.length + newFiles.length}/{MAX_IMAGES})
         </label>
-        {preview && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={preview}
-            alt=""
-            className="mb-2 h-40 w-32 rounded-xl object-cover"
-          />
-        )}
+        <div className="mb-2 flex flex-wrap gap-2">
+          {keptUrls.map((url) => (
+            <div key={url} className="relative h-28 w-24">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={url}
+                alt=""
+                className="h-full w-full rounded-xl object-cover"
+              />
+              <input type="hidden" name="keep_images" value={url} />
+              <button
+                type="button"
+                onClick={() => removeKeptUrl(url)}
+                aria-label="Remove image"
+                className="absolute -right-1.5 -top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-ink text-xs text-white"
+              >
+                &times;
+              </button>
+            </div>
+          ))}
+          {newFiles.map((file, index) => (
+            <div key={`${file.name}-${index}`} className="relative h-28 w-24">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={URL.createObjectURL(file)}
+                alt=""
+                className="h-full w-full rounded-xl object-cover"
+              />
+              <button
+                type="button"
+                onClick={() => removeNewFile(index)}
+                aria-label="Remove image"
+                className="absolute -right-1.5 -top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-ink text-xs text-white"
+              >
+                &times;
+              </button>
+            </div>
+          ))}
+        </div>
         <input
+          ref={fileInputRef}
           type="file"
-          name="image"
+          name="images"
           accept="image/*"
-          onChange={(e) => {
-            const file = e.target.files?.[0];
-            if (file) setPreview(URL.createObjectURL(file));
-          }}
-          className="block w-full text-sm"
+          multiple
+          disabled={remainingSlots === 0}
+          onChange={(e) => handleFilesSelected(e.target.files)}
+          className="block w-full text-sm disabled:opacity-50"
         />
         <p className="mt-1 text-xs text-ink-muted">
-          Max 20MB &middot; auto-resized and compressed to WebP on upload.
-          Leave empty to keep the current image.
+          Max {MAX_IMAGES} images &middot; 20MB each &middot; auto-resized and
+          compressed to WebP on upload.
+          {remainingSlots === 0 && " Remove an image to add a different one."}
         </p>
       </div>
       <button

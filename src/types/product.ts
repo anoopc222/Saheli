@@ -11,5 +11,6 @@ export type Product = {
   rating: number | null;
   rating_count: number;
   image_url: string;
+  image_urls: string[];
   stock: number;
 };

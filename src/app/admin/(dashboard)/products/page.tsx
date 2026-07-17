@@ -57,7 +57,14 @@ export default async function AdminProductsPage() {
               </Link>
               <form action={deleteProductAction}>
                 <input type="hidden" name="id" value={product.id} />
-                <input type="hidden" name="image_url" value={product.image_url} />
+                {(product.image_urls?.length
+                  ? product.image_urls
+                  : [product.image_url]
+                )
+                  .filter(Boolean)
+                  .map((url) => (
+                    <input key={url} type="hidden" name="image_urls" value={url} />
+                  ))}
                 <button
                   type="submit"
                   className="text-sm text-ink-muted hover:text-accent"

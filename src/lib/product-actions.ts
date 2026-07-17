@@ -10,6 +10,8 @@ const MAX_DIMENSION = 1200; // longest side, px
 const WEBP_QUALITY = 80;
 const STORAGE_PATH_MARKER = "/object/public/product-images/";
 
+const MAX_IMAGES = 4;
+
 async function uploadImage(file: File): Promise<string | null> {
   if (!file || file.size === 0) return null;
   if (file.size > MAX_UPLOAD_BYTES) {
@@ -42,6 +44,16 @@ async function uploadImage(file: File): Promise<string | null> {
   return data.publicUrl;
 }
 
+async function uploadImages(files: File[]): Promise<string[]> {
+  const valid = files.filter((file) => file && file.size > 0).slice(0, MAX_IMAGES);
+  const urls: string[] = [];
+  for (const file of valid) {
+    const url = await uploadImage(file);
+    if (url) urls.push(url);
+  }
+  return urls;
+}
+
 function extractStoragePath(imageUrl: string | null | undefined): string | null {
   if (!imageUrl) return null;
   const idx = imageUrl.indexOf(STORAGE_PATH_MARKER);
@@ -49,11 +61,13 @@ function extractStoragePath(imageUrl: string | null | undefined): string | null 
   return imageUrl.slice(idx + STORAGE_PATH_MARKER.length);
 }
 
-async function deleteManagedImage(imageUrl: string | null | undefined) {
-  const path = extractStoragePath(imageUrl);
-  if (!path) return;
+async function deleteManagedImages(imageUrls: (string | null | undefined)[]) {
+  const paths = imageUrls
+    .map(extractStoragePath)
+    .filter((path): path is string => Boolean(path));
+  if (paths.length === 0) return;
   const supabase = createServiceRoleSupabaseClient();
-  await supabase.storage.from("product-images").remove([path]);
+  await supabase.storage.from("product-images").remove(paths);
 }
 
 function parseProductFields(formData: FormData) {
@@ -74,12 +88,13 @@ function parseProductFields(formData: FormData) {
 export async function createProductAction(formData: FormData) {
   const supabase = createServiceRoleSupabaseClient();
   const fields = parseProductFields(formData);
-  const file = formData.get("image") as File | null;
-  const imageUrl = file ? await uploadImage(file) : null;
+  const files = formData.getAll("images") as File[];
+  const imageUrls = await uploadImages(files);
 
   const { error } = await supabase.from("products").insert({
     ...fields,
-    image_url: imageUrl || "",
+    image_url: imageUrls[0] || "",
+    image_urls: imageUrls,
   });
   if (error) throw new Error(error.message);
 
@@ -90,26 +105,32 @@ export async function createProductAction(formData: FormData) {
 
 export async function updateProductAction(
   productId: string,
-  oldImageUrl: string,
+  oldImageUrls: string[],
   formData: FormData
 ) {
   const supabase = createServiceRoleSupabaseClient();
   const fields = parseProductFields(formData);
-  const file = formData.get("image") as File | null;
-  const imageUrl = file ? await uploadImage(file) : null;
 
-  const update: Record<string, unknown> = { ...fields };
-  if (imageUrl) update.image_url = imageUrl;
+  const keepUrls = formData.getAll("keep_images").map(String);
+  const removedUrls = oldImageUrls.filter((url) => !keepUrls.includes(url));
+
+  const remainingSlots = Math.max(0, MAX_IMAGES - keepUrls.length);
+  const files = (formData.getAll("images") as File[]).slice(0, remainingSlots);
+  const newUrls = await uploadImages(files);
+
+  const imageUrls = [...keepUrls, ...newUrls].slice(0, MAX_IMAGES);
 
   const { error } = await supabase
     .from("products")
-    .update(update)
+    .update({
+      ...fields,
+      image_url: imageUrls[0] || "",
+      image_urls: imageUrls,
+    })
     .eq("id", productId);
   if (error) throw new Error(error.message);
 
-  if (imageUrl) {
-    await deleteManagedImage(oldImageUrl);
-  }
+  await deleteManagedImages(removedUrls);
 
   revalidatePath("/admin/products");
   revalidatePath("/");
@@ -118,12 +139,12 @@ export async function updateProductAction(
 
 export async function deleteProductAction(formData: FormData) {
   const id = String(formData.get("id"));
-  const imageUrl = String(formData.get("image_url") || "");
+  const imageUrls = formData.getAll("image_urls").map(String);
   const supabase = createServiceRoleSupabaseClient();
   const { error } = await supabase.from("products").delete().eq("id", id);
   if (error) throw new Error(error.message);
 
-  await deleteManagedImage(imageUrl);
+  await deleteManagedImages(imageUrls);
 
   revalidatePath("/admin/products");
   revalidatePath("/");

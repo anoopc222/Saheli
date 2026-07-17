@@ -19,10 +19,14 @@ export default async function EditProductPage({
 
   if (!product) notFound();
 
+  const existingImageUrls = product.image_urls?.length
+    ? product.image_urls
+    : [product.image_url].filter(Boolean);
+
   const boundUpdate = updateProductAction.bind(
     null,
     product.id,
-    product.image_url
+    existingImageUrls
   );
 
   return (

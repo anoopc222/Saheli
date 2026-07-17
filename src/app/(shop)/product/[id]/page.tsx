@@ -4,6 +4,7 @@ import { Product } from "@/types/product";
 import { formatPrice } from "@/lib/format";
 import { AddToCartForm } from "@/components/AddToCartForm";
 import { ProductBadge } from "@/components/ProductBadge";
+import { ProductGallery } from "@/components/ProductGallery";
 import { RatingStars } from "@/components/RatingStars";
 
 export default async function ProductPage({
@@ -28,14 +29,14 @@ export default async function ProductPage({
       <div className="flex flex-col gap-6">
         <div className="relative aspect-[3/4] w-full overflow-hidden rounded-2xl bg-line">
           <ProductBadge badge={product.badge} />
-          {product.image_url && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={product.image_url}
-              alt={product.name}
-              className="h-full w-full object-cover"
-            />
-          )}
+          <ProductGallery
+            images={
+              product.image_urls?.length
+                ? product.image_urls
+                : [product.image_url].filter(Boolean)
+            }
+            alt={product.name}
+          />
         </div>
         <div>
           <p className="text-xs uppercase tracking-wide text-ink-muted">
