@@ -4,6 +4,34 @@ import { useRef, useState } from "react";
 import { Product } from "@/types/product";
 
 const MAX_IMAGES = 4;
+const MAX_DIMENSION = 1200;
+const JPEG_QUALITY = 0.82;
+
+async function compressImageFile(file: File): Promise<File> {
+  try {
+    const bitmap = await createImageBitmap(file);
+    const scale = Math.min(1, MAX_DIMENSION / Math.max(bitmap.width, bitmap.height));
+    const width = Math.round(bitmap.width * scale);
+    const height = Math.round(bitmap.height * scale);
+
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return file;
+    ctx.drawImage(bitmap, 0, 0, width, height);
+
+    const blob: Blob | null = await new Promise((resolve) =>
+      canvas.toBlob(resolve, "image/jpeg", JPEG_QUALITY)
+    );
+    if (!blob) return file;
+
+    const name = file.name.replace(/\.[^.]+$/, "") + ".jpg";
+    return new File([blob], name, { type: "image/jpeg" });
+  } catch {
+    return file;
+  }
+}
 
 export function ProductForm({
   action,
@@ -20,6 +48,7 @@ export function ProductForm({
         : []
   );
   const [newFiles, setNewFiles] = useState<File[]>([]);
+  const [isProcessing, setIsProcessing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const remainingSlots = Math.max(0, MAX_IMAGES - keptUrls.length - newFiles.length);
@@ -30,14 +59,19 @@ export function ProductForm({
     if (fileInputRef.current) fileInputRef.current.files = dataTransfer.files;
   }
 
-  function handleFilesSelected(selected: FileList | null) {
-    if (!selected) return;
-    const combined = [...newFiles, ...Array.from(selected)].slice(
-      0,
-      MAX_IMAGES - keptUrls.length
-    );
-    setNewFiles(combined);
-    syncFileInput(combined);
+  async function handleFilesSelected(selected: FileList | null) {
+    if (!selected || selected.length === 0) return;
+    const picked = Array.from(selected).slice(0, MAX_IMAGES - keptUrls.length - newFiles.length);
+
+    setIsProcessing(true);
+    try {
+      const compressed = await Promise.all(picked.map(compressImageFile));
+      const combined = [...newFiles, ...compressed].slice(0, MAX_IMAGES - keptUrls.length);
+      setNewFiles(combined);
+      syncFileInput(combined);
+    } finally {
+      setIsProcessing(false);
+    }
   }
 
   function removeNewFile(index: number) {
@@ -195,19 +229,21 @@ export function ProductForm({
           name="images"
           accept="image/*"
           multiple
-          disabled={remainingSlots === 0}
+          disabled={remainingSlots === 0 || isProcessing}
           onChange={(e) => handleFilesSelected(e.target.files)}
           className="block w-full text-sm disabled:opacity-50"
         />
         <p className="mt-1 text-xs text-ink-muted">
-          Max {MAX_IMAGES} images &middot; 20MB each &middot; auto-resized and
-          compressed to WebP on upload.
-          {remainingSlots === 0 && " Remove an image to add a different one."}
+          {isProcessing
+            ? "Compressing images…"
+            : `Max ${MAX_IMAGES} images · resized and compressed in your browser before upload.`}
+          {!isProcessing && remainingSlots === 0 && " Remove an image to add a different one."}
         </p>
       </div>
       <button
         type="submit"
-        className="mt-2 rounded-full bg-ink px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-accent"
+        disabled={isProcessing}
+        className="mt-2 rounded-full bg-ink px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-accent disabled:opacity-50"
       >
         {product ? "Save changes" : "Create product"}
       </button>
