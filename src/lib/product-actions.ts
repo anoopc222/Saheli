@@ -7,7 +7,7 @@ import { createServiceRoleSupabaseClient } from "@/lib/supabase/server";
 
 const MAX_UPLOAD_BYTES = 20 * 1024 * 1024; // 20MB raw upload ceiling
 const MAX_DIMENSION = 1200; // longest side, px
-const WEBP_QUALITY = 80;
+const WEBP_QUALITY = 85;
 const STORAGE_PATH_MARKER = "/object/public/product-images/";
 
 const MAX_IMAGES = 4;
@@ -19,16 +19,40 @@ async function uploadImage(file: File): Promise<string | null> {
   }
 
   const inputBuffer = Buffer.from(await file.arrayBuffer());
-  const outputBuffer = await sharp(inputBuffer)
-    .rotate()
-    .resize({
-      width: MAX_DIMENSION,
-      height: MAX_DIMENSION,
-      fit: "inside",
-      withoutEnlargement: true,
-    })
-    .webp({ quality: WEBP_QUALITY })
-    .toBuffer();
+
+  // The client already resizes and compresses to WebP before upload. Only
+  // re-encode here as a fallback (e.g. the browser couldn't compress, or a
+  // non-standard file slipped through) — re-encoding an already-optimized
+  // WebP would just add a second lossy pass for no benefit.
+  let outputBuffer: Buffer;
+  if (file.type === "image/webp") {
+    const meta = await sharp(inputBuffer).metadata();
+    const withinBounds =
+      (meta.width ?? 0) <= MAX_DIMENSION && (meta.height ?? 0) <= MAX_DIMENSION;
+    outputBuffer = withinBounds
+      ? inputBuffer
+      : await sharp(inputBuffer)
+          .rotate()
+          .resize({
+            width: MAX_DIMENSION,
+            height: MAX_DIMENSION,
+            fit: "inside",
+            withoutEnlargement: true,
+          })
+          .webp({ quality: WEBP_QUALITY })
+          .toBuffer();
+  } else {
+    outputBuffer = await sharp(inputBuffer)
+      .rotate()
+      .resize({
+        width: MAX_DIMENSION,
+        height: MAX_DIMENSION,
+        fit: "inside",
+        withoutEnlargement: true,
+      })
+      .webp({ quality: WEBP_QUALITY })
+      .toBuffer();
+  }
 
   const supabase = createServiceRoleSupabaseClient();
   const path = `${crypto.randomUUID()}.webp`;
