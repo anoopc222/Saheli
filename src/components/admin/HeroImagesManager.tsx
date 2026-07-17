@@ -1,9 +1,9 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import {
-  addHeroImageAction,
+  addHeroImagesAction,
   deleteHeroImageAction,
   reorderHeroImagesAction,
 } from "@/lib/hero-actions";
@@ -14,23 +14,35 @@ import { HeroBanner } from "@/lib/homepage-data";
 const MAX_HERO_IMAGES = 6;
 const HERO_MAX_DIMENSION = 1600;
 
-function UploadStatus() {
+type PendingImage = { key: string; file: File; previewUrl: string };
+
+function UploadButton({ count }: { count: number }) {
   const { pending } = useFormStatus();
-  return pending ? (
-    <span className="text-[11px] font-medium text-ink-muted">Uploading…</span>
-  ) : (
-    <span className="text-2xl leading-none">+</span>
+  return (
+    <button
+      type="submit"
+      disabled={pending}
+      className="flex w-full items-center justify-center gap-2 rounded-full bg-ink px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-accent disabled:opacity-50"
+    >
+      {pending && (
+        <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+      )}
+      {pending ? "Uploading…" : `Upload ${count} image${count === 1 ? "" : "s"}`}
+    </button>
   );
 }
 
 export function HeroImagesManager({ images }: { images: HeroBanner[] }) {
   const [order, setOrder] = useState(images);
   const [prevImages, setPrevImages] = useState(images);
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [pending, setPending] = useState<PendingImage[]>([]);
+  const [isCompressing, setIsCompressing] = useState(false);
   const [reorderError, setReorderError] = useState<string | null>(null);
+  const [addError, setAddError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const dragIndex = useRef<number | null>(null);
+  const pendingDragIndex = useRef<number | null>(null);
 
   // Re-sync local (draggable) order whenever the server-fetched list changes,
   // e.g. after an upload/delete revalidates the page.
@@ -39,18 +51,50 @@ export function HeroImagesManager({ images }: { images: HeroBanner[] }) {
     setOrder(images);
   }
 
-  async function handleFileSelected(file: File | undefined) {
-    if (!file) return;
-    setIsProcessing(true);
+  useEffect(() => {
+    return () => {
+      pending.forEach((img) => URL.revokeObjectURL(img.previewUrl));
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const remainingSlots = Math.max(0, MAX_HERO_IMAGES - order.length - pending.length);
+
+  function syncFileInput(images: PendingImage[]) {
+    const dataTransfer = new DataTransfer();
+    images.forEach((img) => dataTransfer.items.add(img.file));
+    if (fileInputRef.current) fileInputRef.current.files = dataTransfer.files;
+  }
+
+  async function handleFilesSelected(selected: FileList | null) {
+    if (!selected || selected.length === 0) return;
+    setAddError(null);
+    const picked = Array.from(selected).slice(0, remainingSlots);
+
+    setIsCompressing(true);
     try {
-      const compressed = await compressImageFile(file, HERO_MAX_DIMENSION);
-      const dataTransfer = new DataTransfer();
-      dataTransfer.items.add(compressed);
-      if (fileInputRef.current) fileInputRef.current.files = dataTransfer.files;
-      formRef.current?.requestSubmit();
+      const compressed: PendingImage[] = [];
+      for (const file of picked) {
+        const compressedFile = await compressImageFile(file, HERO_MAX_DIMENSION);
+        compressed.push({
+          key: crypto.randomUUID(),
+          file: compressedFile,
+          previewUrl: URL.createObjectURL(compressedFile),
+        });
+      }
+      const combined = [...pending, ...compressed].slice(0, MAX_HERO_IMAGES - order.length);
+      setPending(combined);
+      syncFileInput(combined);
     } finally {
-      setIsProcessing(false);
+      setIsCompressing(false);
     }
+  }
+
+  function removePending(index: number) {
+    URL.revokeObjectURL(pending[index].previewUrl);
+    const next = pending.filter((_, i) => i !== index);
+    setPending(next);
+    syncFileInput(next);
   }
 
   function handleDrop(dropIndex: number) {
@@ -66,6 +110,16 @@ export function HeroImagesManager({ images }: { images: HeroBanner[] }) {
       setOrder(previousOrder);
       setReorderError("Couldn't save the new order. Please try again.");
     });
+  }
+
+  function handlePendingDrop(dropIndex: number) {
+    if (pendingDragIndex.current === null || pendingDragIndex.current === dropIndex) return;
+    const next = [...pending];
+    const [moved] = next.splice(pendingDragIndex.current, 1);
+    next.splice(dropIndex, 0, moved);
+    pendingDragIndex.current = null;
+    setPending(next);
+    syncFileInput(next);
   }
 
   return (
@@ -108,31 +162,92 @@ export function HeroImagesManager({ images }: { images: HeroBanner[] }) {
           </div>
         ))}
 
-        {order.length < MAX_HERO_IMAGES && (
-          <form ref={formRef} action={addHeroImageAction}>
-            <label
-              className={`flex aspect-square flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-line text-ink-muted transition-colors ${
-                isProcessing ? "opacity-50" : "cursor-pointer hover:border-accent hover:text-accent"
-              }`}
-            >
-              <UploadStatus />
-              <span className="text-[11px] font-medium">Add</span>
-              <input
-                ref={fileInputRef}
-                type="file"
-                name="image"
-                accept="image/*"
-                disabled={isProcessing}
-                onChange={(e) => handleFileSelected(e.target.files?.[0])}
-                className="hidden"
-              />
-            </label>
-          </form>
+        {remainingSlots > 0 && (
+          <label
+            className={`flex aspect-square flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-line text-ink-muted transition-colors ${
+              isCompressing ? "opacity-50" : "cursor-pointer hover:border-accent hover:text-accent"
+            }`}
+          >
+            <span className="text-2xl leading-none">+</span>
+            <span className="text-[11px] font-medium">Add</span>
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              disabled={isCompressing}
+              onChange={(e) => handleFilesSelected(e.target.files)}
+              className="hidden"
+            />
+          </label>
         )}
       </div>
       <p className="mt-2 text-xs text-ink-muted">
-        {order.length}/{MAX_HERO_IMAGES} images · drag to reorder · rotates every 8s on the homepage.
+        {isCompressing
+          ? "Compressing images…"
+          : `${order.length}/${MAX_HERO_IMAGES} images · drag to reorder · rotates every 8s on the homepage.`}
       </p>
+
+      {addError && (
+        <div className="mt-3 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">
+          {addError}
+        </div>
+      )}
+
+      {pending.length > 0 && (
+        <div className="mt-4 border-t border-line pt-4">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-muted">
+            New images &middot; drag to arrange
+          </p>
+          <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+            {pending.map((image, index) => (
+              <div
+                key={image.key}
+                draggable
+                onDragStart={() => (pendingDragIndex.current = index)}
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={() => handlePendingDrop(index)}
+                className="relative aspect-square cursor-grab active:cursor-grabbing"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={image.previewUrl}
+                  alt=""
+                  className="h-full w-full rounded-xl border border-accent object-cover"
+                />
+                <span className="absolute left-1 top-1 rounded-full bg-accent px-1.5 py-0.5 text-[10px] font-medium text-white">
+                  {order.length + index + 1}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => removePending(index)}
+                  aria-label="Remove image"
+                  className="absolute -right-1.5 -top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-ink text-xs text-white shadow-sm"
+                >
+                  &times;
+                </button>
+              </div>
+            ))}
+          </div>
+
+          <form
+            ref={formRef}
+            action={async (formData) => {
+              try {
+                await addHeroImagesAction(formData);
+                pending.forEach((img) => URL.revokeObjectURL(img.previewUrl));
+                setPending([]);
+                setAddError(null);
+              } catch (err) {
+                setAddError(err instanceof Error ? err.message : "Couldn't upload images.");
+              }
+            }}
+            className="mt-3"
+          >
+            <input ref={fileInputRef} type="file" name="images" multiple className="hidden" />
+            <UploadButton count={pending.length} />
+          </form>
+        </div>
+      )}
     </div>
   );
 }
