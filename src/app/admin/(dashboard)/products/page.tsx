@@ -1,19 +1,21 @@
 import Link from "next/link";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
-import { formatPrice } from "@/lib/format";
-import { deleteProductAction } from "@/lib/product-actions";
-import { ConfirmSubmitButton } from "@/components/admin/ConfirmSubmitButton";
+import { getCategories } from "@/lib/categories-data";
+import { AdminProductsList } from "@/components/admin/AdminProductsList";
 import { Product } from "@/types/product";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminProductsPage() {
   const supabase = createBrowserSupabaseClient();
-  const { data: products } = await supabase
-    .from("products")
-    .select("*")
-    .order("created_at", { ascending: false })
-    .returns<Product[]>();
+  const [{ data: products }, categories] = await Promise.all([
+    supabase
+      .from("products")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .returns<Product[]>(),
+    getCategories(),
+  ]);
 
   return (
     <div>
@@ -28,63 +30,7 @@ export default async function AdminProductsPage() {
           Add product
         </Link>
       </div>
-      <div className="flex flex-col gap-2">
-        {(products ?? []).map((product) => (
-          <div
-            key={product.id}
-            className="flex items-center justify-between gap-3 rounded-xl border border-line bg-paper-raised p-3"
-          >
-            <div className="flex items-center gap-3">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={product.image_url}
-                alt=""
-                className="h-14 w-11 rounded-lg object-cover bg-line"
-              />
-              <div>
-                <p className="text-sm font-medium text-ink">{product.name}</p>
-                <p className="text-xs text-ink-muted">
-                  {product.fabric} &middot;{" "}
-                  <span className="text-ink">
-                    {formatPrice(product.price_cents)}
-                  </span>
-                  {product.compare_at_price_cents && (
-                    <span className="ml-1 line-through">
-                      {formatPrice(product.compare_at_price_cents)}
-                    </span>
-                  )}{" "}
-                  &middot; stock {product.stock}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <Link
-                href={`/admin/products/${product.id}/edit`}
-                className="text-sm text-accent hover:underline"
-              >
-                Edit
-              </Link>
-              <form action={deleteProductAction}>
-                <input type="hidden" name="id" value={product.id} />
-                {(product.image_urls?.length
-                  ? product.image_urls
-                  : [product.image_url]
-                )
-                  .filter(Boolean)
-                  .map((url) => (
-                    <input key={url} type="hidden" name="image_urls" value={url} />
-                  ))}
-                <ConfirmSubmitButton
-                  confirmMessage={`Delete "${product.name}"? This can't be undone.`}
-                  className="text-sm text-ink-muted hover:text-accent"
-                >
-                  Delete
-                </ConfirmSubmitButton>
-              </form>
-            </div>
-          </div>
-        ))}
-      </div>
+      <AdminProductsList products={products ?? []} categories={categories} />
     </div>
   );
 }
