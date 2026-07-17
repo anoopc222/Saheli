@@ -2,16 +2,16 @@
 
 :root {
   color-scheme: light;
-  --background: #faf9f5;
-  --foreground: #1c1b19;
-  --ink: #1c1b19;
-  --ink-muted: #8a8478;
-  --paper: #faf9f5;
+  --background: #faf6ec;
+  --foreground: #3d1220;
+  --ink: #3d1220;
+  --ink-muted: #8a7565;
+  --paper: #faf6ec;
   --paper-raised: #ffffff;
-  --accent: #3f6b54;
-  --accent-dark: #2e4f3e;
-  --accent-soft: #e7efe9;
-  --line: #eae7df;
+  --accent: #a97c34;
+  --accent-dark: #8a642a;
+  --accent-soft: #f6ead2;
+  --line: #ecdfc9;
 }
 
 @theme inline {
