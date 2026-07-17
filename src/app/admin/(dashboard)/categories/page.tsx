@@ -1,30 +1,21 @@
-import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import {
   createCategoryAction,
   deleteCategoryAction,
   createSubcategoryAction,
 } from "@/lib/category-actions";
+import { getCategories, getMainCategories } from "@/lib/categories-data";
 import { CategoryNameEditor } from "@/components/admin/CategoryNameEditor";
+import { CategoryMenuToggle } from "@/components/admin/CategoryMenuToggle";
 import { SubcategoryChip } from "@/components/admin/SubcategoryChip";
 import { ConfirmSubmitButton } from "@/components/admin/ConfirmSubmitButton";
 
 export const dynamic = "force-dynamic";
 
-type SubcategoryRow = { id: string; name: string; fabric: string };
-type CategoryRow = {
-  id: string;
-  name: string;
-  subcategories: SubcategoryRow[];
-};
-
 export default async function AdminCategoriesPage() {
-  const supabase = createBrowserSupabaseClient();
-  const { data: categories } = await supabase
-    .from("categories")
-    .select("id, name, subcategories(id, name, fabric)")
-    .order("sort_order")
-    .order("sort_order", { referencedTable: "subcategories" })
-    .returns<CategoryRow[]>();
+  const [categories, mainCategories] = await Promise.all([
+    getCategories(),
+    getMainCategories(),
+  ]);
 
   return (
     <div>
@@ -32,82 +23,119 @@ export default async function AdminCategoriesPage() {
         Categories
       </h1>
 
-      <form action={createCategoryAction} className="mb-6 flex items-end gap-2">
-        <div className="flex-1">
-          <label className="mb-1 block text-sm font-medium text-ink">
-            New category
-          </label>
+      <form action={createCategoryAction} className="mb-8 flex flex-col gap-3 rounded-2xl border border-line bg-paper-raised p-4">
+        <p className="text-sm font-medium text-ink">New category</p>
+        <div className="grid grid-cols-2 gap-3">
           <input
             name="name"
             required
             placeholder="e.g. Kalamkari Sarees"
-            className="w-full rounded-xl border border-line bg-paper-raised px-3 py-2 text-sm outline-none focus:border-accent"
+            className="rounded-xl border border-line bg-paper px-3 py-2 text-sm outline-none focus:border-accent"
           />
+          <select
+            name="main_category_id"
+            required
+            defaultValue=""
+            className="rounded-xl border border-line bg-paper px-3 py-2 text-sm outline-none focus:border-accent"
+          >
+            <option value="" disabled>
+              Select main category
+            </option>
+            {mainCategories.map((mc) => (
+              <option key={mc.id} value={mc.id}>
+                {mc.name}
+              </option>
+            ))}
+          </select>
         </div>
         <button
           type="submit"
-          className="rounded-full bg-ink px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-accent"
+          className="self-start rounded-full bg-ink px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-accent"
         >
           Add
         </button>
       </form>
 
-      <div className="flex flex-col gap-4">
-        {(categories ?? []).map((category) => (
-          <div
-            key={category.id}
-            className="rounded-2xl border border-line bg-paper-raised p-4"
-          >
-            <div className="mb-3 flex flex-col gap-1.5">
-              <CategoryNameEditor id={category.id} name={category.name} />
-              <form action={deleteCategoryAction} className="self-end">
-                <input type="hidden" name="id" value={category.id} />
-                <ConfirmSubmitButton
-                  confirmMessage={`Delete "${category.name}" and all its subcategories? This can't be undone.`}
-                  className="text-xs text-ink-muted hover:text-accent"
-                >
-                  Delete category
-                </ConfirmSubmitButton>
-              </form>
-            </div>
+      <div className="flex flex-col gap-8">
+        {mainCategories.map((mainCategory) => {
+          const categoriesInGroup = categories.filter(
+            (c) => c.main_category_id === mainCategory.id
+          );
+          return (
+            <div key={mainCategory.id}>
+              <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-ink-muted">
+                {mainCategory.name}
+              </h2>
+              {categoriesInGroup.length === 0 ? (
+                <p className="text-sm text-ink-muted">No categories yet.</p>
+              ) : (
+                <div className="flex flex-col gap-4">
+                  {categoriesInGroup.map((category) => (
+                    <div
+                      key={category.id}
+                      className="rounded-2xl border border-line bg-paper-raised p-4"
+                    >
+                      <div className="mb-3 flex flex-col gap-1.5">
+                        <div className="flex items-center justify-between">
+                          <CategoryNameEditor id={category.id} name={category.name} />
+                          <CategoryMenuToggle
+                            id={category.id}
+                            showOnMenu={category.show_on_menu}
+                          />
+                        </div>
+                        <form action={deleteCategoryAction} className="self-end">
+                          <input type="hidden" name="id" value={category.id} />
+                          <ConfirmSubmitButton
+                            confirmMessage={`Delete "${category.name}" and all its subcategories? This can't be undone.`}
+                            className="text-xs text-ink-muted hover:text-accent"
+                          >
+                            Delete category
+                          </ConfirmSubmitButton>
+                        </form>
+                      </div>
 
-            <div className="mb-3 flex flex-wrap gap-2">
-              {category.subcategories.map((sub) => (
-                <SubcategoryChip
-                  key={sub.id}
-                  id={sub.id}
-                  name={sub.name}
-                  fabric={sub.fabric}
-                />
-              ))}
-            </div>
+                      <div className="mb-3 flex flex-wrap gap-2">
+                        {category.subcategories.map((sub) => (
+                          <SubcategoryChip
+                            key={sub.id}
+                            id={sub.id}
+                            name={sub.name}
+                            fabric={sub.fabric}
+                          />
+                        ))}
+                      </div>
 
-            <form
-              action={createSubcategoryAction}
-              className="flex flex-wrap items-end gap-2"
-            >
-              <input type="hidden" name="category_id" value={category.id} />
-              <input
-                name="name"
-                required
-                placeholder="Subcategory name"
-                className="w-40 rounded-lg border border-line bg-paper px-2.5 py-1.5 text-xs outline-none focus:border-accent"
-              />
-              <input
-                name="fabric"
-                required
-                placeholder="Fabric (matches product fabric)"
-                className="w-52 rounded-lg border border-line bg-paper px-2.5 py-1.5 text-xs outline-none focus:border-accent"
-              />
-              <button
-                type="submit"
-                className="rounded-lg border border-line px-3 py-1.5 text-xs font-medium text-ink transition-colors hover:border-accent hover:text-accent"
-              >
-                Add subcategory
-              </button>
-            </form>
-          </div>
-        ))}
+                      <form
+                        action={createSubcategoryAction}
+                        className="flex flex-wrap items-end gap-2"
+                      >
+                        <input type="hidden" name="category_id" value={category.id} />
+                        <input
+                          name="name"
+                          required
+                          placeholder="Subcategory name"
+                          className="w-40 rounded-lg border border-line bg-paper px-2.5 py-1.5 text-xs outline-none focus:border-accent"
+                        />
+                        <input
+                          name="fabric"
+                          required
+                          placeholder="Fabric (matches product fabric)"
+                          className="w-52 rounded-lg border border-line bg-paper px-2.5 py-1.5 text-xs outline-none focus:border-accent"
+                        />
+                        <button
+                          type="submit"
+                          className="rounded-lg border border-line px-3 py-1.5 text-xs font-medium text-ink transition-colors hover:border-accent hover:text-accent"
+                        >
+                          Add subcategory
+                        </button>
+                      </form>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );

@@ -2,25 +2,37 @@
 
 import Link from "next/link";
 import { useCart } from "@/lib/cart-context";
-import { BagIcon } from "@/components/icons";
+import { useNavDrawer } from "@/lib/nav-drawer-context";
+import { BagIcon, MenuIcon } from "@/components/icons";
 
 export function Header() {
   const { totalItems } = useCart();
+  const { open } = useNavDrawer();
 
   return (
     <header className="sticky top-0 z-30 border-b border-line bg-paper/95 backdrop-blur">
       <div className="mx-auto flex max-w-[480px] items-center justify-between px-4 py-3.5">
-        <Link href="/" className="flex items-center gap-2.5">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/logo.jpg"
-            alt="Saheli"
-            className="h-9 w-9 rounded-full object-cover"
-          />
-          <span className="font-heading text-lg font-semibold text-ink">
-            Saheli
-          </span>
-        </Link>
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            onClick={open}
+            aria-label="Open menu"
+            className="flex h-9 w-9 items-center justify-center rounded-full text-ink transition-colors hover:bg-accent-soft hover:text-accent"
+          >
+            <MenuIcon className="h-5 w-5" />
+          </button>
+          <Link href="/" className="flex items-center gap-2.5">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/logo.jpg"
+              alt="Saheli"
+              className="h-9 w-9 rounded-full object-cover"
+            />
+            <span className="font-heading text-lg font-semibold text-ink">
+              Saheli
+            </span>
+          </Link>
+        </div>
         <Link
           href="/cart"
           aria-label="Cart"

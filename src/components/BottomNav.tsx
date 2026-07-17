@@ -3,17 +3,19 @@
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useCart } from "@/lib/cart-context";
+import { useNavDrawer } from "@/lib/nav-drawer-context";
 import { HomeIcon, GridIcon, TagIcon, BagIcon } from "@/components/icons";
 
 export function BottomNav() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { totalItems } = useCart();
+  const { isOpen, open } = useNavDrawer();
 
   const fabric = searchParams.get("fabric");
   const filter = searchParams.get("filter");
   const isHome = pathname === "/" && !fabric && !filter;
-  const isCategories = pathname === "/categories" || (pathname === "/" && !!fabric);
+  const isCategories = isOpen || (pathname === "/" && !!fabric);
   const isSale = pathname === "/" && filter === "sale";
   const isCart = pathname === "/cart";
 
@@ -29,10 +31,10 @@ export function BottomNav() {
           <HomeIcon className="h-5 w-5" />
           Home
         </Link>
-        <Link href="/categories" className={tabClass(isCategories)}>
+        <button type="button" onClick={open} className={tabClass(isCategories)}>
           <GridIcon className="h-5 w-5" />
           Categories
-        </Link>
+        </button>
         <Link href="/?filter=sale" className={tabClass(isSale)}>
           <TagIcon className="h-5 w-5" />
           Sale

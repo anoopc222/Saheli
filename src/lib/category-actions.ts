@@ -19,7 +19,9 @@ function revalidateAll() {
 
 export async function createCategoryAction(formData: FormData) {
   const name = String(formData.get("name") || "").trim();
+  const mainCategoryId = String(formData.get("main_category_id") || "").trim();
   if (!name) return;
+  if (!mainCategoryId) throw new Error("Select a main category.");
   const supabase = createServiceRoleSupabaseClient();
   const { count } = await supabase
     .from("categories")
@@ -27,8 +29,21 @@ export async function createCategoryAction(formData: FormData) {
   const { error } = await supabase.from("categories").insert({
     name,
     slug: slugify(name),
+    main_category_id: mainCategoryId,
     sort_order: (count ?? 0) + 1,
   });
+  if (error) throw new Error(error.message);
+  revalidateAll();
+}
+
+export async function setCategoryMenuVisibilityAction(formData: FormData) {
+  const id = String(formData.get("id"));
+  const showOnMenu = formData.get("show_on_menu") === "true";
+  const supabase = createServiceRoleSupabaseClient();
+  const { error } = await supabase
+    .from("categories")
+    .update({ show_on_menu: showOnMenu })
+    .eq("id", id);
   if (error) throw new Error(error.message);
   revalidateAll();
 }
