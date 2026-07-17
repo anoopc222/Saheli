@@ -22,13 +22,13 @@ export function CategoryMenuToggle({
           type="submit"
           role="switch"
           aria-checked={showOnMenu}
-          className={`relative h-5 w-9 rounded-full transition-colors ${
+          className={`relative inline-block h-5 w-9 shrink-0 rounded-full p-0 transition-colors ${
             showOnMenu ? "bg-accent" : "bg-line"
           }`}
         >
           <span
-            className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${
-              showOnMenu ? "translate-x-4" : "translate-x-0.5"
+            className={`absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${
+              showOnMenu ? "translate-x-4" : "translate-x-0"
             }`}
           />
         </button>
