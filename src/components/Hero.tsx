@@ -49,10 +49,16 @@ export function Hero({ images }: { images: string[] }) {
         >
           Handloom &amp; silk, made with care
         </p>
-        <h1 className="mt-3 font-heading text-4xl font-semibold leading-[1.1]">
+        <h1 className="mt-3 font-heading text-[2.75rem] font-semibold leading-[1.05]">
           Sarees for
           <br />
-          every story
+          <span
+            className={`font-script text-[3.25rem] font-normal leading-none ${
+              hasImages ? "text-white" : "text-accent"
+            }`}
+          >
+            every occasion
+          </span>
         </h1>
         <p
           className={`mx-auto mt-4 max-w-[300px] text-sm leading-relaxed ${

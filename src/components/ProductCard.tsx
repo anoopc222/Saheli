@@ -4,16 +4,34 @@ import Link from "next/link";
 import { Product } from "@/types/product";
 import { formatPrice } from "@/lib/format";
 import { useCart } from "@/lib/cart-context";
+import { useWishlist } from "@/lib/wishlist-context";
 import { ProductBadge } from "@/components/ProductBadge";
 import { RatingStars } from "@/components/RatingStars";
+import { HeartIcon } from "@/components/icons";
 
 export function ProductCard({ product }: { product: Product }) {
   const { addItem } = useCart();
+  const { isWishlisted, toggle } = useWishlist();
+  const wishlisted = isWishlisted(product.id);
 
   return (
     <div className="group flex flex-col overflow-hidden rounded-2xl border border-line bg-paper-raised shadow-sm transition-shadow hover:shadow-md">
       <Link href={`/product/${product.id}`} className="relative block">
         <ProductBadge badge={product.badge} />
+        <button
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            toggle(product.id);
+          }}
+          aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
+          aria-pressed={wishlisted}
+          className={`absolute right-2.5 top-2.5 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 shadow-sm transition-colors ${
+            wishlisted ? "text-accent" : "text-ink"
+          }`}
+        >
+          <HeartIcon className="h-4.5 w-4.5" filled={wishlisted} />
+        </button>
         <div className="aspect-[3/4] w-full overflow-hidden bg-line">
           {product.image_url && (
             // eslint-disable-next-line @next/next/no-img-element

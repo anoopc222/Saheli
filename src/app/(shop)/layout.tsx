@@ -1,7 +1,8 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Outfit } from "next/font/google";
+import { Inter, Playfair_Display, Dancing_Script } from "next/font/google";
 import "../globals.css";
 import { CartProvider } from "@/lib/cart-context";
+import { WishlistProvider } from "@/lib/wishlist-context";
 import { AppShell } from "@/components/AppShell";
 
 const inter = Inter({
@@ -9,9 +10,15 @@ const inter = Inter({
   subsets: ["latin"],
 });
 
-const outfit = Outfit({
+const playfairDisplay = Playfair_Display({
   variable: "--font-heading",
   weight: ["500", "600", "700"],
+  subsets: ["latin"],
+});
+
+const dancingScript = Dancing_Script({
+  variable: "--font-script",
+  weight: ["600"],
   subsets: ["latin"],
 });
 
@@ -32,11 +39,13 @@ export default function ShopLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${outfit.variable} h-full antialiased`}
+      className={`${inter.variable} ${playfairDisplay.variable} ${dancingScript.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         <CartProvider>
-          <AppShell>{children}</AppShell>
+          <WishlistProvider>
+            <AppShell>{children}</AppShell>
+          </WishlistProvider>
         </CartProvider>
       </body>
     </html>
