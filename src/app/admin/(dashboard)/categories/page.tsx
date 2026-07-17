@@ -75,23 +75,23 @@ export default async function AdminCategoriesPage() {
                       key={category.id}
                       className="rounded-2xl border border-line bg-paper-raised p-4"
                     >
-                      <div className="mb-3 flex flex-col gap-1.5">
+                      <div className="mb-3 flex flex-col gap-2">
+                        <CategoryNameEditor id={category.id} name={category.name} />
                         <div className="flex items-center justify-between">
-                          <CategoryNameEditor id={category.id} name={category.name} />
                           <CategoryMenuToggle
                             id={category.id}
                             showOnMenu={category.show_on_menu}
                           />
+                          <form action={deleteCategoryAction}>
+                            <input type="hidden" name="id" value={category.id} />
+                            <ConfirmSubmitButton
+                              confirmMessage={`Delete "${category.name}" and all its subcategories? This can't be undone.`}
+                              className="text-xs text-ink-muted hover:text-accent"
+                            >
+                              Delete category
+                            </ConfirmSubmitButton>
+                          </form>
                         </div>
-                        <form action={deleteCategoryAction} className="self-end">
-                          <input type="hidden" name="id" value={category.id} />
-                          <ConfirmSubmitButton
-                            confirmMessage={`Delete "${category.name}" and all its subcategories? This can't be undone.`}
-                            className="text-xs text-ink-muted hover:text-accent"
-                          >
-                            Delete category
-                          </ConfirmSubmitButton>
-                        </form>
                       </div>
 
                       <div className="mb-3 flex flex-wrap gap-2">
