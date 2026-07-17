@@ -11,37 +11,47 @@ function revalidateHome() {
   revalidatePath("/admin/homepage");
 }
 
-export async function addHeroImagesAction(formData: FormData) {
-  const supabase = createServiceRoleSupabaseClient();
-  const files = (formData.getAll("images") as File[]).filter(
-    (file) => file && file.size > 0
-  );
-  if (files.length === 0) return;
+export type AddHeroImagesState = { error: string | null };
 
-  const { count } = await supabase
-    .from("hero_banners")
-    .select("*", { count: "exact", head: true });
-  const existingCount = count ?? 0;
-
-  if (existingCount + files.length > MAX_HERO_IMAGES) {
-    throw new Error(
-      `Maximum ${MAX_HERO_IMAGES} hero images allowed. You can add ${Math.max(0, MAX_HERO_IMAGES - existingCount)} more.`
+export async function addHeroImagesAction(
+  _prevState: AddHeroImagesState,
+  formData: FormData
+): Promise<AddHeroImagesState> {
+  try {
+    const supabase = createServiceRoleSupabaseClient();
+    const files = (formData.getAll("images") as File[]).filter(
+      (file) => file && file.size > 0
     );
-  }
+    if (files.length === 0) return { error: null };
 
-  // Upload and insert sequentially (not Promise.all) so sort_order reflects
-  // the order the admin arranged the previews in, not upload completion order.
-  for (let i = 0; i < files.length; i++) {
-    const imageUrl = await uploadHomepageImage(files[i], "hero");
-    if (!imageUrl) continue;
-    const { error } = await supabase.from("hero_banners").insert({
-      image_url: imageUrl,
-      sort_order: existingCount + i + 1,
-    });
-    if (error) throw new Error(error.message);
-  }
+    const { count } = await supabase
+      .from("hero_banners")
+      .select("*", { count: "exact", head: true });
+    const existingCount = count ?? 0;
 
-  revalidateHome();
+    if (existingCount + files.length > MAX_HERO_IMAGES) {
+      return {
+        error: `Maximum ${MAX_HERO_IMAGES} hero images allowed. You can add ${Math.max(0, MAX_HERO_IMAGES - existingCount)} more.`,
+      };
+    }
+
+    // Upload and insert sequentially (not Promise.all) so sort_order reflects
+    // the order the admin arranged the previews in, not upload completion order.
+    for (let i = 0; i < files.length; i++) {
+      const imageUrl = await uploadHomepageImage(files[i], "hero");
+      if (!imageUrl) continue;
+      const { error } = await supabase.from("hero_banners").insert({
+        image_url: imageUrl,
+        sort_order: existingCount + i + 1,
+      });
+      if (error) return { error: error.message };
+    }
+
+    revalidateHome();
+    return { error: null };
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Couldn't upload images." };
+  }
 }
 
 export async function deleteHeroImageAction(formData: FormData) {

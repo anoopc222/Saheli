@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import {
   addHeroImagesAction,
   deleteHeroImageAction,
   reorderHeroImagesAction,
+  type AddHeroImagesState,
 } from "@/lib/hero-actions";
 import { ConfirmSubmitButton } from "@/components/admin/ConfirmSubmitButton";
 import { compressImageFile } from "@/lib/client-image-compression";
@@ -32,15 +33,17 @@ function UploadButton({ count }: { count: number }) {
   );
 }
 
+const initialAddState: AddHeroImagesState = { error: null };
+
 export function HeroImagesManager({ images }: { images: HeroBanner[] }) {
   const [order, setOrder] = useState(images);
   const [prevImages, setPrevImages] = useState(images);
   const [pending, setPending] = useState<PendingImage[]>([]);
   const [isCompressing, setIsCompressing] = useState(false);
   const [reorderError, setReorderError] = useState<string | null>(null);
-  const [addError, setAddError] = useState<string | null>(null);
+  const [addState, formAction] = useActionState(addHeroImagesAction, initialAddState);
+  const isFirstAddState = useRef(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const formRef = useRef<HTMLFormElement>(null);
   const dragIndex = useRef<number | null>(null);
   const pendingDragIndex = useRef<number | null>(null);
 
@@ -58,6 +61,20 @@ export function HeroImagesManager({ images }: { images: HeroBanner[] }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Once a submitted batch finishes without error, clear the pending
+  // previews — the server-revalidated `images` prop now includes them.
+  useEffect(() => {
+    if (isFirstAddState.current) {
+      isFirstAddState.current = false;
+      return;
+    }
+    if (!addState.error) {
+      pending.forEach((img) => URL.revokeObjectURL(img.previewUrl));
+      setPending([]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [addState]);
+
   const remainingSlots = Math.max(0, MAX_HERO_IMAGES - order.length - pending.length);
 
   function syncFileInput(images: PendingImage[]) {
@@ -68,7 +85,6 @@ export function HeroImagesManager({ images }: { images: HeroBanner[] }) {
 
   async function handleFilesSelected(selected: FileList | null) {
     if (!selected || selected.length === 0) return;
-    setAddError(null);
     const picked = Array.from(selected).slice(0, remainingSlots);
 
     setIsCompressing(true);
@@ -187,9 +203,9 @@ export function HeroImagesManager({ images }: { images: HeroBanner[] }) {
           : `${order.length}/${MAX_HERO_IMAGES} images · drag to reorder · rotates every 8s on the homepage.`}
       </p>
 
-      {addError && (
+      {addState.error && (
         <div className="mt-3 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">
-          {addError}
+          {addState.error}
         </div>
       )}
 
@@ -229,20 +245,7 @@ export function HeroImagesManager({ images }: { images: HeroBanner[] }) {
             ))}
           </div>
 
-          <form
-            ref={formRef}
-            action={async (formData) => {
-              try {
-                await addHeroImagesAction(formData);
-                pending.forEach((img) => URL.revokeObjectURL(img.previewUrl));
-                setPending([]);
-                setAddError(null);
-              } catch (err) {
-                setAddError(err instanceof Error ? err.message : "Couldn't upload images.");
-              }
-            }}
-            className="mt-3"
-          >
+          <form action={formAction} className="mt-3">
             <input ref={fileInputRef} type="file" name="images" multiple className="hidden" />
             <UploadButton count={pending.length} />
           </form>
