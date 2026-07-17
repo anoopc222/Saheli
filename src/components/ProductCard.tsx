@@ -11,34 +11,36 @@ export function ProductCard({ product }: { product: Product }) {
   const { addItem } = useCart();
 
   return (
-    <div className="flex flex-col overflow-hidden rounded-xl border border-brand-line bg-white/60 transition-shadow hover:shadow-lg dark:bg-white/5">
+    <div className="group flex flex-col overflow-hidden rounded-2xl border border-line bg-paper-raised shadow-sm transition-shadow hover:shadow-md">
       <Link href={`/product/${product.id}`} className="relative block">
         <ProductBadge badge={product.badge} />
-        <div className="aspect-[3/4] w-full overflow-hidden bg-brand-line">
+        <div className="aspect-[3/4] w-full overflow-hidden bg-line">
           {product.image_url && (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={product.image_url}
               alt={product.name}
-              className="h-full w-full object-cover transition-transform duration-300 hover:scale-105"
+              className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
             />
           )}
         </div>
       </Link>
-      <div className="flex flex-1 flex-col gap-1.5 p-4">
+      <div className="flex flex-1 flex-col gap-1.5 p-3.5">
         <Link href={`/product/${product.id}`}>
-          <h3 className="font-medium leading-snug">{product.name}</h3>
+          <h3 className="text-sm font-medium leading-snug text-ink">
+            {product.name}
+          </h3>
         </Link>
-        <p className="text-xs uppercase tracking-wide text-brand-maroon-dark/60">
+        <p className="text-[11px] uppercase tracking-wide text-ink-muted">
           {product.fabric}
         </p>
         <RatingStars rating={product.rating} count={product.rating_count} />
-        <div className="mt-1 flex items-baseline gap-2">
-          <p className="font-semibold text-brand-maroon">
+        <div className="mt-0.5 flex items-baseline gap-2">
+          <p className="font-semibold tabular-nums text-accent">
             {formatPrice(product.price_cents)}
           </p>
           {product.compare_at_price_cents && (
-            <p className="text-sm text-brand-maroon-dark/40 line-through">
+            <p className="text-xs tabular-nums text-ink-muted line-through">
               {formatPrice(product.compare_at_price_cents)}
             </p>
           )}
@@ -46,7 +48,7 @@ export function ProductCard({ product }: { product: Product }) {
         <button
           onClick={() => addItem(product)}
           disabled={product.stock <= 0}
-          className="mt-3 rounded-md bg-brand-maroon px-3 py-2 text-sm font-medium text-brand-cream transition-colors hover:bg-brand-maroon-dark disabled:opacity-40"
+          className="mt-2 rounded-full bg-ink px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-accent disabled:opacity-40"
         >
           {product.stock > 0 ? "Add to cart" : "Out of stock"}
         </button>

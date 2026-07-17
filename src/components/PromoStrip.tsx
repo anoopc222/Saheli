@@ -6,12 +6,15 @@ const ITEMS = [
 
 export function PromoStrip() {
   return (
-    <div className="border-b border-brand-line bg-brand-maroon">
-      <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-x-8 gap-y-1 px-4 py-2 text-xs font-medium tracking-wide text-brand-cream/90">
-        {ITEMS.map((item) => (
-          <span key={item}>{item}</span>
-        ))}
-      </div>
+    <div className="mx-auto flex max-w-[480px] items-center gap-2 overflow-x-auto px-4 pb-5 text-xs font-medium text-ink-muted [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      {ITEMS.map((item) => (
+        <span
+          key={item}
+          className="shrink-0 whitespace-nowrap rounded-full border border-line bg-paper-raised px-3.5 py-1.5"
+        >
+          {item}
+        </span>
+      ))}
     </div>
   );
 }

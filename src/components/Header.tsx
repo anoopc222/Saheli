@@ -2,35 +2,36 @@
 
 import Link from "next/link";
 import { useCart } from "@/lib/cart-context";
+import { BagIcon } from "@/components/icons";
 
 export function Header() {
   const { totalItems } = useCart();
 
   return (
-    <header className="border-b border-brand-line bg-brand-cream/90 backdrop-blur">
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-5">
-        <Link href="/" className="font-serif text-2xl font-semibold tracking-wide text-brand-maroon">
-          Saheli Sarees
+    <header className="sticky top-0 z-30 border-b border-line bg-paper/95 backdrop-blur">
+      <div className="mx-auto flex max-w-[480px] items-center justify-between px-4 py-3.5">
+        <Link href="/" className="flex items-center gap-2.5">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/logo.jpg"
+            alt="Saheli"
+            className="h-9 w-9 rounded-full object-cover"
+          />
+          <span className="font-heading text-lg font-semibold text-ink">
+            Saheli
+          </span>
         </Link>
-        <nav className="hidden items-center gap-6 text-sm font-medium text-brand-maroon-dark/80 sm:flex">
-          <Link href="/" className="hover:text-brand-maroon">
-            All Sarees
-          </Link>
-          <Link href="/?filter=new" className="hover:text-brand-maroon">
-            New Arrivals
-          </Link>
-          <Link href="/?filter=sale" className="hover:text-brand-maroon">
-            Sale
-          </Link>
-        </nav>
         <Link
           href="/cart"
-          className="flex items-center gap-2 rounded-full border border-brand-line px-3 py-1.5 text-sm font-medium text-brand-maroon-dark"
+          aria-label="Cart"
+          className="relative flex h-10 w-10 items-center justify-center rounded-full border border-line text-ink transition-colors hover:border-accent hover:bg-accent-soft"
         >
-          Cart
-          <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-maroon px-1.5 text-xs text-brand-cream">
-            {totalItems}
-          </span>
+          <BagIcon className="h-4.5 w-4.5" />
+          {totalItems > 0 && (
+            <span className="absolute -right-1 -top-1 flex h-4.5 min-w-4.5 items-center justify-center rounded-full bg-accent px-1 text-[10px] font-semibold text-white">
+              {totalItems}
+            </span>
+          )}
         </Link>
       </div>
     </header>

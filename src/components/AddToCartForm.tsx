@@ -11,14 +11,28 @@ export function AddToCartForm({ product }: { product: Product }) {
 
   return (
     <div className="mt-6 flex items-center gap-3">
-      <input
-        type="number"
-        min={1}
-        max={Math.max(product.stock, 1)}
-        value={quantity}
-        onChange={(e) => setQuantity(Number(e.target.value) || 1)}
-        className="w-16 rounded-md border border-brand-line px-2 py-2 text-sm"
-      />
+      <div className="flex items-center gap-1 rounded-full border border-line">
+        <button
+          type="button"
+          onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+          aria-label="Decrease quantity"
+          className="flex h-9 w-9 items-center justify-center rounded-full text-ink transition-colors hover:bg-accent-soft hover:text-accent"
+        >
+          &minus;
+        </button>
+        <span className="w-6 text-center text-sm tabular-nums">{quantity}</span>
+        <button
+          type="button"
+          onClick={() =>
+            setQuantity((q) => Math.min(Math.max(product.stock, 1), q + 1))
+          }
+          disabled={quantity >= product.stock}
+          aria-label="Increase quantity"
+          className="flex h-9 w-9 items-center justify-center rounded-full text-ink transition-colors hover:bg-accent-soft hover:text-accent disabled:opacity-30"
+        >
+          +
+        </button>
+      </div>
       <button
         onClick={() => {
           addItem(product, quantity);
@@ -26,7 +40,7 @@ export function AddToCartForm({ product }: { product: Product }) {
           setTimeout(() => setAdded(false), 1500);
         }}
         disabled={product.stock <= 0}
-        className="rounded-md bg-brand-maroon px-4 py-2 text-sm font-medium text-brand-cream transition-colors hover:bg-brand-maroon-dark disabled:opacity-40"
+        className="flex-1 rounded-full bg-ink px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-accent disabled:opacity-40"
       >
         {product.stock <= 0 ? "Out of stock" : added ? "Added!" : "Add to cart"}
       </button>

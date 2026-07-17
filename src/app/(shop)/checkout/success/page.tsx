@@ -11,20 +11,20 @@ export default async function CheckoutSuccessPage({
   return (
     <div className="mx-auto max-w-2xl px-4 py-16 text-center">
       <ClearCartOnLoad />
-      <h1 className="font-serif text-2xl font-semibold text-brand-maroon">
+      <h1 className="font-heading text-2xl font-semibold text-ink">
         Payment successful
       </h1>
-      <p className="mt-3 text-brand-maroon-dark/60">
+      <p className="mt-3 text-ink-muted">
         Thanks for your order! A confirmation has been recorded.
       </p>
       {session_id && (
-        <p className="mt-1 text-xs text-brand-maroon-dark/40">
+        <p className="mt-1 text-xs text-ink-muted/70">
           Session: {session_id}
         </p>
       )}
       <Link
         href="/"
-        className="mt-6 inline-block rounded-md bg-brand-maroon px-4 py-2 text-sm font-medium text-brand-cream hover:bg-brand-maroon-dark"
+        className="mt-6 inline-block rounded-full bg-ink px-5 py-2.5 text-sm font-medium text-white hover:bg-accent"
       >
         Continue shopping
       </Link>
