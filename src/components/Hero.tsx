@@ -16,55 +16,20 @@ export function Hero({ images }: { images: string[] }) {
     return () => clearInterval(interval);
   }, [images.length]);
 
-  return (
-    <section className="relative mx-auto max-w-[480px] overflow-hidden">
-      {hasImages && (
-        <div className="relative aspect-[4/5] w-full bg-line">
-          {images.map((url, i) => (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              key={url}
-              src={url}
-              alt=""
-              className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ${
-                i === index ? "opacity-100" : "opacity-0"
-              }`}
-            />
-          ))}
-          <div className="absolute inset-0 bg-gradient-to-t from-ink/70 via-ink/10 to-transparent" />
-        </div>
-      )}
-
-      <div
-        className={
-          hasImages
-            ? "absolute inset-x-0 bottom-8 px-6 text-center text-white"
-            : "mx-auto max-w-[480px] px-4 pb-6 pt-8 text-center"
-        }
-      >
-        <p
-          className={`text-xs font-medium uppercase tracking-[0.2em] ${
-            hasImages ? "text-white/90" : "text-accent"
-          }`}
-        >
+  if (!hasImages) {
+    return (
+      <section className="mx-auto max-w-[480px] px-4 pb-6 pt-8 text-center">
+        <p className="text-xs font-medium uppercase tracking-[0.2em] text-accent">
           Handloom &amp; silk, made with care
         </p>
         <h1 className="mt-3 font-heading text-[2.75rem] font-semibold leading-[1.05]">
           Sarees for
           <br />
-          <span
-            className={`font-script text-[3.25rem] font-normal leading-none ${
-              hasImages ? "text-white" : "text-accent"
-            }`}
-          >
+          <span className="font-script text-[3.25rem] font-normal leading-none text-accent">
             every occasion
           </span>
         </h1>
-        <p
-          className={`mx-auto mt-4 max-w-[300px] text-sm leading-relaxed ${
-            hasImages ? "text-white/85" : "text-ink-muted"
-          }`}
-        >
+        <p className="mx-auto mt-4 max-w-[300px] text-sm leading-relaxed text-ink-muted">
           Cotton, silk, linen and georgette — curated for everyday wear and
           special occasions alike.
         </p>
@@ -74,9 +39,27 @@ export function Hero({ images }: { images: string[] }) {
         >
           Shop the collection
         </a>
+      </section>
+    );
+  }
+
+  return (
+    <section className="relative mx-auto max-w-[480px] overflow-hidden">
+      <div className="relative aspect-[4/5] w-full bg-line">
+        {images.map((url, i) => (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            key={url}
+            src={url}
+            alt=""
+            className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ${
+              i === index ? "opacity-100" : "opacity-0"
+            }`}
+          />
+        ))}
       </div>
 
-      {hasImages && images.length > 1 && (
+      {images.length > 1 && (
         <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 gap-1.5">
           {images.map((_, i) => (
             <button
@@ -84,8 +67,8 @@ export function Hero({ images }: { images: string[] }) {
               type="button"
               onClick={() => setIndex(i)}
               aria-label={`Show slide ${i + 1}`}
-              className={`h-1.5 rounded-full transition-all ${
-                i === index ? "w-4 bg-white" : "w-1.5 bg-white/50"
+              className={`h-1.5 rounded-full shadow-sm transition-all ${
+                i === index ? "w-4 bg-white" : "w-1.5 bg-white/60"
               }`}
             />
           ))}
