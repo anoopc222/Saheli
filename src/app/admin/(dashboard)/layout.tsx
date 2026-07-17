@@ -19,6 +19,9 @@ export default function AdminDashboardLayout({
           <Link href="/admin/categories" className="text-sm text-ink-muted hover:text-accent">
             Categories
           </Link>
+          <Link href="/admin/homepage" className="text-sm text-ink-muted hover:text-accent">
+            Homepage
+          </Link>
         </div>
         <form action={logoutAction}>
           <button type="submit" className="text-sm text-accent hover:underline">

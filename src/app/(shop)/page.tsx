@@ -2,8 +2,10 @@ import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { Product } from "@/types/product";
 import { ProductCard } from "@/components/ProductCard";
 import { Hero } from "@/components/Hero";
+import { IconFeatureRow } from "@/components/IconFeatureRow";
 import { PromoStrip } from "@/components/PromoStrip";
 import { getCategories } from "@/lib/categories-data";
+import { getHeroBanners, getActivePromoBanner } from "@/lib/homepage-data";
 
 const FILTER_LABELS: Record<string, string> = {
   new: "New Arrivals",
@@ -30,7 +32,11 @@ export default async function Home({
     query = query.eq("badge", filter);
   }
 
-  const { data: products, error } = await query.returns<Product[]>();
+  const [{ data: products, error }, heroImages, activePromo] = await Promise.all([
+    query.returns<Product[]>(),
+    getHeroBanners(),
+    getActivePromoBanner(),
+  ]);
 
   if (error) {
     return (
@@ -55,8 +61,9 @@ export default async function Home({
 
   return (
     <div>
-      <Hero />
-      <PromoStrip />
+      <Hero images={heroImages.map((h) => h.image_url)} />
+      <IconFeatureRow />
+      <PromoStrip promo={activePromo} />
       <div id="shop" className="mx-auto max-w-[480px] scroll-mt-16 px-4 pb-8 pt-2">
         <div className="mb-4 flex items-baseline justify-between">
           <h2 className="font-heading text-xl font-semibold text-ink">
