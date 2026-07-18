@@ -22,6 +22,7 @@ export default function WishlistPage() {
       const { data } = await supabase
         .from("products")
         .select("*")
+        .eq("show_on_store", true)
         .in("id", ids)
         .returns<Product[]>();
       if (!cancelled) setProducts(data ?? []);

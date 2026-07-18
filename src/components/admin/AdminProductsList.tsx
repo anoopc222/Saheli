@@ -3,8 +3,9 @@
 import { useState } from "react";
 import Link from "next/link";
 import { formatPrice } from "@/lib/format";
-import { deleteProductAction } from "@/lib/product-actions";
+import { deleteProductAction, setProductVisibilityAction } from "@/lib/product-actions";
 import { ConfirmSubmitButton } from "@/components/admin/ConfirmSubmitButton";
+import { VisibilityToggle } from "@/components/admin/VisibilityToggle";
 import { Product } from "@/types/product";
 import { CategoryRow } from "@/lib/categories-data";
 import { PencilIcon, TrashIcon } from "@/components/icons";
@@ -77,7 +78,9 @@ export function AdminProductsList({
           {filtered.map((product) => (
             <div
               key={product.id}
-              className="flex items-center justify-between gap-3 rounded-xl border border-line bg-paper-raised p-3"
+              className={`flex items-center justify-between gap-3 rounded-xl border border-line bg-paper-raised p-3 transition-opacity ${
+                product.show_on_store ? "" : "opacity-50"
+              }`}
             >
               <div className="flex items-center gap-3">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -87,7 +90,14 @@ export function AdminProductsList({
                   className="h-14 w-11 rounded-lg object-cover bg-line"
                 />
                 <div>
-                  <p className="text-sm font-medium text-ink">{product.name}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-medium text-ink">{product.name}</p>
+                    {!product.show_on_store && (
+                      <span className="shrink-0 rounded-full bg-line px-2 py-0.5 text-[11px] font-medium text-ink-muted">
+                        Hidden
+                      </span>
+                    )}
+                  </div>
                   {product.product_code && (
                     <p className="text-xs text-ink-muted">{product.product_code}</p>
                   )}
@@ -105,7 +115,14 @@ export function AdminProductsList({
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-1">
+              <div className="flex shrink-0 items-center gap-1">
+                <VisibilityToggle
+                  id={product.id}
+                  checked={product.show_on_store}
+                  action={setProductVisibilityAction}
+                  label={`Show ${product.name} on store`}
+                  field="show_on_store"
+                />
                 <Link
                   href={`/admin/products/${product.id}/edit`}
                   aria-label={`Edit ${product.name}`}

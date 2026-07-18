@@ -46,7 +46,7 @@ export default async function Home({
     getMenuItems(),
   ]);
 
-  let query = supabase.from("products").select("*");
+  let query = supabase.from("products").select("*").eq("show_on_store", true);
 
   if (fabric) {
     query = query.eq("fabric", fabric);

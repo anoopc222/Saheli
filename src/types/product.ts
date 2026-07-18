@@ -18,4 +18,5 @@ export type Product = {
   category_id: string | null;
   subcategory_id: string | null;
   tags: string[];
+  show_on_store: boolean;
 };

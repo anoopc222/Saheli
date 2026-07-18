@@ -16,7 +16,7 @@ export default async function CategoriesPage({
   await sweepExpiredNewBadges();
   const supabase = createBrowserSupabaseClient();
 
-  let query = supabase.from("products").select("*");
+  let query = supabase.from("products").select("*").eq("show_on_store", true);
   if (sort === "price_asc") {
     query = query.order("price_cents", { ascending: true });
   } else if (sort === "price_desc") {

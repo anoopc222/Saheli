@@ -22,7 +22,7 @@ export default async function ProductPage({
     .eq("id", id)
     .maybeSingle<Product>();
 
-  if (error || !product) {
+  if (error || !product || !product.show_on_store) {
     notFound();
   }
 
@@ -30,7 +30,7 @@ export default async function ProductPage({
     <div className="mx-auto max-w-[480px] px-4 py-6">
       <div className="flex flex-col gap-6">
         <div className="relative aspect-[3/4] w-full overflow-hidden rounded-2xl bg-line">
-          <ProductBadge badge={product.badge} />
+          <ProductBadge badge={product.badge} stock={product.stock} />
           <ProductGallery
             images={
               product.image_urls?.length

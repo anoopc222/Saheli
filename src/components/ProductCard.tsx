@@ -22,7 +22,7 @@ export function ProductCard({ product }: { product: Product }) {
   return (
     <div className="group flex flex-col overflow-hidden rounded-md border border-line bg-paper-raised shadow-sm transition-shadow hover:shadow-md">
       <Link href={`/product/${product.id}`} className="relative block">
-        <ProductBadge badge={product.badge} />
+        <ProductBadge badge={product.badge} stock={product.stock} />
         <button
           type="button"
           onClick={(e) => {
@@ -76,7 +76,7 @@ export function ProductCard({ product }: { product: Product }) {
           disabled={product.stock <= 0}
           className="mt-2 rounded-md bg-brand px-3 py-2 text-xs font-medium text-white transition-colors hover:bg-brand-dark disabled:opacity-40"
         >
-          {product.stock > 0 ? "Add to cart" : "Out of stock"}
+          {product.stock > 0 ? "Add to cart" : "Sold Out"}
         </button>
       </div>
     </div>

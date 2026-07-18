@@ -42,7 +42,7 @@ export function AddToCartForm({ product }: { product: Product }) {
         disabled={product.stock <= 0}
         className="flex-1 rounded-full bg-ink px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-accent disabled:opacity-40"
       >
-        {product.stock <= 0 ? "Out of stock" : added ? "Added!" : "Add to cart"}
+        {product.stock <= 0 ? "Sold Out" : added ? "Added!" : "Add to cart"}
       </button>
     </div>
   );

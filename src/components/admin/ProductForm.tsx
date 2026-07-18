@@ -101,6 +101,7 @@ export function ProductForm({
     categories.find((c) => c.id === categoryId)?.subcategories ?? [];
 
   const [priceError, setPriceError] = useState<string | null>(null);
+  const [showOnStore, setShowOnStore] = useState(product?.show_on_store ?? true);
 
   const [costPrice, setCostPrice] = useState(
     product?.cost_price_cents ? product.cost_price_cents / 100 : 0
@@ -390,6 +391,30 @@ export function ProductForm({
             required
             className={inputClasses}
           />
+        </div>
+        <div className="flex items-center justify-between rounded-xl border border-line bg-paper px-3 py-2.5">
+          <div>
+            <p className="text-sm font-medium text-ink">Show on store</p>
+            <p className="text-xs text-ink-muted">
+              Turn off to hide this product from customers without deleting it.
+            </p>
+          </div>
+          <input type="hidden" name="show_on_store" value={showOnStore.toString()} />
+          <button
+            type="button"
+            role="switch"
+            aria-checked={showOnStore}
+            onClick={() => setShowOnStore((prev) => !prev)}
+            className={`relative inline-block h-6 w-11 shrink-0 rounded-full p-0 transition-colors ${
+              showOnStore ? "bg-accent" : "bg-line"
+            }`}
+          >
+            <span
+              className={`absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${
+                showOnStore ? "translate-x-5" : "translate-x-0"
+              }`}
+            />
+          </button>
         </div>
       </Section>
 

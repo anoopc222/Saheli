@@ -54,6 +54,7 @@ function parseProductFields(formData: FormData) {
     category_id: (formData.get("category_id") as string) || null,
     subcategory_id: (formData.get("subcategory_id") as string) || null,
     tags,
+    show_on_store: formData.get("show_on_store") === "true",
   };
 }
 
@@ -109,6 +110,21 @@ export async function updateProductAction(
   revalidatePath("/");
   revalidatePath("/categories");
   redirect("/admin/products");
+}
+
+export async function setProductVisibilityAction(formData: FormData) {
+  const id = String(formData.get("id"));
+  const showOnStore = formData.get("show_on_store") === "true";
+  const supabase = createServiceRoleSupabaseClient();
+  const { error } = await supabase
+    .from("products")
+    .update({ show_on_store: showOnStore })
+    .eq("id", id);
+  if (error) throw new Error(error.message);
+
+  revalidatePath("/admin/products");
+  revalidatePath("/");
+  revalidatePath("/categories");
 }
 
 export async function deleteProductAction(formData: FormData) {

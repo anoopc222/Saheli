@@ -32,6 +32,7 @@ export default function SearchPage() {
       const { data } = await supabase
         .from("products")
         .select("*")
+        .eq("show_on_store", true)
         .or(`name.ilike.%${term}%,fabric.ilike.%${term}%`)
         .returns<Product[]>();
       if (!cancelled) {
