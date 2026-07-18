@@ -6,6 +6,7 @@ import { AddToCartForm } from "@/components/AddToCartForm";
 import { ProductBadge } from "@/components/ProductBadge";
 import { ProductGallery } from "@/components/ProductGallery";
 import { RatingStars } from "@/components/RatingStars";
+import { sweepExpiredNewBadges } from "@/lib/badge-sweep";
 
 export default async function ProductPage({
   params,
@@ -13,6 +14,7 @@ export default async function ProductPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  await sweepExpiredNewBadges();
   const supabase = createBrowserSupabaseClient();
   const { data: product, error } = await supabase
     .from("products")

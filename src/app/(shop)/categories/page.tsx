@@ -3,6 +3,7 @@ import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { Product } from "@/types/product";
 import { ProductCard } from "@/components/ProductCard";
 import { SortSelect } from "@/components/SortSelect";
+import { sweepExpiredNewBadges } from "@/lib/badge-sweep";
 
 export const dynamic = "force-dynamic";
 
@@ -12,6 +13,7 @@ export default async function CategoriesPage({
   searchParams: Promise<{ sort?: string }>;
 }) {
   const { sort } = await searchParams;
+  await sweepExpiredNewBadges();
   const supabase = createBrowserSupabaseClient();
 
   let query = supabase.from("products").select("*");

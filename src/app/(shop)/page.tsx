@@ -12,6 +12,7 @@ import { getCategories, getMainCategories } from "@/lib/categories-data";
 import { getHeroBanners, getActivePromoBanner } from "@/lib/homepage-data";
 import { getFeatureItems, getFeatureRowSettings } from "@/lib/feature-items-data";
 import { getMenuItems } from "@/lib/menu-items-data";
+import { sweepExpiredNewBadges } from "@/lib/badge-sweep";
 
 const FILTER_LABELS: Record<string, string> = {
   new: "New Arrivals",
@@ -32,6 +33,7 @@ export default async function Home({
   }>;
 }) {
   const { filter, fabric, category, main_category: mainCategoryId, tag, sort } = await searchParams;
+  await sweepExpiredNewBadges();
   const supabase = createBrowserSupabaseClient();
 
   const hasFilter = Boolean(
