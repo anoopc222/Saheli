@@ -21,11 +21,13 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
       <Suspense fallback={null}>
         <BottomNav />
       </Suspense>
-      <NavDrawer
-        menuTree={menuTree}
-        onamHref={activePromo?.button_link || "/"}
-        menuItems={menuItems}
-      />
+      <Suspense fallback={null}>
+        <NavDrawer
+          menuTree={menuTree}
+          onamHref={activePromo?.button_link || "/"}
+          menuItems={menuItems}
+        />
+      </Suspense>
     </NavDrawerProvider>
   );
 }

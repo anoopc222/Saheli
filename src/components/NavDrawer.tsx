@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useNavDrawer } from "@/lib/nav-drawer-context";
 import { MenuMainCategory } from "@/lib/categories-data";
 import { MenuItemRow } from "@/lib/menu-items-data";
@@ -38,6 +39,38 @@ const SHOP_ICONS: Record<string, IconComponent> = {
   "kids-wear": KidsIcon,
 };
 
+type ActivePath = { mainId: string | null; categoryId: string | null; subId: string | null };
+
+// The one item that matches the page currently being viewed, so the drawer
+// can highlight exactly that and auto-reveal it, rather than relying on
+// whatever the user last happened to tap open.
+function resolveActivePath(
+  menuTree: MenuMainCategory[],
+  fabric: string | null,
+  categoryParam: string | null,
+  mainCategoryParam: string | null
+): ActivePath {
+  if (fabric) {
+    for (const mainCategory of menuTree) {
+      for (const category of mainCategory.categories) {
+        const sub = category.subcategories.find((s) => s.fabric === fabric);
+        if (sub) return { mainId: mainCategory.id, categoryId: category.id, subId: sub.id };
+      }
+    }
+  }
+  if (categoryParam) {
+    for (const mainCategory of menuTree) {
+      const category = mainCategory.categories.find((c) => c.id === categoryParam);
+      if (category) return { mainId: mainCategory.id, categoryId: category.id, subId: null };
+    }
+  }
+  if (mainCategoryParam) {
+    const mainCategory = menuTree.find((mc) => mc.id === mainCategoryParam);
+    if (mainCategory) return { mainId: mainCategory.id, categoryId: null, subId: null };
+  }
+  return { mainId: null, categoryId: null, subId: null };
+}
+
 export function NavDrawer({
   menuTree,
   onamHref,
@@ -48,9 +81,30 @@ export function NavDrawer({
   menuItems: MenuItemRow[];
 }) {
   const { isOpen, close } = useNavDrawer();
+  const searchParams = useSearchParams();
   const [shopOpen, setShopOpen] = useState(true);
   const [expandedMainId, setExpandedMainId] = useState<string | null>(null);
   const [expandedCategoryId, setExpandedCategoryId] = useState<string | null>(null);
+
+  const activePath = resolveActivePath(
+    menuTree,
+    searchParams.get("fabric"),
+    searchParams.get("category"),
+    searchParams.get("main_category")
+  );
+
+  // Auto-reveal whichever section matches the page currently being viewed,
+  // so opening the drawer doesn't require digging back down to it by hand.
+  // Adjusted during render (not in an effect) so it takes effect on the same
+  // paint instead of causing an extra one.
+  const [revealedKey, setRevealedKey] = useState<string | null>(null);
+  const activeKey = activePath.mainId ? `${activePath.mainId}|${activePath.categoryId}` : null;
+  if (activeKey && activeKey !== revealedKey) {
+    setRevealedKey(activeKey);
+    setShopOpen(true);
+    setExpandedMainId(activePath.mainId);
+    setExpandedCategoryId(activePath.categoryId);
+  }
 
   const onamItem = menuItems.find((item) => item.key === "onam");
   const newArrivalsItem = menuItems.find((item) => item.key === "new_arrivals");
@@ -94,27 +148,18 @@ export function NavDrawer({
           <NavLink href="/" icon={<HomeIcon className="h-5 w-5" />} label="Home" onClick={close} />
 
           <div className="border-b border-line">
-            {(() => {
-              const shopIsActive = shopOpen && expandedMainId === null;
-              return (
-                <button
-                  type="button"
-                  onClick={() => setShopOpen((v) => !v)}
-                  className={`flex w-full items-center justify-between gap-3 py-3.5 text-sm font-medium transition-colors ${
-                    shopIsActive ? "text-accent" : "text-ink"
-                  }`}
-                >
-                  <span className="flex items-center gap-3">
-                    <BagIcon className={`h-5 w-5 ${shopIsActive ? "text-accent" : "text-ink-muted"}`} /> Shop
-                  </span>
-                  <ChevronDownIcon
-                    className={`h-4 w-4 transition-transform ${
-                      shopOpen ? "rotate-180" : ""
-                    } ${shopIsActive ? "text-accent" : "text-ink-muted"}`}
-                  />
-                </button>
-              );
-            })()}
+            <button
+              type="button"
+              onClick={() => setShopOpen((v) => !v)}
+              className="flex w-full items-center justify-between gap-3 py-3.5 text-sm font-medium text-ink"
+            >
+              <span className="flex items-center gap-3">
+                <BagIcon className="h-5 w-5 text-ink-muted" /> Shop
+              </span>
+              <ChevronDownIcon
+                className={`h-4 w-4 text-ink-muted transition-transform ${shopOpen ? "rotate-180" : ""}`}
+              />
+            </button>
             {shopOpen && (
               <div className="flex flex-col gap-0.5 pb-2 pl-6">
                 {menuTree.length === 0 ? (
@@ -123,7 +168,8 @@ export function NavDrawer({
                   menuTree.map((mainCategory) => {
                     const Icon = SHOP_ICONS[mainCategory.slug] ?? TagIcon;
                     const isExpanded = expandedMainId === mainCategory.id;
-                    const isActive = isExpanded && expandedCategoryId === null;
+                    const isActive =
+                      activePath.mainId === mainCategory.id && activePath.categoryId === null;
                     return (
                       <div key={mainCategory.id}>
                         <button
@@ -159,6 +205,8 @@ export function NavDrawer({
                             ) : (
                               mainCategory.categories.map((category) => {
                                 const isCatExpanded = expandedCategoryId === category.id;
+                                const isCatActive =
+                                  activePath.categoryId === category.id && activePath.subId === null;
                                 return (
                                   <div key={category.id}>
                                     <button
@@ -167,14 +215,14 @@ export function NavDrawer({
                                         setExpandedCategoryId(isCatExpanded ? null : category.id)
                                       }
                                       className={`flex w-full items-center justify-between gap-3 py-1 text-sm font-medium transition-colors hover:text-accent ${
-                                        isCatExpanded ? "text-accent" : "text-ink"
+                                        isCatActive ? "text-accent" : "text-ink"
                                       }`}
                                     >
                                       <span>{category.name}</span>
                                       <ChevronDownIcon
                                         className={`h-3 w-3 transition-transform ${
-                                          isCatExpanded ? "rotate-180 text-accent" : "text-ink-muted"
-                                        }`}
+                                          isCatExpanded ? "rotate-180" : ""
+                                        } ${isCatActive ? "text-accent" : "text-ink-muted"}`}
                                       />
                                     </button>
                                     {isCatExpanded && (
@@ -188,16 +236,21 @@ export function NavDrawer({
                                         </Link>
                                         {category.subcategories.length > 0 && (
                                           <div className="flex flex-col gap-2">
-                                            {category.subcategories.map((sub) => (
-                                              <Link
-                                                key={sub.id}
-                                                href={`/?fabric=${encodeURIComponent(sub.fabric)}`}
-                                                onClick={close}
-                                                className="text-xs text-ink transition-colors hover:text-accent"
-                                              >
-                                                {sub.name}
-                                              </Link>
-                                            ))}
+                                            {category.subcategories.map((sub) => {
+                                              const isSubActive = activePath.subId === sub.id;
+                                              return (
+                                                <Link
+                                                  key={sub.id}
+                                                  href={`/?fabric=${encodeURIComponent(sub.fabric)}`}
+                                                  onClick={close}
+                                                  className={`text-xs transition-colors hover:text-accent ${
+                                                    isSubActive ? "font-semibold text-accent" : "text-ink"
+                                                  }`}
+                                                >
+                                                  {sub.name}
+                                                </Link>
+                                              );
+                                            })}
                                           </div>
                                         )}
                                       </div>
