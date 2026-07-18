@@ -13,6 +13,8 @@ function revalidateHome() {
 
 export type AddHeroImagesState = { error: string | null };
 
+type HeroRow = { id: string; image_url: string; sort_order: number; created_at: string };
+
 export async function addHeroImagesAction(
   _prevState: AddHeroImagesState,
   formData: FormData
@@ -24,27 +26,37 @@ export async function addHeroImagesAction(
     );
     if (files.length === 0) return { error: null };
 
-    const { count } = await supabase
+    const { data: existing } = await supabase
       .from("hero_banners")
-      .select("*", { count: "exact", head: true });
-    const existingCount = count ?? 0;
+      .select("id, image_url, sort_order, created_at")
+      .order("created_at", { ascending: true })
+      .returns<HeroRow[]>();
+    const current = existing ?? [];
+    let maxSortOrder = current.reduce((max, row) => Math.max(max, row.sort_order), 0);
 
-    if (existingCount + files.length > MAX_HERO_IMAGES) {
-      return {
-        error: `Maximum ${MAX_HERO_IMAGES} hero images allowed. You can add ${Math.max(0, MAX_HERO_IMAGES - existingCount)} more.`,
-      };
-    }
-
-    // Upload and insert sequentially (not Promise.all) so sort_order reflects
-    // the order the admin arranged the previews in, not upload completion order.
-    for (let i = 0; i < files.length; i++) {
-      const imageUrl = await uploadHomepageImage(files[i], "hero");
+    for (const file of files) {
+      // Upload first, before touching any existing row — if this fails, an
+      // existing hero image should never be evicted for nothing.
+      const imageUrl = await uploadHomepageImage(file, "hero");
       if (!imageUrl) continue;
-      const { error } = await supabase.from("hero_banners").insert({
-        image_url: imageUrl,
-        sort_order: existingCount + i + 1,
-      });
+
+      // Now that the replacement is safely uploaded, keep a rolling cap of
+      // MAX_HERO_IMAGES by dropping the oldest hero image if needed.
+      while (current.length >= MAX_HERO_IMAGES) {
+        const oldest = current.shift();
+        if (!oldest) break;
+        await supabase.from("hero_banners").delete().eq("id", oldest.id);
+        await deleteHomepageImage(oldest.image_url);
+      }
+
+      maxSortOrder += 1;
+      const { data: inserted, error } = await supabase
+        .from("hero_banners")
+        .insert({ image_url: imageUrl, sort_order: maxSortOrder })
+        .select("id, image_url, sort_order, created_at")
+        .single<HeroRow>();
       if (error) return { error: error.message };
+      if (inserted) current.push(inserted);
     }
 
     revalidateHome();

@@ -93,7 +93,12 @@ export function HeroImagesManager({ images }: { images: HeroBanner[] }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [addState]);
 
-  const remainingSlots = Math.max(0, MAX_HERO_IMAGES - order.length - pending.length);
+  // Not reduced by order.length: once at MAX_HERO_IMAGES, new uploads bump
+  // the oldest existing hero image instead of being blocked, so the admin can
+  // always queue up to a full batch of new photos regardless of how many
+  // already exist.
+  const remainingSlots = Math.max(0, MAX_HERO_IMAGES - pending.length);
+  const willEvict = Math.max(0, order.length + pending.length - MAX_HERO_IMAGES);
 
   async function handleFilesSelected(selected: FileList | null) {
     if (!selected || selected.length === 0) return;
@@ -121,7 +126,7 @@ export function HeroImagesManager({ images }: { images: HeroBanner[] }) {
           `${skipped} photo${skipped === 1 ? "" : "s"} couldn't be added — still too large after compression. Try a smaller or less detailed photo.`
         );
       }
-      setPending((prev) => [...prev, ...compressed].slice(0, MAX_HERO_IMAGES - order.length));
+      setPending((prev) => [...prev, ...compressed].slice(0, MAX_HERO_IMAGES));
     } finally {
       setIsCompressing(false);
     }
@@ -264,7 +269,7 @@ export function HeroImagesManager({ images }: { images: HeroBanner[] }) {
                   className="h-full w-full rounded-xl border border-accent object-cover"
                 />
                 <span className="absolute left-1 top-1 rounded-full bg-accent px-1.5 py-0.5 text-[10px] font-medium text-white">
-                  {order.length + index + 1}
+                  {index + 1}
                 </span>
                 {!uploading && (
                   <button
@@ -279,6 +284,13 @@ export function HeroImagesManager({ images }: { images: HeroBanner[] }) {
               </div>
             ))}
           </div>
+
+          {willEvict > 0 && (
+            <p className="mt-3 text-xs text-ink-muted">
+              You&apos;re at the {MAX_HERO_IMAGES}-image limit — uploading these will remove
+              your oldest {willEvict} hero image{willEvict === 1 ? "" : "s"} to make room.
+            </p>
+          )}
 
           {/* Hidden form submitted once per queued file — never all at once,
               to stay well under Vercel's per-request body-size ceiling. */}
