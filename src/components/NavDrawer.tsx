@@ -48,7 +48,7 @@ export function NavDrawer({
   menuItems: MenuItemRow[];
 }) {
   const { isOpen, close } = useNavDrawer();
-  const [shopOpen, setShopOpen] = useState(false);
+  const [shopOpen, setShopOpen] = useState(true);
   const [expandedMainId, setExpandedMainId] = useState<string | null>(null);
   const [expandedCategoryId, setExpandedCategoryId] = useState<string | null>(null);
 
@@ -97,13 +97,15 @@ export function NavDrawer({
             <button
               type="button"
               onClick={() => setShopOpen((v) => !v)}
-              className="flex w-full items-center justify-between gap-3 py-3.5 text-sm font-medium text-ink"
+              className={`flex w-full items-center justify-between gap-3 py-3.5 text-sm font-medium transition-colors ${
+                shopOpen ? "text-accent" : "text-ink"
+              }`}
             >
               <span className="flex items-center gap-3">
-                <BagIcon className="h-5 w-5 text-ink-muted" /> Shop
+                <BagIcon className={`h-5 w-5 ${shopOpen ? "text-accent" : "text-ink-muted"}`} /> Shop
               </span>
               <ChevronDownIcon
-                className={`h-4 w-4 text-ink-muted transition-transform ${shopOpen ? "rotate-180" : ""}`}
+                className={`h-4 w-4 transition-transform ${shopOpen ? "rotate-180 text-accent" : "text-ink-muted"}`}
               />
             </button>
             {shopOpen && (
@@ -121,15 +123,17 @@ export function NavDrawer({
                           onClick={() =>
                             setExpandedMainId(isExpanded ? null : mainCategory.id)
                           }
-                          className="flex w-full items-center justify-between gap-3 py-2 text-sm text-ink transition-colors hover:text-accent"
+                          className={`flex w-full items-center justify-between gap-3 py-2 text-sm transition-colors hover:text-accent ${
+                            isExpanded ? "text-accent" : "text-ink"
+                          }`}
                         >
                           <span className="flex items-center gap-3">
-                            <Icon className="h-4.5 w-4.5 text-ink-muted" />
+                            <Icon className={`h-4.5 w-4.5 ${isExpanded ? "text-accent" : "text-ink-muted"}`} />
                             {mainCategory.name}
                           </span>
                           <ChevronDownIcon
-                            className={`h-3.5 w-3.5 text-ink-muted transition-transform ${
-                              isExpanded ? "rotate-180" : ""
+                            className={`h-3.5 w-3.5 transition-transform ${
+                              isExpanded ? "rotate-180 text-accent" : "text-ink-muted"
                             }`}
                           />
                         </button>
@@ -154,12 +158,14 @@ export function NavDrawer({
                                       onClick={() =>
                                         setExpandedCategoryId(isCatExpanded ? null : category.id)
                                       }
-                                      className="flex w-full items-center justify-between gap-3 py-1 text-sm font-medium text-ink transition-colors hover:text-accent"
+                                      className={`flex w-full items-center justify-between gap-3 py-1 text-sm font-medium transition-colors hover:text-accent ${
+                                        isCatExpanded ? "text-accent" : "text-ink"
+                                      }`}
                                     >
                                       <span>{category.name}</span>
                                       <ChevronDownIcon
-                                        className={`h-3 w-3 text-ink-muted transition-transform ${
-                                          isCatExpanded ? "rotate-180" : ""
+                                        className={`h-3 w-3 transition-transform ${
+                                          isCatExpanded ? "rotate-180 text-accent" : "text-ink-muted"
                                         }`}
                                       />
                                     </button>
