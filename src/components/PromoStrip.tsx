@@ -31,7 +31,7 @@ export function PromoStrip({ promo }: { promo: PromoBanner | null }) {
           )}
           <Link
             href={promo.button_link || "/"}
-            className="mt-1 flex h-6 w-20 items-center justify-center gap-1 rounded bg-brand/85 text-[10px] font-semibold uppercase tracking-wide text-white transition-colors hover:bg-brand-dark hover:opacity-100"
+            className="mt-1 flex h-7 items-center justify-center gap-1 rounded-full border border-white/30 bg-ink/60 px-3 text-[10px] font-semibold uppercase tracking-wide text-white backdrop-blur-md transition-colors hover:bg-ink/80"
           >
             {promo.button_text || "Shop Now"}
             <span aria-hidden>&rarr;</span>
