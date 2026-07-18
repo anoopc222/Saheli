@@ -131,6 +131,11 @@ export default async function TrackOrderPage({
               <p className="text-ink">Total</p>
               <p className="tabular-nums text-ink">{formatPrice(order.amount_total_cents)}</p>
             </div>
+            {order.gst_amount_cents > 0 && (
+              <p className="mt-1 text-xs text-ink-muted">
+                Includes GST of {formatPrice(order.gst_amount_cents)}
+              </p>
+            )}
           </div>
 
           <Link

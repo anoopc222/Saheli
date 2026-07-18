@@ -6,7 +6,8 @@ import Link from "next/link";
 import Script from "next/script";
 import { useCart } from "@/lib/cart-context";
 import { formatPrice } from "@/lib/format";
-import { getProductSettings } from "@/lib/product-settings-data";
+import { getProductSettings, ProductSettings } from "@/lib/product-settings-data";
+import { totalGstCents } from "@/lib/gst";
 
 type Discount = {
   code: string;
@@ -67,7 +68,7 @@ function CheckoutForm() {
   const { lines, totalCents, clear } = useCart();
 
   const [discount, setDiscount] = useState<Discount>(null);
-  const [shippingFeeCents, setShippingFeeCents] = useState(0);
+  const [settings, setSettings] = useState<ProductSettings | null>(null);
   const [scriptReady, setScriptReady] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -83,7 +84,7 @@ function CheckoutForm() {
   });
 
   useEffect(() => {
-    getProductSettings().then((settings) => setShippingFeeCents(settings.shipping_fee_cents));
+    getProductSettings().then(setSettings);
   }, []);
 
   useEffect(() => {
@@ -111,7 +112,14 @@ function CheckoutForm() {
       ? Math.round((totalCents * discount.percentOff) / 100)
       : Math.min(discount.amountOffCents ?? 0, totalCents)
     : 0;
+  const shippingFeeCents = settings?.shipping_fee_cents ?? 0;
   const payableCents = Math.max(0, totalCents - discountCents) + shippingFeeCents;
+  const gstCents = settings
+    ? totalGstCents(
+        lines.map((l) => ({ unitPriceCents: l.product.price_cents, quantity: l.quantity })),
+        settings
+      )
+    : 0;
 
   function updateField(field: keyof ShippingForm, value: string) {
     setForm((f) => ({ ...f, [field]: value }));
@@ -218,6 +226,11 @@ function CheckoutForm() {
           <p className="text-ink-muted">Subtotal</p>
           <p className="tabular-nums text-ink">{formatPrice(totalCents)}</p>
         </div>
+        {gstCents > 0 && (
+          <p className="text-xs text-ink-muted">
+            (includes GST of {formatPrice(gstCents)})
+          </p>
+        )}
         {discountCents > 0 && (
           <div className="mt-1 flex items-center justify-between text-sm">
             <p className="text-ink-muted">Discount ({discount?.code})</p>

@@ -57,11 +57,6 @@ export default async function AdminHomePage() {
             className="w-24 rounded-xl border border-line bg-paper px-3 py-2 text-sm outline-none focus:border-accent"
           />
           <span className="text-sm text-ink-muted">days</span>
-          <input
-            type="hidden"
-            name="bestseller_count"
-            value={settings.bestseller_count}
-          />
           <button
             type="submit"
             className="rounded-full bg-ink px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-accent"
@@ -81,7 +76,6 @@ export default async function AdminHomePage() {
           products should hold the badge at once.
         </p>
         <form action={updateProductSettingsAction} className="flex items-center gap-2">
-          <input type="hidden" name="new_badge_days" value={settings.new_badge_days} />
           <input
             type="number"
             name="bestseller_count"
@@ -92,11 +86,6 @@ export default async function AdminHomePage() {
             className="w-24 rounded-xl border border-line bg-paper px-3 py-2 text-sm outline-none focus:border-accent"
           />
           <span className="text-sm text-ink-muted">products</span>
-          <input
-            type="hidden"
-            name="shipping_fee"
-            value={settings.shipping_fee_cents / 100}
-          />
           <button
             type="submit"
             className="rounded-full bg-ink px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-accent"
@@ -115,8 +104,6 @@ export default async function AdminHomePage() {
           shipping.
         </p>
         <form action={updateProductSettingsAction} className="flex items-center gap-2">
-          <input type="hidden" name="new_badge_days" value={settings.new_badge_days} />
-          <input type="hidden" name="bestseller_count" value={settings.bestseller_count} />
           <span className="text-sm text-ink-muted">&#8377;</span>
           <input
             type="number"
@@ -130,6 +117,65 @@ export default async function AdminHomePage() {
           <button
             type="submit"
             className="rounded-full bg-ink px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-accent"
+          >
+            Save
+          </button>
+        </form>
+      </section>
+
+      <section className="rounded-2xl border border-line bg-paper-raised p-4">
+        <h2 className="mb-1 text-xs font-semibold uppercase tracking-wide text-ink-muted">
+          GST
+        </h2>
+        <p className="mb-3 text-sm text-ink-muted">
+          Product prices are treated as GST-inclusive. This breaks out how much tax is
+          already in the price on receipts and order pages — it doesn&apos;t add anything
+          extra to the charge. Sarees/garments priced up to the threshold use the lower
+          rate; above it, the higher rate applies.
+        </p>
+        <form action={updateProductSettingsAction} className="flex flex-col gap-2">
+          <div className="flex items-center gap-2">
+            <span className="w-32 shrink-0 text-sm text-ink-muted">Threshold</span>
+            <span className="text-sm text-ink-muted">&#8377;</span>
+            <input
+              type="number"
+              name="gst_threshold"
+              min={0}
+              step="0.01"
+              defaultValue={settings.gst_threshold_cents / 100}
+              required
+              className="w-28 rounded-xl border border-line bg-paper px-3 py-2 text-sm outline-none focus:border-accent"
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="w-32 shrink-0 text-sm text-ink-muted">Rate at/below</span>
+            <input
+              type="number"
+              name="gst_low_rate"
+              min={0}
+              step="0.01"
+              defaultValue={settings.gst_low_rate_percent}
+              required
+              className="w-24 rounded-xl border border-line bg-paper px-3 py-2 text-sm outline-none focus:border-accent"
+            />
+            <span className="text-sm text-ink-muted">%</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="w-32 shrink-0 text-sm text-ink-muted">Rate above</span>
+            <input
+              type="number"
+              name="gst_high_rate"
+              min={0}
+              step="0.01"
+              defaultValue={settings.gst_high_rate_percent}
+              required
+              className="w-24 rounded-xl border border-line bg-paper px-3 py-2 text-sm outline-none focus:border-accent"
+            />
+            <span className="text-sm text-ink-muted">%</span>
+          </div>
+          <button
+            type="submit"
+            className="mt-1 self-start rounded-full bg-ink px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-accent"
           >
             Save
           </button>

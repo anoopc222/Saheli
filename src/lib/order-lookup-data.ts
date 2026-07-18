@@ -22,6 +22,7 @@ export type OrderDetail = {
   status: string;
   amount_total_cents: number;
   shipping_fee_cents: number;
+  gst_amount_cents: number;
   created_at: string;
   items: OrderItemDetail[];
   shipping: ShippingDetail | null;
@@ -79,7 +80,7 @@ export async function getOrderByReference(
   const { data: order } = await supabase
     .from("orders")
     .select(
-      `id, status, amount_total_cents, shipping_fee_cents, created_at, customer_email, ${SHIPPING_COLUMNS}`
+      `id, status, amount_total_cents, shipping_fee_cents, gst_amount_cents, created_at, customer_email, ${SHIPPING_COLUMNS}`
     )
     .eq("id", orderId)
     .maybeSingle<
@@ -88,6 +89,7 @@ export async function getOrderByReference(
         status: string;
         amount_total_cents: number;
         shipping_fee_cents: number;
+        gst_amount_cents: number;
         created_at: string;
         customer_email: string | null;
       } & ShippingRow
@@ -103,6 +105,7 @@ export async function getOrderByReference(
     status: order.status,
     amount_total_cents: order.amount_total_cents,
     shipping_fee_cents: order.shipping_fee_cents,
+    gst_amount_cents: order.gst_amount_cents,
     created_at: order.created_at,
     items: await loadItems(supabase, order.id),
     shipping: toShippingDetail(order),
@@ -113,7 +116,9 @@ export async function getOrderById(id: string): Promise<OrderDetail | null> {
   const supabase = createServiceRoleSupabaseClient();
   const { data: order } = await supabase
     .from("orders")
-    .select(`id, status, amount_total_cents, shipping_fee_cents, created_at, ${SHIPPING_COLUMNS}`)
+    .select(
+      `id, status, amount_total_cents, shipping_fee_cents, gst_amount_cents, created_at, ${SHIPPING_COLUMNS}`
+    )
     .eq("id", id)
     .maybeSingle<
       {
@@ -121,6 +126,7 @@ export async function getOrderById(id: string): Promise<OrderDetail | null> {
         status: string;
         amount_total_cents: number;
         shipping_fee_cents: number;
+        gst_amount_cents: number;
         created_at: string;
       } & ShippingRow
     >();
@@ -132,6 +138,7 @@ export async function getOrderById(id: string): Promise<OrderDetail | null> {
     status: order.status,
     amount_total_cents: order.amount_total_cents,
     shipping_fee_cents: order.shipping_fee_cents,
+    gst_amount_cents: order.gst_amount_cents,
     created_at: order.created_at,
     items: await loadItems(supabase, order.id),
     shipping: toShippingDetail(order),

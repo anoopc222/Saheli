@@ -5,7 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/lib/cart-context";
 import { formatPrice } from "@/lib/format";
-import { getProductSettings } from "@/lib/product-settings-data";
+import { getProductSettings, ProductSettings } from "@/lib/product-settings-data";
+import { totalGstCents } from "@/lib/gst";
 
 type AppliedCoupon = {
   code: string;
@@ -16,7 +17,7 @@ type AppliedCoupon = {
 export default function CartPage() {
   const router = useRouter();
   const { lines, setQuantity, removeItem, totalCents } = useCart();
-  const [shippingFeeCents, setShippingFeeCents] = useState(0);
+  const [settings, setSettings] = useState<ProductSettings | null>(null);
 
   const [couponInput, setCouponInput] = useState("");
   const [couponLoading, setCouponLoading] = useState(false);
@@ -24,8 +25,16 @@ export default function CartPage() {
   const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);
 
   useEffect(() => {
-    getProductSettings().then((settings) => setShippingFeeCents(settings.shipping_fee_cents));
+    getProductSettings().then(setSettings);
   }, []);
+
+  const shippingFeeCents = settings?.shipping_fee_cents ?? 0;
+  const gstCents = settings
+    ? totalGstCents(
+        lines.map((l) => ({ unitPriceCents: l.product.price_cents, quantity: l.quantity })),
+        settings
+      )
+    : 0;
 
   const discountCents = appliedCoupon
     ? appliedCoupon.percentOff
@@ -192,6 +201,11 @@ export default function CartPage() {
           <p className="text-sm text-ink-muted">Subtotal</p>
           <p className="text-sm tabular-nums text-ink">{formatPrice(totalCents)}</p>
         </div>
+        {gstCents > 0 && (
+          <p className="text-xs text-ink-muted">
+            (includes GST of {formatPrice(gstCents)})
+          </p>
+        )}
         {discountCents > 0 && (
           <div className="flex items-center justify-between">
             <p className="text-sm text-ink-muted">Discount</p>

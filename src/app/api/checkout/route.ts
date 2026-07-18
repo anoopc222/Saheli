@@ -3,6 +3,7 @@ import { getRazorpay } from "@/lib/razorpay";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/server";
 import { validateDiscountCode } from "@/lib/discount-data";
 import { getProductSettings } from "@/lib/product-settings-data";
+import { totalGstCents } from "@/lib/gst";
 import { Product } from "@/types/product";
 
 type CheckoutItem = { productId: string; quantity: number };
@@ -112,8 +113,15 @@ export async function POST(request: Request) {
       (sum, i) => sum + i.unitPriceCents * i.quantity,
       0
     );
-    const { shipping_fee_cents: shippingFeeCents } = await getProductSettings();
+    const settings = await getProductSettings();
+    const shippingFeeCents = settings.shipping_fee_cents;
     const amountTotalCents = itemsTotalCents + shippingFeeCents;
+    // Informational only — GST is already included in each product's price,
+    // this just records how much of that price was tax at the time of sale.
+    const gstAmountCents = totalGstCents(
+      discountedItems.map((i) => ({ unitPriceCents: i.unitPriceCents, quantity: i.quantity })),
+      settings
+    );
 
     // The order (and its items) are recorded up front, before payment —
     // Razorpay's checkout widget doesn't collect shipping details for us
@@ -127,6 +135,7 @@ export async function POST(request: Request) {
         source: "razorpay",
         amount_total_cents: amountTotalCents,
         shipping_fee_cents: shippingFeeCents,
+        gst_amount_cents: gstAmountCents,
         customer_email: shipping.email.trim(),
         discount_code: discount?.valid ? discount.code : null,
         shipping_name: shipping.name.trim(),
