@@ -1,9 +1,11 @@
+import Link from "next/link";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { Product } from "@/types/product";
 import { ProductCard } from "@/components/ProductCard";
 import { Hero } from "@/components/Hero";
 import { IconFeatureRow } from "@/components/IconFeatureRow";
 import { PromoStrip } from "@/components/PromoStrip";
+import { ChevronRightIcon } from "@/components/icons";
 import { getCategories } from "@/lib/categories-data";
 import { getHeroBanners, getActivePromoBanner } from "@/lib/homepage-data";
 
@@ -65,13 +67,15 @@ export default async function Home({
       <IconFeatureRow />
       <PromoStrip promo={activePromo} />
       <div id="shop" className="mx-auto max-w-[480px] scroll-mt-16 px-4 pb-8 pt-2">
-        <div className="mb-4 flex items-baseline justify-between">
-          <h2 className="font-heading text-xl font-semibold text-ink">
-            {heading}
-          </h2>
-          <span className="text-xs text-ink-muted">
-            {products.length} {products.length === 1 ? "item" : "items"}
-          </span>
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="font-heading text-xl font-bold text-ink">{heading}</h2>
+          <Link
+            href="/"
+            className="flex items-center gap-0.5 text-sm font-medium text-accent transition-colors hover:text-accent-dark"
+          >
+            View all
+            <ChevronRightIcon className="h-4 w-4" />
+          </Link>
         </div>
         {products.length === 0 ? (
           <p className="text-ink-muted">No sarees found for this filter.</p>

@@ -13,44 +13,44 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-30 border-b border-line bg-paper/95 backdrop-blur">
-      <div className="mx-auto flex max-w-[480px] items-center justify-between px-4 py-3.5">
-        <div className="flex items-center gap-1">
+      <div className="mx-auto flex max-w-[480px] items-center justify-between px-5 py-4">
+        <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={open}
             aria-label="Open menu"
             className="flex h-9 w-9 items-center justify-center rounded-full text-ink transition-colors hover:bg-accent-soft hover:text-accent"
           >
-            <MenuIcon className="h-5 w-5" />
+            <MenuIcon className="h-6 w-6" />
           </button>
           <Link href="/" className="flex items-center gap-2.5">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/logo.jpg"
               alt="Saheli"
-              className="h-9 w-9 rounded-full object-cover"
+              className="h-10 w-10 rounded-full object-cover"
             />
-            <span className="font-heading text-lg font-semibold text-ink">
+            <span className="font-heading text-xl font-semibold text-ink">
               Saheli
             </span>
           </Link>
         </div>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-3">
           <Link
             href="/search"
             aria-label="Search"
-            className="flex h-9 w-9 items-center justify-center rounded-full text-ink transition-colors hover:bg-accent-soft hover:text-accent"
+            className="flex h-9 w-9 items-center justify-center text-ink transition-colors hover:text-accent"
           >
-            <SearchIcon className="h-4.5 w-4.5" />
+            <SearchIcon className="h-5.5 w-5.5" />
           </Link>
           <Link
             href="/wishlist"
             aria-label="Wishlist"
-            className="relative flex h-9 w-9 items-center justify-center rounded-full text-ink transition-colors hover:bg-accent-soft hover:text-accent"
+            className="relative flex h-9 w-9 items-center justify-center text-ink transition-colors hover:text-accent"
           >
-            <HeartIcon className="h-4.5 w-4.5" />
+            <HeartIcon className="h-5.5 w-5.5" />
             {wishlistCount > 0 && (
-              <span className="absolute -right-1 -top-1 flex h-4.5 min-w-4.5 items-center justify-center rounded-full bg-accent px-1 text-[10px] font-semibold text-white">
+              <span className="absolute -right-0.5 -top-0.5 flex h-4.5 min-w-4.5 items-center justify-center rounded-full bg-accent px-1 text-[10px] font-semibold text-white">
                 {wishlistCount}
               </span>
             )}
@@ -60,7 +60,7 @@ export function Header() {
             aria-label="Cart"
             className="relative flex h-10 w-10 items-center justify-center rounded-full border border-line text-ink transition-colors hover:border-accent hover:bg-accent-soft"
           >
-            <BagIcon className="h-4.5 w-4.5" />
+            <BagIcon className="h-5 w-5" />
             {totalItems > 0 && (
               <span className="absolute -right-1 -top-1 flex h-4.5 min-w-4.5 items-center justify-center rounded-full bg-accent px-1 text-[10px] font-semibold text-white">
                 {totalItems}
