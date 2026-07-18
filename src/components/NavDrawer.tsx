@@ -202,6 +202,25 @@ export function NavDrawer({
                     const isExpanded = expandedMainId === mainCategory.id;
                     const isActive =
                       activePath.mainId === mainCategory.id && activePath.categoryId === null;
+
+                    // No categories to expand into — just a direct link,
+                    // instead of a toggle that would reveal nothing.
+                    if (mainCategory.categories.length === 0) {
+                      return (
+                        <Link
+                          key={mainCategory.id}
+                          href={`/?main_category=${mainCategory.id}`}
+                          onClick={close}
+                          className={`flex items-center gap-3 py-2 text-sm transition-colors hover:text-accent ${
+                            isActive ? "text-accent" : "text-ink"
+                          }`}
+                        >
+                          <Icon className={`h-4.5 w-4.5 ${isActive ? "text-accent" : "text-ink-muted"}`} />
+                          {mainCategory.name}
+                        </Link>
+                      );
+                    }
+
                     return (
                       <div key={mainCategory.id}>
                         <button
@@ -225,17 +244,16 @@ export function NavDrawer({
                         </button>
                         {isExpanded && (
                           <div className="flex flex-col gap-2.5 py-1 pl-7 pb-3">
-                            <Link
-                              href={`/?main_category=${mainCategory.id}`}
-                              onClick={close}
-                              className="text-xs font-medium text-accent hover:underline"
-                            >
-                              View all {mainCategory.name}
-                            </Link>
-                            {mainCategory.categories.length === 0 ? (
-                              <p className="text-xs text-ink-muted">Nothing here yet.</p>
-                            ) : (
-                              mainCategory.categories.map((category) => {
+                            {mainCategory.categories.length > 1 && (
+                              <Link
+                                href={`/?main_category=${mainCategory.id}`}
+                                onClick={close}
+                                className="text-xs font-medium text-accent hover:underline"
+                              >
+                                View all {mainCategory.name}
+                              </Link>
+                            )}
+                            {mainCategory.categories.map((category) => {
                                 const isCatExpanded = expandedCategoryId === category.id;
                                 const isCatActive =
                                   activePath.categoryId === category.id && activePath.subId === null;
@@ -307,8 +325,7 @@ export function NavDrawer({
                                     )}
                                   </div>
                                 );
-                              })
-                            )}
+                              })}
                           </div>
                         )}
                       </div>
