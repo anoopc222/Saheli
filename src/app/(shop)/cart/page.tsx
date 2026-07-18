@@ -224,7 +224,11 @@ export default function CartPage() {
         </div>
       </div>
 
-      {error && <p className="mt-4 text-sm text-accent">{error}</p>}
+      {error && (
+        <p className="mt-4 rounded-xl border border-red-300 bg-red-50 px-3 py-2.5 text-sm text-red-700">
+          {error}
+        </p>
+      )}
 
       <button
         onClick={handleCheckout}

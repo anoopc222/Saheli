@@ -19,6 +19,7 @@ export function AdminProductsList({
   products: Product[];
   categories: CategoryRow[];
 }) {
+  const [tab, setTab] = useState<"active" | "hidden">("active");
   const [categoryId, setCategoryId] = useState("all");
   const [subcategoryId, setSubcategoryId] = useState("all");
 
@@ -27,7 +28,12 @@ export function AdminProductsList({
       ? []
       : categories.find((c) => c.id === categoryId)?.subcategories ?? [];
 
+  const activeCount = products.filter((p) => p.show_on_store).length;
+  const hiddenCount = products.length - activeCount;
+
   const filtered = products.filter((product) => {
+    if (tab === "active" && !product.show_on_store) return false;
+    if (tab === "hidden" && product.show_on_store) return false;
     if (categoryId !== "all" && product.category_id !== categoryId) return false;
     if (subcategoryId !== "all" && product.subcategory_id !== subcategoryId) {
       return false;
@@ -37,6 +43,27 @@ export function AdminProductsList({
 
   return (
     <>
+      <div className="mb-3 flex gap-1 rounded-xl border border-line bg-paper-raised p-1">
+        <button
+          type="button"
+          onClick={() => setTab("active")}
+          className={`flex-1 rounded-lg py-1.5 text-sm font-medium transition-colors ${
+            tab === "active" ? "bg-ink text-white" : "text-ink-muted hover:text-ink"
+          }`}
+        >
+          Products ({activeCount})
+        </button>
+        <button
+          type="button"
+          onClick={() => setTab("hidden")}
+          className={`flex-1 rounded-lg py-1.5 text-sm font-medium transition-colors ${
+            tab === "hidden" ? "bg-ink text-white" : "text-ink-muted hover:text-ink"
+          }`}
+        >
+          Hidden ({hiddenCount})
+        </button>
+      </div>
+
       <div className="mb-4 flex flex-wrap gap-2">
         <select
           value={categoryId}
@@ -70,16 +97,14 @@ export function AdminProductsList({
 
       {filtered.length === 0 ? (
         <p className="rounded-xl border border-line bg-paper-raised p-4 text-sm text-ink-muted">
-          No products match this filter.
+          {tab === "hidden" ? "No hidden products." : "No products match this filter."}
         </p>
       ) : (
         <div className="flex flex-col gap-2">
           {filtered.map((product) => (
             <div
               key={product.id}
-              className={`flex items-center justify-between gap-3 rounded-xl border border-line bg-paper-raised p-3 transition-opacity ${
-                product.show_on_store ? "" : "opacity-50"
-              }`}
+              className="flex items-center justify-between gap-3 rounded-xl border border-line bg-paper-raised p-3"
             >
               <div className="flex items-center gap-3">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -89,14 +114,7 @@ export function AdminProductsList({
                   className="h-14 w-11 rounded-lg object-cover bg-line"
                 />
                 <div>
-                  <div className="flex items-center gap-2">
-                    <p className="text-sm font-medium text-ink">{product.name}</p>
-                    {!product.show_on_store && (
-                      <span className="shrink-0 rounded-full bg-line px-2 py-0.5 text-[11px] font-medium text-ink-muted">
-                        Hidden
-                      </span>
-                    )}
-                  </div>
+                  <p className="text-sm font-medium text-ink">{product.name}</p>
                   {product.product_code && (
                     <p className="text-xs text-ink-muted">{product.product_code}</p>
                   )}
