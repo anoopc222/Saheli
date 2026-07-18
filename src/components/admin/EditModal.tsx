@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import { PencilIcon, XIcon } from "@/components/icons";
 
 export function EditModal({
@@ -27,30 +28,35 @@ export function EditModal({
       >
         <Icon className="h-4 w-4" />
       </button>
-      {open && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 p-4"
-          onClick={close}
-        >
+      {open &&
+        createPortal(
+          // Rendered through a portal (not just fixed-positioned in place)
+          // so a faded ancestor row — e.g. a hidden category with
+          // opacity-50 — can never wash out the popup sitting on top of it.
           <div
-            className="flex h-[32rem] max-h-[85vh] w-full max-w-sm flex-col rounded-2xl bg-paper p-4"
-            onClick={(e) => e.stopPropagation()}
+            className="fixed inset-0 z-50 flex items-end justify-center bg-ink/40"
+            onClick={close}
           >
-            <div className="mb-3 flex shrink-0 items-center justify-between">
-              <p className="font-heading text-sm font-semibold text-ink">{title}</p>
-              <button
-                type="button"
-                onClick={close}
-                aria-label="Close"
-                className="flex h-7 w-7 items-center justify-center rounded-full text-ink-muted transition-colors hover:bg-accent-soft hover:text-accent"
-              >
-                <XIcon className="h-4 w-4" />
-              </button>
+            <div
+              className="flex h-[75vh] max-h-[85vh] w-full max-w-sm flex-col rounded-t-2xl bg-paper p-4"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="mb-3 flex shrink-0 items-center justify-between">
+                <p className="font-heading text-sm font-semibold text-ink">{title}</p>
+                <button
+                  type="button"
+                  onClick={close}
+                  aria-label="Close"
+                  className="flex h-7 w-7 items-center justify-center rounded-full text-ink-muted transition-colors hover:bg-accent-soft hover:text-accent"
+                >
+                  <XIcon className="h-4 w-4" />
+                </button>
+              </div>
+              <div className="flex flex-1 flex-col gap-4 overflow-y-auto">{children(close)}</div>
             </div>
-            <div className="flex flex-1 flex-col gap-4 overflow-y-auto">{children(close)}</div>
-          </div>
-        </div>
-      )}
+          </div>,
+          document.body
+        )}
     </>
   );
 }
