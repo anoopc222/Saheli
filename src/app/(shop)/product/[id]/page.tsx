@@ -9,7 +9,7 @@ import { RatingStars } from "@/components/RatingStars";
 import { ProductRail } from "@/components/ProductRail";
 import { RecordRecentlyViewed } from "@/components/RecordRecentlyViewed";
 import { RecentlyViewedRail } from "@/components/RecentlyViewedRail";
-import { sweepExpiredNewBadges } from "@/lib/badge-sweep";
+import { sweepExpiredNewBadges, sweepBestsellerBadges } from "@/lib/badge-sweep";
 
 export default async function ProductPage({
   params,
@@ -18,6 +18,7 @@ export default async function ProductPage({
 }) {
   const { id } = await params;
   await sweepExpiredNewBadges();
+  await sweepBestsellerBadges();
   const supabase = createBrowserSupabaseClient();
   const { data: product, error } = await supabase
     .from("products")

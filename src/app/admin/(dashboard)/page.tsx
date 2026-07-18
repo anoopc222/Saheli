@@ -57,6 +57,41 @@ export default async function AdminHomePage() {
             className="w-24 rounded-xl border border-line bg-paper px-3 py-2 text-sm outline-none focus:border-accent"
           />
           <span className="text-sm text-ink-muted">days</span>
+          <input
+            type="hidden"
+            name="bestseller_count"
+            value={settings.bestseller_count}
+          />
+          <button
+            type="submit"
+            className="rounded-full bg-ink px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-accent"
+          >
+            Save
+          </button>
+        </form>
+      </section>
+
+      <section className="rounded-2xl border border-line bg-paper-raised p-4">
+        <h2 className="mb-1 text-xs font-semibold uppercase tracking-wide text-ink-muted">
+          Bestseller badge
+        </h2>
+        <p className="mb-3 text-sm text-ink-muted">
+          The top selling products (by units sold from paid orders) automatically get a
+          &quot;Bestseller&quot; badge and show up under the Best Sellers menu. Set how many
+          products should hold the badge at once.
+        </p>
+        <form action={updateProductSettingsAction} className="flex items-center gap-2">
+          <input type="hidden" name="new_badge_days" value={settings.new_badge_days} />
+          <input
+            type="number"
+            name="bestseller_count"
+            min={0}
+            step={1}
+            defaultValue={settings.bestseller_count}
+            required
+            className="w-24 rounded-xl border border-line bg-paper px-3 py-2 text-sm outline-none focus:border-accent"
+          />
+          <span className="text-sm text-ink-muted">products</span>
           <button
             type="submit"
             className="rounded-full bg-ink px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-accent"

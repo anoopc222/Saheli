@@ -5,6 +5,10 @@ import { createServiceRoleSupabaseClient } from "@/lib/supabase/server";
 
 export async function updateProductSettingsAction(formData: FormData) {
   const days = Math.max(1, Math.round(Number(formData.get("new_badge_days")) || 30));
+  const bestsellerCount = Math.max(
+    0,
+    Math.round(Number(formData.get("bestseller_count")) || 0)
+  );
   const supabase = createServiceRoleSupabaseClient();
 
   const { data: existing } = await supabase
@@ -16,13 +20,13 @@ export async function updateProductSettingsAction(formData: FormData) {
   if (existing) {
     const { error } = await supabase
       .from("product_settings")
-      .update({ new_badge_days: days })
+      .update({ new_badge_days: days, bestseller_count: bestsellerCount })
       .eq("id", existing.id);
     if (error) throw new Error(error.message);
   } else {
     const { error } = await supabase
       .from("product_settings")
-      .insert({ new_badge_days: days });
+      .insert({ new_badge_days: days, bestseller_count: bestsellerCount });
     if (error) throw new Error(error.message);
   }
 

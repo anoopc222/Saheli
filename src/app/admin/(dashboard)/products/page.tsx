@@ -3,7 +3,7 @@ import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { getCategories } from "@/lib/categories-data";
 import { AdminProductsList } from "@/components/admin/AdminProductsList";
 import { Product } from "@/types/product";
-import { sweepExpiredNewBadges } from "@/lib/badge-sweep";
+import { sweepExpiredNewBadges, sweepBestsellerBadges } from "@/lib/badge-sweep";
 
 export const dynamic = "force-dynamic";
 
@@ -14,6 +14,7 @@ export default async function AdminProductsPage({
 }) {
   const { deleteBlocked } = await searchParams;
   await sweepExpiredNewBadges();
+  await sweepBestsellerBadges();
   const supabase = createBrowserSupabaseClient();
   const [{ data: products }, categories] = await Promise.all([
     supabase
