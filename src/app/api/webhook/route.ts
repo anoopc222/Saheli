@@ -37,6 +37,8 @@ export async function POST(request: Request) {
           items.map((i) => i.productId)
         );
 
+      const shipping = session.collected_information?.shipping_details;
+
       const { data: order, error: orderError } = await supabase
         .from("orders")
         .insert({
@@ -45,6 +47,14 @@ export async function POST(request: Request) {
           amount_total_cents: session.amount_total ?? 0,
           status: "paid",
           discount_code: session.metadata?.discount_code || null,
+          shipping_name: shipping?.name ?? null,
+          shipping_phone: session.customer_details?.phone ?? null,
+          shipping_address_line1: shipping?.address?.line1 ?? null,
+          shipping_address_line2: shipping?.address?.line2 ?? null,
+          shipping_city: shipping?.address?.city ?? null,
+          shipping_state: shipping?.address?.state ?? null,
+          shipping_postal_code: shipping?.address?.postal_code ?? null,
+          shipping_country: shipping?.address?.country ?? null,
         })
         .select()
         .single();

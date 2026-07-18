@@ -80,6 +80,30 @@ export default async function TrackOrderPage({
             </p>
           </div>
 
+          {order.shipping && (
+            <div className="rounded-2xl border border-line bg-paper-raised p-4">
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-muted">
+                Shipping to
+              </p>
+              <p className="text-sm text-ink">{order.shipping.name}</p>
+              {order.shipping.phone && (
+                <p className="text-xs text-ink-muted">{order.shipping.phone}</p>
+              )}
+              <p className="mt-1 text-xs text-ink-muted">
+                {[
+                  order.shipping.address_line1,
+                  order.shipping.address_line2,
+                  order.shipping.city,
+                  order.shipping.state,
+                  order.shipping.postal_code,
+                  order.shipping.country,
+                ]
+                  .filter(Boolean)
+                  .join(", ")}
+              </p>
+            </div>
+          )}
+
           <div className="rounded-2xl border border-line bg-paper-raised p-4">
             <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-ink-muted">
               Items

@@ -34,6 +34,26 @@ export default async function CheckoutSuccessPage({
             </Link>{" "}
             page any time.
           </p>
+          {order.shipping && (
+            <div className="mt-3 border-t border-line pt-3">
+              <p className="text-xs font-medium uppercase tracking-wide text-ink-muted">
+                Shipping to
+              </p>
+              <p className="mt-1 text-sm text-ink">{order.shipping.name}</p>
+              <p className="text-xs text-ink-muted">
+                {[
+                  order.shipping.address_line1,
+                  order.shipping.address_line2,
+                  order.shipping.city,
+                  order.shipping.state,
+                  order.shipping.postal_code,
+                  order.shipping.country,
+                ]
+                  .filter(Boolean)
+                  .join(", ")}
+              </p>
+            </div>
+          )}
         </div>
       ) : session_id ? (
         <p className="mt-2 text-xs text-ink-muted">

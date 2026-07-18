@@ -6,15 +6,55 @@ export type OrderItemDetail = {
   quantity: number;
 };
 
+export type ShippingDetail = {
+  name: string | null;
+  phone: string | null;
+  address_line1: string | null;
+  address_line2: string | null;
+  city: string | null;
+  state: string | null;
+  postal_code: string | null;
+  country: string | null;
+};
+
 export type OrderDetail = {
   id: string;
   status: string;
   amount_total_cents: number;
   created_at: string;
   items: OrderItemDetail[];
+  shipping: ShippingDetail | null;
 };
 
 type ServiceClient = ReturnType<typeof createServiceRoleSupabaseClient>;
+
+const SHIPPING_COLUMNS =
+  "shipping_name, shipping_phone, shipping_address_line1, shipping_address_line2, shipping_city, shipping_state, shipping_postal_code, shipping_country";
+
+type ShippingRow = {
+  shipping_name: string | null;
+  shipping_phone: string | null;
+  shipping_address_line1: string | null;
+  shipping_address_line2: string | null;
+  shipping_city: string | null;
+  shipping_state: string | null;
+  shipping_postal_code: string | null;
+  shipping_country: string | null;
+};
+
+function toShippingDetail(row: ShippingRow): ShippingDetail | null {
+  if (!row.shipping_address_line1 && !row.shipping_name) return null;
+  return {
+    name: row.shipping_name,
+    phone: row.shipping_phone,
+    address_line1: row.shipping_address_line1,
+    address_line2: row.shipping_address_line2,
+    city: row.shipping_city,
+    state: row.shipping_state,
+    postal_code: row.shipping_postal_code,
+    country: row.shipping_country,
+  };
+}
 
 async function loadItems(supabase: ServiceClient, orderId: string) {
   const { data } = await supabase
@@ -37,15 +77,17 @@ export async function getOrderByReference(
   const supabase = createServiceRoleSupabaseClient();
   const { data: order } = await supabase
     .from("orders")
-    .select("id, status, amount_total_cents, created_at, customer_email")
+    .select(`id, status, amount_total_cents, created_at, customer_email, ${SHIPPING_COLUMNS}`)
     .eq("id", orderId)
-    .maybeSingle<{
-      id: string;
-      status: string;
-      amount_total_cents: number;
-      created_at: string;
-      customer_email: string | null;
-    }>();
+    .maybeSingle<
+      {
+        id: string;
+        status: string;
+        amount_total_cents: number;
+        created_at: string;
+        customer_email: string | null;
+      } & ShippingRow
+    >();
 
   if (!order || !order.customer_email) return null;
   if (order.customer_email.toLowerCase().trim() !== email.toLowerCase().trim()) {
@@ -58,6 +100,7 @@ export async function getOrderByReference(
     amount_total_cents: order.amount_total_cents,
     created_at: order.created_at,
     items: await loadItems(supabase, order.id),
+    shipping: toShippingDetail(order),
   };
 }
 
@@ -65,9 +108,11 @@ export async function getOrderBySessionId(sessionId: string): Promise<OrderDetai
   const supabase = createServiceRoleSupabaseClient();
   const { data: order } = await supabase
     .from("orders")
-    .select("id, status, amount_total_cents, created_at")
+    .select(`id, status, amount_total_cents, created_at, ${SHIPPING_COLUMNS}`)
     .eq("stripe_session_id", sessionId)
-    .maybeSingle<{ id: string; status: string; amount_total_cents: number; created_at: string }>();
+    .maybeSingle<
+      { id: string; status: string; amount_total_cents: number; created_at: string } & ShippingRow
+    >();
 
   if (!order) return null;
 
@@ -77,5 +122,6 @@ export async function getOrderBySessionId(sessionId: string): Promise<OrderDetai
     amount_total_cents: order.amount_total_cents,
     created_at: order.created_at,
     items: await loadItems(supabase, order.id),
+    shipping: toShippingDetail(order),
   };
 }
