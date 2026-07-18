@@ -339,7 +339,7 @@ export function NavDrawer({
           <NavLink
             href="/categories"
             icon={<PetalsIcon className="h-5 w-5" />}
-            label="Collections"
+            label="All Collections"
             onClick={close}
             chevron
           />

@@ -66,7 +66,7 @@ export default async function Home({
   } else if (sort === "price_desc") {
     query = query.order("price_cents", { ascending: false });
   } else {
-    query = query.order("created_at", { ascending: true });
+    query = query.order("created_at", { ascending: false });
   }
 
   const [{ data: products, error }, heroImages, activePromo, featureItems, featureRowSettings] =
