@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useNavDrawer } from "@/lib/nav-drawer-context";
 import { MenuMainCategory } from "@/lib/categories-data";
 import { MenuItemRow } from "@/lib/menu-items-data";
@@ -100,6 +100,7 @@ export function NavDrawer({
   menuItems: MenuItemRow[];
 }) {
   const { isOpen, close } = useNavDrawer();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const [shopOpen, setShopOpen] = useState(true);
   const [expandedMainId, setExpandedMainId] = useState<string | null>(null);
@@ -126,6 +127,17 @@ export function NavDrawer({
   }
 
   const visiblePromoItems = menuItems.filter((item) => item.show_on_menu);
+
+  const isHomeActive =
+    pathname === "/" &&
+    !searchParams.get("fabric") &&
+    !searchParams.get("category") &&
+    !searchParams.get("main_category") &&
+    !searchParams.get("tag") &&
+    !searchParams.get("filter");
+  const isWishlistActive = pathname === "/wishlist";
+  const isAboutActive = pathname === "/about";
+  const isContactActive = pathname === "/contact";
 
   return (
     <div className={`fixed inset-0 z-40 ${isOpen ? "" : "pointer-events-none"}`} aria-hidden={!isOpen}>
@@ -159,7 +171,13 @@ export function NavDrawer({
         </div>
 
         <div className="flex-1 overflow-y-auto px-4">
-          <NavLink href="/" icon={<HomeIcon className="h-5 w-5" />} label="Home" onClick={close} />
+          <NavLink
+            href="/"
+            icon={<HomeIcon className="h-5 w-5" />}
+            label="Home"
+            onClick={close}
+            active={isHomeActive}
+          />
 
           <div className="border-b border-line">
             <button
@@ -321,13 +339,26 @@ export function NavDrawer({
               />
             );
           })}
-          <NavLink href="/wishlist" icon={<HeartIcon className="h-5 w-5" />} label="Wishlist" onClick={close} />
-          <NavLink href="/about" icon={<UserIcon className="h-5 w-5" />} label="About Us" onClick={close} />
+          <NavLink
+            href="/wishlist"
+            icon={<HeartIcon className="h-5 w-5" />}
+            label="Wishlist"
+            onClick={close}
+            active={isWishlistActive}
+          />
+          <NavLink
+            href="/about"
+            icon={<UserIcon className="h-5 w-5" />}
+            label="About Us"
+            onClick={close}
+            active={isAboutActive}
+          />
           <NavLink
             href="/contact"
             icon={<PhoneIcon className="h-5 w-5" />}
             label="Contact Us"
             onClick={close}
+            active={isContactActive}
             last
           />
         </div>
@@ -349,6 +380,7 @@ function NavLink({
   onClick,
   chevron,
   last,
+  active,
 }: {
   href: string;
   icon: React.ReactNode;
@@ -356,14 +388,15 @@ function NavLink({
   onClick: () => void;
   chevron?: boolean;
   last?: boolean;
+  active?: boolean;
 }) {
   return (
     <Link
       href={href}
       onClick={onClick}
-      className={`flex items-center justify-between gap-3 py-3.5 text-sm font-medium text-ink transition-colors hover:text-accent ${
-        last ? "" : "border-b border-line"
-      }`}
+      className={`flex items-center justify-between gap-3 py-3.5 text-sm font-medium transition-colors hover:text-accent ${
+        active ? "text-accent" : "text-ink"
+      } ${last ? "" : "border-b border-line"}`}
     >
       <span className="flex items-center gap-3">
         {icon}
