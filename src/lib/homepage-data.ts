@@ -1,6 +1,12 @@
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 
-export type HeroBanner = { id: string; image_url: string; sort_order: number };
+export type HeroBanner = {
+  id: string;
+  image_url: string;
+  sort_order: number;
+  category_id: string | null;
+  subcategory_id: string | null;
+};
 export type PromoBanner = {
   id: string;
   title: string;
@@ -15,7 +21,7 @@ export async function getHeroBanners(): Promise<HeroBanner[]> {
   const supabase = createBrowserSupabaseClient();
   const { data } = await supabase
     .from("hero_banners")
-    .select("id, image_url, sort_order")
+    .select("id, image_url, sort_order, category_id, subcategory_id")
     .order("sort_order")
     .returns<HeroBanner[]>();
   return data ?? [];

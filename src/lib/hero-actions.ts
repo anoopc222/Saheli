@@ -26,6 +26,9 @@ export async function addHeroImagesAction(
     );
     if (files.length === 0) return { error: null };
 
+    const categoryId = (formData.get("category_id") as string) || null;
+    const subcategoryId = (formData.get("subcategory_id") as string) || null;
+
     const { data: existing } = await supabase
       .from("hero_banners")
       .select("id, image_url, sort_order, created_at")
@@ -52,7 +55,12 @@ export async function addHeroImagesAction(
       maxSortOrder += 1;
       const { data: inserted, error } = await supabase
         .from("hero_banners")
-        .insert({ image_url: imageUrl, sort_order: maxSortOrder })
+        .insert({
+          image_url: imageUrl,
+          sort_order: maxSortOrder,
+          category_id: categoryId,
+          subcategory_id: subcategoryId,
+        })
         .select("id, image_url, sort_order, created_at")
         .single<HeroRow>();
       if (error) return { error: error.message };
@@ -84,5 +92,19 @@ export async function reorderHeroImagesAction(orderedIds: string[]) {
       supabase.from("hero_banners").update({ sort_order: index + 1 }).eq("id", id)
     )
   );
+  revalidateHome();
+}
+
+export async function updateHeroImageLinkAction(
+  id: string,
+  categoryId: string | null,
+  subcategoryId: string | null
+) {
+  const supabase = createServiceRoleSupabaseClient();
+  const { error } = await supabase
+    .from("hero_banners")
+    .update({ category_id: categoryId, subcategory_id: subcategoryId })
+    .eq("id", id);
+  if (error) throw new Error(error.message);
   revalidateHome();
 }

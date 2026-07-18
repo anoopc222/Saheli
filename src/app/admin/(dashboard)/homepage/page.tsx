@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getHeroBanners, getAllPromoBanners } from "@/lib/homepage-data";
+import { getCategories } from "@/lib/categories-data";
 import { HeroImagesManager } from "@/components/admin/HeroImagesManager";
 import { deletePromoAction, setActivePromoAction } from "@/lib/promo-actions";
 import { ConfirmSubmitButton } from "@/components/admin/ConfirmSubmitButton";
@@ -7,9 +8,10 @@ import { ConfirmSubmitButton } from "@/components/admin/ConfirmSubmitButton";
 export const dynamic = "force-dynamic";
 
 export default async function AdminHomepagePage() {
-  const [heroImages, promos] = await Promise.all([
+  const [heroImages, promos, categories] = await Promise.all([
     getHeroBanners(),
     getAllPromoBanners(),
+    getCategories(),
   ]);
 
   return (
@@ -20,7 +22,7 @@ export default async function AdminHomepagePage() {
         <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-ink-muted">
           Hero images
         </h2>
-        <HeroImagesManager images={heroImages} />
+        <HeroImagesManager images={heroImages} categories={categories} />
       </section>
 
       <section>

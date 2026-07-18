@@ -5,11 +5,13 @@ import {
   addHeroImagesAction,
   deleteHeroImageAction,
   reorderHeroImagesAction,
+  updateHeroImageLinkAction,
   type AddHeroImagesState,
 } from "@/lib/hero-actions";
 import { ConfirmSubmitButton } from "@/components/admin/ConfirmSubmitButton";
 import { compressImageFile } from "@/lib/client-image-compression";
 import { HeroBanner } from "@/lib/homepage-data";
+import { CategoryRow } from "@/lib/categories-data";
 
 const MAX_HERO_IMAGES = 6;
 const HERO_MAX_DIMENSION = 1600;
@@ -19,21 +21,84 @@ const HERO_MAX_DIMENSION = 1600;
 // that ceiling — avoids the multi-file bundle ever getting close to it.
 const MAX_UPLOAD_BYTES = 3.5 * 1024 * 1024;
 
-type PendingImage = { key: string; file: File; previewUrl: string };
+type PendingImage = {
+  key: string;
+  file: File;
+  previewUrl: string;
+  categoryId: string;
+  subcategoryId: string;
+};
 
 const initialAddState: AddHeroImagesState = { error: null };
 
-export function HeroImagesManager({ images }: { images: HeroBanner[] }) {
+const selectClasses =
+  "w-full rounded-md border border-line bg-paper-raised px-2 py-1.5 text-xs outline-none focus:border-accent disabled:opacity-50";
+
+function LinkSelects({
+  categories,
+  categoryId,
+  subcategoryId,
+  onChange,
+}: {
+  categories: CategoryRow[];
+  categoryId: string;
+  subcategoryId: string;
+  onChange: (categoryId: string, subcategoryId: string) => void;
+}) {
+  const subcategoryOptions =
+    categories.find((cat) => cat.id === categoryId)?.subcategories ?? [];
+
+  return (
+    <div className="grid flex-1 grid-cols-2 gap-1.5">
+      <select
+        value={categoryId}
+        onChange={(e) => onChange(e.target.value, "")}
+        className={selectClasses}
+      >
+        <option value="">Links to: All Sarees</option>
+        {categories.map((cat) => (
+          <option key={cat.id} value={cat.id}>
+            {cat.name}
+          </option>
+        ))}
+      </select>
+      <select
+        value={subcategoryId}
+        disabled={subcategoryOptions.length === 0}
+        onChange={(e) => onChange(categoryId, e.target.value)}
+        className={selectClasses}
+      >
+        <option value="">All in category</option>
+        {subcategoryOptions.map((sub) => (
+          <option key={sub.id} value={sub.id}>
+            {sub.name}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
+export function HeroImagesManager({
+  images,
+  categories,
+}: {
+  images: HeroBanner[];
+  categories: CategoryRow[];
+}) {
   const [order, setOrder] = useState(images);
   const [prevImages, setPrevImages] = useState(images);
   const [pending, setPending] = useState<PendingImage[]>([]);
   const [isCompressing, setIsCompressing] = useState(false);
   const [sizeWarning, setSizeWarning] = useState<string | null>(null);
   const [reorderError, setReorderError] = useState<string | null>(null);
+  const [linkError, setLinkError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [addState, formAction] = useActionState(addHeroImagesAction, initialAddState);
   const isFirstAddState = useRef(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const categoryInputRef = useRef<HTMLInputElement>(null);
+  const subcategoryInputRef = useRef<HTMLInputElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const uploadQueueRef = useRef<PendingImage[]>([]);
   const dragIndex = useRef<number | null>(null);
@@ -66,6 +131,8 @@ export function HeroImagesManager({ images }: { images: HeroBanner[] }) {
       return;
     }
     syncFileInput([next]);
+    if (categoryInputRef.current) categoryInputRef.current.value = next.categoryId;
+    if (subcategoryInputRef.current) subcategoryInputRef.current.value = next.subcategoryId;
     formRef.current?.requestSubmit();
   }
 
@@ -119,6 +186,8 @@ export function HeroImagesManager({ images }: { images: HeroBanner[] }) {
           key: crypto.randomUUID(),
           file: compressedFile,
           previewUrl: URL.createObjectURL(compressedFile),
+          categoryId: "",
+          subcategoryId: "",
         });
       }
       if (skipped > 0) {
@@ -130,6 +199,28 @@ export function HeroImagesManager({ images }: { images: HeroBanner[] }) {
     } finally {
       setIsCompressing(false);
     }
+  }
+
+  function setPendingLink(key: string, categoryId: string, subcategoryId: string) {
+    setPending((prev) =>
+      prev.map((img) => (img.key === key ? { ...img, categoryId, subcategoryId } : img))
+    );
+  }
+
+  function updateExistingLink(id: string, categoryId: string, subcategoryId: string) {
+    const previous = order;
+    setOrder((prev) =>
+      prev.map((img) =>
+        img.id === id
+          ? { ...img, category_id: categoryId || null, subcategory_id: subcategoryId || null }
+          : img
+      )
+    );
+    setLinkError(null);
+    updateHeroImageLinkAction(id, categoryId || null, subcategoryId || null).catch(() => {
+      setOrder(previous);
+      setLinkError("Couldn't save that link. Please try again.");
+    });
   }
 
   function removePending(index: number) {
@@ -177,7 +268,13 @@ export function HeroImagesManager({ images }: { images: HeroBanner[] }) {
           {reorderError}
         </div>
       )}
-      <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+      {linkError && (
+        <div className="mb-2 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">
+          {linkError}
+        </div>
+      )}
+
+      <div className="flex flex-col gap-2">
         {order.map((image, index) => (
           <div
             key={image.id}
@@ -185,50 +282,61 @@ export function HeroImagesManager({ images }: { images: HeroBanner[] }) {
             onDragStart={() => (dragIndex.current = index)}
             onDragOver={(e) => e.preventDefault()}
             onDrop={() => handleDrop(index)}
-            className="relative aspect-square cursor-grab active:cursor-grabbing"
+            className="flex items-center gap-2 rounded-xl border border-line bg-paper-raised p-2 cursor-grab active:cursor-grabbing"
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={image.image_url}
-              alt=""
-              className="h-full w-full rounded-xl border border-line object-cover"
+            <div className="relative h-14 w-14 shrink-0">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={image.image_url}
+                alt=""
+                className="h-full w-full rounded-lg border border-line object-cover"
+              />
+              <span className="absolute left-0.5 top-0.5 rounded-full bg-ink/70 px-1.5 py-0.5 text-[9px] font-medium text-white">
+                {index + 1}
+              </span>
+            </div>
+            <LinkSelects
+              categories={categories}
+              categoryId={image.category_id ?? ""}
+              subcategoryId={image.subcategory_id ?? ""}
+              onChange={(categoryId, subcategoryId) =>
+                updateExistingLink(image.id, categoryId, subcategoryId)
+              }
             />
-            <span className="absolute left-1 top-1 rounded-full bg-ink/70 px-1.5 py-0.5 text-[10px] font-medium text-white">
-              {index + 1}
-            </span>
             <form action={deleteHeroImageAction}>
               <input type="hidden" name="id" value={image.id} />
               <input type="hidden" name="image_url" value={image.image_url} />
               <ConfirmSubmitButton
                 confirmMessage="Remove this hero image?"
                 ariaLabel="Remove image"
-                className="absolute -right-1.5 -top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-ink text-xs text-white shadow-sm"
+                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-ink text-xs text-white shadow-sm"
               >
                 &times;
               </ConfirmSubmitButton>
             </form>
           </div>
         ))}
-
-        {remainingSlots > 0 && (
-          <label
-            className={`flex aspect-square flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-line text-ink-muted transition-colors ${
-              isCompressing || uploading ? "opacity-50" : "cursor-pointer hover:border-accent hover:text-accent"
-            }`}
-          >
-            <span className="text-2xl leading-none">+</span>
-            <span className="text-[11px] font-medium">Add</span>
-            <input
-              type="file"
-              accept="image/*"
-              multiple
-              disabled={isCompressing || uploading}
-              onChange={(e) => handleFilesSelected(e.target.files)}
-              className="hidden"
-            />
-          </label>
-        )}
       </div>
+
+      {remainingSlots > 0 && (
+        <label
+          className={`mt-2 flex h-14 flex-col items-center justify-center gap-0.5 rounded-xl border-2 border-dashed border-line text-ink-muted transition-colors ${
+            isCompressing || uploading ? "opacity-50" : "cursor-pointer hover:border-accent hover:text-accent"
+          }`}
+        >
+          <span className="text-lg leading-none">+</span>
+          <span className="text-[11px] font-medium">Add photos</span>
+          <input
+            type="file"
+            accept="image/*"
+            multiple
+            disabled={isCompressing || uploading}
+            onChange={(e) => handleFilesSelected(e.target.files)}
+            className="hidden"
+          />
+        </label>
+      )}
+
       <p className="mt-2 text-xs text-ink-muted">
         {isCompressing
           ? "Compressing images…"
@@ -250,9 +358,9 @@ export function HeroImagesManager({ images }: { images: HeroBanner[] }) {
       {pending.length > 0 && (
         <div className="mt-4 border-t border-line pt-4">
           <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-muted">
-            New images &middot; drag to arrange
+            New images &middot; set where each one links, then upload
           </p>
-          <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+          <div className="flex flex-col gap-2">
             {pending.map((image, index) => (
               <div
                 key={image.key}
@@ -260,23 +368,35 @@ export function HeroImagesManager({ images }: { images: HeroBanner[] }) {
                 onDragStart={() => (pendingDragIndex.current = index)}
                 onDragOver={(e) => e.preventDefault()}
                 onDrop={() => handlePendingDrop(index)}
-                className={`relative aspect-square ${uploading ? "" : "cursor-grab active:cursor-grabbing"}`}
+                className={`flex items-center gap-2 rounded-xl border border-accent bg-paper-raised p-2 ${
+                  uploading ? "" : "cursor-grab active:cursor-grabbing"
+                }`}
               >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={image.previewUrl}
-                  alt=""
-                  className="h-full w-full rounded-xl border border-accent object-cover"
+                <div className="relative h-14 w-14 shrink-0">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={image.previewUrl}
+                    alt=""
+                    className="h-full w-full rounded-lg border border-accent object-cover"
+                  />
+                  <span className="absolute left-0.5 top-0.5 rounded-full bg-accent px-1.5 py-0.5 text-[9px] font-medium text-white">
+                    {index + 1}
+                  </span>
+                </div>
+                <LinkSelects
+                  categories={categories}
+                  categoryId={image.categoryId}
+                  subcategoryId={image.subcategoryId}
+                  onChange={(categoryId, subcategoryId) =>
+                    setPendingLink(image.key, categoryId, subcategoryId)
+                  }
                 />
-                <span className="absolute left-1 top-1 rounded-full bg-accent px-1.5 py-0.5 text-[10px] font-medium text-white">
-                  {index + 1}
-                </span>
                 {!uploading && (
                   <button
                     type="button"
                     onClick={() => removePending(index)}
                     aria-label="Remove image"
-                    className="absolute -right-1.5 -top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-ink text-xs text-white shadow-sm"
+                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-ink text-xs text-white shadow-sm"
                   >
                     &times;
                   </button>
@@ -296,6 +416,8 @@ export function HeroImagesManager({ images }: { images: HeroBanner[] }) {
               to stay well under Vercel's per-request body-size ceiling. */}
           <form ref={formRef} action={formAction} className="mt-3">
             <input ref={fileInputRef} type="file" name="images" className="hidden" />
+            <input ref={categoryInputRef} type="hidden" name="category_id" />
+            <input ref={subcategoryInputRef} type="hidden" name="subcategory_id" />
             <button
               type="button"
               disabled={uploading}

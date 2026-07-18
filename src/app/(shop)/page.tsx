@@ -18,9 +18,9 @@ const FILTER_LABELS: Record<string, string> = {
 export default async function Home({
   searchParams,
 }: {
-  searchParams: Promise<{ filter?: string; fabric?: string }>;
+  searchParams: Promise<{ filter?: string; fabric?: string; category?: string }>;
 }) {
-  const { filter, fabric } = await searchParams;
+  const { filter, fabric, category } = await searchParams;
   const supabase = createBrowserSupabaseClient();
 
   let query = supabase
@@ -30,14 +30,17 @@ export default async function Home({
 
   if (fabric) {
     query = query.eq("fabric", fabric);
+  } else if (category) {
+    query = query.eq("category_id", category);
   } else if (filter && FILTER_LABELS[filter]) {
     query = query.eq("badge", filter);
   }
 
-  const [{ data: products, error }, heroImages, activePromo] = await Promise.all([
+  const [{ data: products, error }, heroImages, activePromo, categories] = await Promise.all([
     query.returns<Product[]>(),
     getHeroBanners(),
     getActivePromoBanner(),
+    getCategories(),
   ]);
 
   if (error) {
@@ -48,22 +51,39 @@ export default async function Home({
     );
   }
 
-  const categories = fabric ? await getCategories() : [];
   const subcategory = fabric
     ? categories
-        .flatMap((category) => category.subcategories)
+        .flatMap((cat) => cat.subcategories)
         .find((sub) => sub.fabric === fabric)
+    : undefined;
+  const matchedCategory = category
+    ? categories.find((cat) => cat.id === category)
     : undefined;
 
   const heading = subcategory
     ? subcategory.name
-    : filter && FILTER_LABELS[filter]
-      ? FILTER_LABELS[filter]
-      : "All Sarees";
+    : matchedCategory
+      ? matchedCategory.name
+      : filter && FILTER_LABELS[filter]
+        ? FILTER_LABELS[filter]
+        : "All Sarees";
+
+  const heroSlides = heroImages.map((banner) => {
+    let href = "/";
+    if (banner.subcategory_id) {
+      const sub = categories
+        .flatMap((cat) => cat.subcategories)
+        .find((s) => s.id === banner.subcategory_id);
+      if (sub) href = `/?fabric=${encodeURIComponent(sub.fabric)}`;
+    } else if (banner.category_id) {
+      href = `/?category=${banner.category_id}`;
+    }
+    return { image_url: banner.image_url, href };
+  });
 
   return (
     <div>
-      <Hero images={heroImages.map((h) => h.image_url)} />
+      <Hero slides={heroSlides} />
       <IconFeatureRow />
       <PromoStrip promo={activePromo} />
       <div id="shop" className="mx-auto max-w-[480px] scroll-mt-16 px-4 pb-8 pt-[1.125rem]">
