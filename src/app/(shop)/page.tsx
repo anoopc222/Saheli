@@ -6,7 +6,7 @@ import { Hero } from "@/components/Hero";
 import { IconFeatureRow } from "@/components/IconFeatureRow";
 import { PromoStrip } from "@/components/PromoStrip";
 import { ChevronRightIcon } from "@/components/icons";
-import { getCategories } from "@/lib/categories-data";
+import { getCategories, getMainCategories } from "@/lib/categories-data";
 import { getHeroBanners, getActivePromoBanner } from "@/lib/homepage-data";
 
 const FILTER_LABELS: Record<string, string> = {
@@ -18,10 +18,17 @@ const FILTER_LABELS: Record<string, string> = {
 export default async function Home({
   searchParams,
 }: {
-  searchParams: Promise<{ filter?: string; fabric?: string; category?: string }>;
+  searchParams: Promise<{
+    filter?: string;
+    fabric?: string;
+    category?: string;
+    main_category?: string;
+  }>;
 }) {
-  const { filter, fabric, category } = await searchParams;
+  const { filter, fabric, category, main_category: mainCategoryId } = await searchParams;
   const supabase = createBrowserSupabaseClient();
+
+  const [categories, mainCategories] = await Promise.all([getCategories(), getMainCategories()]);
 
   let query = supabase
     .from("products")
@@ -32,15 +39,19 @@ export default async function Home({
     query = query.eq("fabric", fabric);
   } else if (category) {
     query = query.eq("category_id", category);
+  } else if (mainCategoryId) {
+    const categoryIds = categories
+      .filter((cat) => cat.main_category_id === mainCategoryId)
+      .map((cat) => cat.id);
+    query = query.in("category_id", categoryIds.length > 0 ? categoryIds : [mainCategoryId]);
   } else if (filter && FILTER_LABELS[filter]) {
     query = query.eq("badge", filter);
   }
 
-  const [{ data: products, error }, heroImages, activePromo, categories] = await Promise.all([
+  const [{ data: products, error }, heroImages, activePromo] = await Promise.all([
     query.returns<Product[]>(),
     getHeroBanners(),
     getActivePromoBanner(),
-    getCategories(),
   ]);
 
   if (error) {
@@ -59,14 +70,19 @@ export default async function Home({
   const matchedCategory = category
     ? categories.find((cat) => cat.id === category)
     : undefined;
+  const matchedMainCategory = mainCategoryId
+    ? mainCategories.find((mc) => mc.id === mainCategoryId)
+    : undefined;
 
   const heading = subcategory
     ? subcategory.name
     : matchedCategory
       ? matchedCategory.name
-      : filter && FILTER_LABELS[filter]
-        ? FILTER_LABELS[filter]
-        : "All Sarees";
+      : matchedMainCategory
+        ? matchedMainCategory.name
+        : filter && FILTER_LABELS[filter]
+          ? FILTER_LABELS[filter]
+          : "All Sarees";
 
   const heroSlides = heroImages.map((banner) => {
     let href = "/";

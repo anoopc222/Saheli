@@ -3,11 +3,17 @@ import {
   deleteCategoryAction,
   createSubcategoryAction,
 } from "@/lib/category-actions";
+import {
+  createMainCategoryAction,
+  deleteMainCategoryAction,
+} from "@/lib/main-category-actions";
 import { getCategories, getMainCategories } from "@/lib/categories-data";
 import { CategoryNameEditor } from "@/components/admin/CategoryNameEditor";
 import { CategoryMenuToggle } from "@/components/admin/CategoryMenuToggle";
 import { SubcategoryChip } from "@/components/admin/SubcategoryChip";
 import { ConfirmSubmitButton } from "@/components/admin/ConfirmSubmitButton";
+import { MainCategoryNameEditor } from "@/components/admin/MainCategoryNameEditor";
+import { MainCategoryReorderButtons } from "@/components/admin/MainCategoryReorderButtons";
 
 export const dynamic = "force-dynamic";
 
@@ -22,6 +28,52 @@ export default async function AdminCategoriesPage() {
       <h1 className="mb-4 font-heading text-xl font-semibold text-ink">
         Categories
       </h1>
+
+      <section className="mb-8">
+        <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-ink-muted">
+          Main categories (Shop menu)
+        </h2>
+        <div className="mb-3 flex flex-col gap-2">
+          {mainCategories.map((mainCategory, index) => (
+            <div
+              key={mainCategory.id}
+              className="flex items-center justify-between gap-3 rounded-xl border border-line bg-paper-raised p-3"
+            >
+              <div className="flex items-center gap-2">
+                <MainCategoryReorderButtons
+                  id={mainCategory.id}
+                  disableUp={index === 0}
+                  disableDown={index === mainCategories.length - 1}
+                />
+                <MainCategoryNameEditor id={mainCategory.id} name={mainCategory.name} />
+              </div>
+              <form action={deleteMainCategoryAction}>
+                <input type="hidden" name="id" value={mainCategory.id} />
+                <ConfirmSubmitButton
+                  confirmMessage={`Delete "${mainCategory.name}"? It must have no categories under it.`}
+                  className="text-xs text-ink-muted hover:text-accent"
+                >
+                  Delete
+                </ConfirmSubmitButton>
+              </form>
+            </div>
+          ))}
+        </div>
+        <form action={createMainCategoryAction} className="flex items-end gap-2">
+          <input
+            name="name"
+            required
+            placeholder="e.g. Footwear"
+            className="w-52 rounded-xl border border-line bg-paper px-3 py-2 text-sm outline-none focus:border-accent"
+          />
+          <button
+            type="submit"
+            className="rounded-full bg-ink px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-accent"
+          >
+            Add main category
+          </button>
+        </form>
+      </section>
 
       <form action={createCategoryAction} className="mb-8 flex flex-col gap-3 rounded-2xl border border-line bg-paper-raised p-4">
         <p className="text-sm font-medium text-ink">New category</p>
