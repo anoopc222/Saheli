@@ -6,10 +6,12 @@ import { PencilIcon, XIcon } from "@/components/icons";
 export function EditModal({
   label,
   title,
+  icon: Icon = PencilIcon,
   children,
 }: {
   label: string;
   title: string;
+  icon?: (props: { className?: string }) => React.ReactElement;
   children: (close: () => void) => React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
@@ -23,7 +25,7 @@ export function EditModal({
         aria-label={label}
         className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-ink-muted transition-colors hover:bg-accent-soft hover:text-accent"
       >
-        <PencilIcon className="h-4 w-4" />
+        <Icon className="h-4 w-4" />
       </button>
       {open && (
         <div
