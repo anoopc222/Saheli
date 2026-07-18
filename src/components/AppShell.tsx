@@ -3,12 +3,12 @@ import { Header } from "@/components/Header";
 import { BottomNav } from "@/components/BottomNav";
 import { NavDrawer } from "@/components/NavDrawer";
 import { NavDrawerProvider } from "@/lib/nav-drawer-context";
-import { getMainCategories } from "@/lib/categories-data";
+import { getMenuTree } from "@/lib/categories-data";
 import { getActivePromoBanner } from "@/lib/homepage-data";
 
 export async function AppShell({ children }: { children: React.ReactNode }) {
-  const [mainCategories, activePromo] = await Promise.all([
-    getMainCategories(),
+  const [menuTree, activePromo] = await Promise.all([
+    getMenuTree(),
     getActivePromoBanner(),
   ]);
 
@@ -20,7 +20,7 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
         <BottomNav />
       </Suspense>
       <NavDrawer
-        mainCategories={mainCategories}
+        menuTree={menuTree}
         onamHref={activePromo?.button_link || "/"}
       />
     </NavDrawerProvider>

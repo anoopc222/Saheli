@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useNavDrawer } from "@/lib/nav-drawer-context";
-import { MainCategoryRow } from "@/lib/categories-data";
+import { MenuMainCategory } from "@/lib/categories-data";
 import {
   XIcon,
   HomeIcon,
@@ -38,14 +38,15 @@ const SHOP_ICONS: Record<string, IconComponent> = {
 };
 
 export function NavDrawer({
-  mainCategories,
+  menuTree,
   onamHref,
 }: {
-  mainCategories: MainCategoryRow[];
+  menuTree: MenuMainCategory[];
   onamHref: string;
 }) {
   const { isOpen, close } = useNavDrawer();
   const [shopOpen, setShopOpen] = useState(false);
+  const [expandedMainId, setExpandedMainId] = useState<string | null>(null);
 
   return (
     <div className={`fixed inset-0 z-40 ${isOpen ? "" : "pointer-events-none"}`} aria-hidden={!isOpen}>
@@ -95,22 +96,73 @@ export function NavDrawer({
               />
             </button>
             {shopOpen && (
-              <div className="flex flex-col gap-0.5 pb-2 pl-8">
-                {mainCategories.length === 0 ? (
+              <div className="flex flex-col gap-0.5 pb-2 pl-6">
+                {menuTree.length === 0 ? (
                   <p className="py-1.5 text-xs text-ink-muted">Nothing here yet.</p>
                 ) : (
-                  mainCategories.map((mainCategory) => {
+                  menuTree.map((mainCategory) => {
                     const Icon = SHOP_ICONS[mainCategory.slug] ?? TagIcon;
+                    const isExpanded = expandedMainId === mainCategory.id;
                     return (
-                      <Link
-                        key={mainCategory.id}
-                        href={`/?main_category=${mainCategory.id}`}
-                        onClick={close}
-                        className="flex items-center gap-3 py-2 text-sm text-ink transition-colors hover:text-accent"
-                      >
-                        <Icon className="h-4.5 w-4.5 text-ink-muted" />
-                        {mainCategory.name}
-                      </Link>
+                      <div key={mainCategory.id}>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setExpandedMainId(isExpanded ? null : mainCategory.id)
+                          }
+                          className="flex w-full items-center justify-between gap-3 py-2 text-sm text-ink transition-colors hover:text-accent"
+                        >
+                          <span className="flex items-center gap-3">
+                            <Icon className="h-4.5 w-4.5 text-ink-muted" />
+                            {mainCategory.name}
+                          </span>
+                          <ChevronDownIcon
+                            className={`h-3.5 w-3.5 text-ink-muted transition-transform ${
+                              isExpanded ? "rotate-180" : ""
+                            }`}
+                          />
+                        </button>
+                        {isExpanded && (
+                          <div className="flex flex-col gap-2.5 py-1 pl-7 pb-3">
+                            <Link
+                              href={`/?main_category=${mainCategory.id}`}
+                              onClick={close}
+                              className="text-xs font-medium text-accent hover:underline"
+                            >
+                              View all {mainCategory.name}
+                            </Link>
+                            {mainCategory.categories.length === 0 ? (
+                              <p className="text-xs text-ink-muted">Nothing here yet.</p>
+                            ) : (
+                              mainCategory.categories.map((category) => (
+                                <div key={category.id}>
+                                  <Link
+                                    href={`/?category=${category.id}`}
+                                    onClick={close}
+                                    className="mb-1.5 block text-sm font-medium text-ink transition-colors hover:text-accent"
+                                  >
+                                    {category.name}
+                                  </Link>
+                                  {category.subcategories.length > 0 && (
+                                    <div className="flex flex-wrap gap-1.5">
+                                      {category.subcategories.map((sub) => (
+                                        <Link
+                                          key={sub.id}
+                                          href={`/?fabric=${encodeURIComponent(sub.fabric)}`}
+                                          onClick={close}
+                                          className="rounded-full border border-line px-3 py-1 text-xs font-medium text-ink transition-colors hover:border-accent hover:bg-accent-soft hover:text-accent"
+                                        >
+                                          {sub.name}
+                                        </Link>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              ))
+                            )}
+                          </div>
+                        )}
+                      </div>
                     );
                   })
                 )}
