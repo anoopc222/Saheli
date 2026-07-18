@@ -1,6 +1,8 @@
+import Link from "next/link";
 import { getProductSettings } from "@/lib/product-settings-data";
 import { updateProductSettingsAction } from "@/lib/product-settings-actions";
 import { getDiscountCodes } from "@/lib/discount-data";
+import { getCustomerCount } from "@/lib/customers-data";
 import {
   createDiscountCodeAction,
   setDiscountCodeActiveAction,
@@ -15,13 +17,27 @@ import { formatPrice } from "@/lib/format";
 export const dynamic = "force-dynamic";
 
 export default async function AdminHomePage() {
-  const [settings, discountCodes] = await Promise.all([
+  const [settings, discountCodes, customerCount] = await Promise.all([
     getProductSettings(),
     getDiscountCodes(),
+    getCustomerCount(),
   ]);
 
   return (
     <div className="flex flex-col gap-6">
+      <Link
+        href="/admin/customers"
+        className="flex items-center justify-between rounded-2xl border border-line bg-paper-raised p-4 transition-colors hover:border-accent"
+      >
+        <div>
+          <p className="font-heading text-lg font-semibold text-ink">Customers</p>
+          <p className="mt-1 text-sm text-ink-muted">
+            See who bought what, tracked by phone number
+          </p>
+        </div>
+        <p className="font-heading text-2xl font-semibold text-accent">{customerCount}</p>
+      </Link>
+
       <section className="rounded-2xl border border-line bg-paper-raised p-4">
         <h2 className="mb-1 text-xs font-semibold uppercase tracking-wide text-ink-muted">
           New arrival badge
