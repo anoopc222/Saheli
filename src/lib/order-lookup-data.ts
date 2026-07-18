@@ -22,6 +22,7 @@ export type OrderDetail = {
   status: string;
   amount_total_cents: number;
   shipping_fee_cents: number;
+  shipping_zone_name: string | null;
   gst_amount_cents: number;
   customer_gstin: string | null;
   created_at: string;
@@ -81,7 +82,7 @@ export async function getOrderByReference(
   const { data: order } = await supabase
     .from("orders")
     .select(
-      `id, status, amount_total_cents, shipping_fee_cents, gst_amount_cents, customer_gstin, created_at, customer_email, ${SHIPPING_COLUMNS}`
+      `id, status, amount_total_cents, shipping_fee_cents, shipping_zone_name, gst_amount_cents, customer_gstin, created_at, customer_email, ${SHIPPING_COLUMNS}`
     )
     .eq("id", orderId)
     .maybeSingle<
@@ -90,6 +91,7 @@ export async function getOrderByReference(
         status: string;
         amount_total_cents: number;
         shipping_fee_cents: number;
+        shipping_zone_name: string | null;
         gst_amount_cents: number;
         customer_gstin: string | null;
         created_at: string;
@@ -107,6 +109,7 @@ export async function getOrderByReference(
     status: order.status,
     amount_total_cents: order.amount_total_cents,
     shipping_fee_cents: order.shipping_fee_cents,
+    shipping_zone_name: order.shipping_zone_name,
     gst_amount_cents: order.gst_amount_cents,
     customer_gstin: order.customer_gstin,
     created_at: order.created_at,
@@ -120,7 +123,7 @@ export async function getOrderById(id: string): Promise<OrderDetail | null> {
   const { data: order } = await supabase
     .from("orders")
     .select(
-      `id, status, amount_total_cents, shipping_fee_cents, gst_amount_cents, customer_gstin, created_at, ${SHIPPING_COLUMNS}`
+      `id, status, amount_total_cents, shipping_fee_cents, shipping_zone_name, gst_amount_cents, customer_gstin, created_at, ${SHIPPING_COLUMNS}`
     )
     .eq("id", id)
     .maybeSingle<
@@ -129,6 +132,7 @@ export async function getOrderById(id: string): Promise<OrderDetail | null> {
         status: string;
         amount_total_cents: number;
         shipping_fee_cents: number;
+        shipping_zone_name: string | null;
         gst_amount_cents: number;
         customer_gstin: string | null;
         created_at: string;
@@ -142,6 +146,7 @@ export async function getOrderById(id: string): Promise<OrderDetail | null> {
     status: order.status,
     amount_total_cents: order.amount_total_cents,
     shipping_fee_cents: order.shipping_fee_cents,
+    shipping_zone_name: order.shipping_zone_name,
     gst_amount_cents: order.gst_amount_cents,
     customer_gstin: order.customer_gstin,
     created_at: order.created_at,

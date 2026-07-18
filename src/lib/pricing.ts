@@ -47,10 +47,14 @@ export type OrderTotals = {
   grandTotalCents: number;
 };
 
+// Shipping is resolved separately (it depends on the destination PIN code
+// via shipping-zones, not on product settings), so it's passed in already
+// computed rather than derived here.
 export function computeOrderTotals(
   items: CartItemInput[],
   discount: DiscountInput,
-  settings: GstSettings & { shipping_fee_cents: number }
+  gstSettings: GstSettings,
+  shippingFeeCents: number
 ): OrderTotals {
   const subtotalCents = items.reduce((sum, i) => sum + i.unitPriceCents * i.quantity, 0);
   const discountedLines = applyDiscountToItems(items, discount);
@@ -59,8 +63,7 @@ export function computeOrderTotals(
     0
   );
   const discountCents = subtotalCents - discountedSubtotalCents;
-  const gstCents = totalGstCents(discountedLines, settings);
-  const shippingFeeCents = settings.shipping_fee_cents;
+  const gstCents = totalGstCents(discountedLines, gstSettings);
   const grandTotalCents = discountedSubtotalCents + gstCents + shippingFeeCents;
 
   return { subtotalCents, discountCents, gstCents, shippingFeeCents, grandTotalCents };

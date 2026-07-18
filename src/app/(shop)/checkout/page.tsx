@@ -7,6 +7,8 @@ import Script from "next/script";
 import { useCart } from "@/lib/cart-context";
 import { formatPrice } from "@/lib/format";
 import { getProductSettings, ProductSettings } from "@/lib/product-settings-data";
+import { getShippingZones } from "@/lib/shipping-zones-data";
+import { matchShippingZone, ShippingZone } from "@/lib/shipping-zones";
 import { computeOrderTotals } from "@/lib/pricing";
 
 type Discount = {
@@ -70,6 +72,7 @@ function CheckoutForm() {
 
   const [discount, setDiscount] = useState<Discount>(null);
   const [settings, setSettings] = useState<ProductSettings | null>(null);
+  const [shippingZones, setShippingZones] = useState<ShippingZone[]>([]);
   const [scriptReady, setScriptReady] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -87,6 +90,7 @@ function CheckoutForm() {
 
   useEffect(() => {
     getProductSettings().then(setSettings);
+    getShippingZones().then(setShippingZones);
   }, []);
 
   useEffect(() => {
@@ -109,16 +113,20 @@ function CheckoutForm() {
       .catch(() => {});
   }, [couponCode]);
 
+  const matchedZone =
+    form.postalCode.trim().length === 6 ? matchShippingZone(form.postalCode, shippingZones) : null;
+  const shippingFeeCents = matchedZone?.rate_cents ?? 0;
+
   const totals = settings
     ? computeOrderTotals(
         lines.map((l) => ({ unitPriceCents: l.product.price_cents, quantity: l.quantity })),
         discount,
-        settings
+        settings,
+        shippingFeeCents
       )
     : null;
   const discountCents = totals?.discountCents ?? 0;
   const gstCents = totals?.gstCents ?? 0;
-  const shippingFeeCents = totals?.shippingFeeCents ?? settings?.shipping_fee_cents ?? 0;
   const payableCents = totals?.grandTotalCents ?? totalCents;
 
   function updateField(field: keyof ShippingForm, value: string) {
@@ -239,9 +247,15 @@ function CheckoutForm() {
           </div>
         )}
         <div className="mt-1 flex items-center justify-between text-sm">
-          <p className="text-ink-muted">Shipping</p>
+          <p className="text-ink-muted">
+            Shipping{matchedZone ? ` (${matchedZone.name})` : ""}
+          </p>
           <p className="tabular-nums text-ink">
-            {shippingFeeCents > 0 ? formatPrice(shippingFeeCents) : "Free"}
+            {form.postalCode.trim().length !== 6
+              ? "Enter pincode"
+              : shippingFeeCents > 0
+                ? formatPrice(shippingFeeCents)
+                : "Free"}
           </p>
         </div>
         <div className="mt-2 flex items-center justify-between border-t border-line pt-2">
@@ -310,9 +324,11 @@ function CheckoutForm() {
         </div>
         <input
           required
+          inputMode="numeric"
+          maxLength={6}
           placeholder="Pincode"
           value={form.postalCode}
-          onChange={(e) => updateField("postalCode", e.target.value)}
+          onChange={(e) => updateField("postalCode", e.target.value.replace(/\D/g, ""))}
           className={inputClasses}
         />
         <input

@@ -132,7 +132,9 @@ export default async function TrackOrderPage({
                 </div>
               )}
               <div className="flex items-center justify-between">
-                <p className="text-ink-muted">Shipping</p>
+                <p className="text-ink-muted">
+                  Shipping{order.shipping_zone_name ? ` (${order.shipping_zone_name})` : ""}
+                </p>
                 <p className="tabular-nums text-ink">
                   {order.shipping_fee_cents > 0 ? formatPrice(order.shipping_fee_cents) : "Free"}
                 </p>

@@ -3,6 +3,8 @@ import { getRazorpay } from "@/lib/razorpay";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/server";
 import { validateDiscountCode } from "@/lib/discount-data";
 import { getProductSettings } from "@/lib/product-settings-data";
+import { getShippingZones } from "@/lib/shipping-zones-data";
+import { matchShippingZone } from "@/lib/shipping-zones";
 import { applyDiscountToItems, computeOrderTotals } from "@/lib/pricing";
 import { Product } from "@/types/product";
 
@@ -45,6 +47,13 @@ export async function POST(request: Request) {
     ) {
       return NextResponse.json(
         { error: "Please fill in all the required shipping details." },
+        { status: 400 }
+      );
+    }
+
+    if (!/^[0-9]{6}$/.test(shipping.postalCode.trim())) {
+      return NextResponse.json(
+        { error: "Please enter a valid 6-digit pincode." },
         { status: 400 }
       );
     }
@@ -107,16 +116,22 @@ export async function POST(request: Request) {
       unitPriceCents: discountedLines[index].unitPriceCents,
     }));
 
-    const settings = await getProductSettings();
+    const [settings, shippingZones] = await Promise.all([
+      getProductSettings(),
+      getShippingZones(),
+    ]);
+    const matchedZone = matchShippingZone(shipping.postalCode, shippingZones);
+    const shippingFeeCents = matchedZone?.rate_cents ?? 0;
+
     const totals = computeOrderTotals(
       priceInputs,
       discount?.valid
         ? { percentOff: discount.percentOff, amountOffCents: discount.amountOffCents }
         : null,
-      settings
+      settings,
+      shippingFeeCents
     );
-    const { gstCents: gstAmountCents, shippingFeeCents, grandTotalCents: amountTotalCents } =
-      totals;
+    const { gstCents: gstAmountCents, grandTotalCents: amountTotalCents } = totals;
 
     // The order (and its items) are recorded up front, before payment —
     // Razorpay's checkout widget doesn't collect shipping details for us
@@ -130,6 +145,7 @@ export async function POST(request: Request) {
         source: "razorpay",
         amount_total_cents: amountTotalCents,
         shipping_fee_cents: shippingFeeCents,
+        shipping_zone_name: matchedZone?.name ?? null,
         gst_amount_cents: gstAmountCents,
         customer_email: shipping.email.trim(),
         customer_gstin: gstin,

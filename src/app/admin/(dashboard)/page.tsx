@@ -3,6 +3,7 @@ import { getProductSettings } from "@/lib/product-settings-data";
 import { updateProductSettingsAction } from "@/lib/product-settings-actions";
 import { getDiscountCodes } from "@/lib/discount-data";
 import { getCustomerCount } from "@/lib/customers-data";
+import { getShippingZones } from "@/lib/shipping-zones-data";
 import {
   createDiscountCodeAction,
   setDiscountCodeActiveAction,
@@ -11,16 +12,18 @@ import {
 import { VisibilityToggle } from "@/components/admin/VisibilityToggle";
 import { InlineAddForm } from "@/components/admin/InlineAddForm";
 import { ConfirmSubmitButton } from "@/components/admin/ConfirmSubmitButton";
+import { ShippingZoneManager } from "@/components/admin/ShippingZoneManager";
 import { TrashIcon } from "@/components/icons";
 import { formatPrice } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminHomePage() {
-  const [settings, discountCodes, customerCount] = await Promise.all([
+  const [settings, discountCodes, customerCount, shippingZones] = await Promise.all([
     getProductSettings(),
     getDiscountCodes(),
     getCustomerCount(),
+    getShippingZones(),
   ]);
 
   return (
@@ -97,30 +100,15 @@ export default async function AdminHomePage() {
 
       <section className="rounded-2xl border border-line bg-paper-raised p-4">
         <h2 className="mb-1 text-xs font-semibold uppercase tracking-wide text-ink-muted">
-          Shipping charge
+          Shipping zones
         </h2>
         <p className="mb-3 text-sm text-ink-muted">
-          A flat shipping fee added on top of the cart total at checkout. Set to 0 for free
-          shipping.
+          Shipping is charged by matching the customer&apos;s pincode against these zones,
+          checked in priority order (lowest first) — the first zone whose PIN prefixes match
+          wins. Leave PIN prefixes blank on one zone to make it a catch-all, and give it the
+          highest priority number so it&apos;s checked last.
         </p>
-        <form action={updateProductSettingsAction} className="flex items-center gap-2">
-          <span className="text-sm text-ink-muted">&#8377;</span>
-          <input
-            type="number"
-            name="shipping_fee"
-            min={0}
-            step="0.01"
-            defaultValue={settings.shipping_fee_cents / 100}
-            required
-            className="w-24 rounded-xl border border-line bg-paper px-3 py-2 text-sm outline-none focus:border-accent"
-          />
-          <button
-            type="submit"
-            className="rounded-full bg-ink px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-accent"
-          >
-            Save
-          </button>
-        </form>
+        <ShippingZoneManager zones={shippingZones} />
       </section>
 
       <section className="rounded-2xl border border-line bg-paper-raised p-4">

@@ -28,16 +28,19 @@ export default function CartPage() {
     getProductSettings().then(setSettings);
   }, []);
 
+  // The destination pincode (and so the real shipping fee) isn't known
+  // until the checkout page's shipping form — this total is subtotal,
+  // discount, and GST only, with shipping called out separately below.
   const totals = settings
     ? computeOrderTotals(
         lines.map((l) => ({ unitPriceCents: l.product.price_cents, quantity: l.quantity })),
         appliedCoupon,
-        settings
+        settings,
+        0
       )
     : null;
   const discountCents = totals?.discountCents ?? 0;
   const gstCents = totals?.gstCents ?? 0;
-  const shippingFeeCents = totals?.shippingFeeCents ?? settings?.shipping_fee_cents ?? 0;
   const discountedTotalCents = totals?.grandTotalCents ?? totalCents;
 
   async function handleApplyCoupon() {
@@ -212,9 +215,7 @@ export default function CartPage() {
         )}
         <div className="flex items-center justify-between">
           <p className="text-sm text-ink-muted">Shipping</p>
-          <p className="text-sm tabular-nums text-ink">
-            {shippingFeeCents > 0 ? formatPrice(shippingFeeCents) : "Free"}
-          </p>
+          <p className="text-sm text-ink-muted">Calculated at checkout</p>
         </div>
         <div className="flex items-center justify-between pt-1">
           <p className="text-base font-semibold text-ink">Total</p>
@@ -222,6 +223,7 @@ export default function CartPage() {
             {formatPrice(discountedTotalCents)}
           </p>
         </div>
+        <p className="text-right text-xs text-ink-muted">plus shipping</p>
       </div>
 
       <button
