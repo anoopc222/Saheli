@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { Product } from "@/types/product";
@@ -5,6 +6,7 @@ import { ProductCard } from "@/components/ProductCard";
 import { Hero } from "@/components/Hero";
 import { IconFeatureRow } from "@/components/IconFeatureRow";
 import { PromoStrip } from "@/components/PromoStrip";
+import { SortSelect } from "@/components/SortSelect";
 import { ChevronRightIcon } from "@/components/icons";
 import { getCategories, getMainCategories } from "@/lib/categories-data";
 import { getHeroBanners, getActivePromoBanner } from "@/lib/homepage-data";
@@ -26,10 +28,15 @@ export default async function Home({
     category?: string;
     main_category?: string;
     tag?: string;
+    sort?: string;
   }>;
 }) {
-  const { filter, fabric, category, main_category: mainCategoryId, tag } = await searchParams;
+  const { filter, fabric, category, main_category: mainCategoryId, tag, sort } = await searchParams;
   const supabase = createBrowserSupabaseClient();
+
+  const hasFilter = Boolean(
+    fabric || category || mainCategoryId || tag || (filter && FILTER_LABELS[filter])
+  );
 
   const [categories, mainCategories, menuItems] = await Promise.all([
     getCategories(),
@@ -37,10 +44,7 @@ export default async function Home({
     getMenuItems(),
   ]);
 
-  let query = supabase
-    .from("products")
-    .select("*")
-    .order("created_at", { ascending: true });
+  let query = supabase.from("products").select("*");
 
   if (fabric) {
     query = query.eq("fabric", fabric);
@@ -57,13 +61,21 @@ export default async function Home({
     query = query.eq("badge", filter);
   }
 
+  if (sort === "price_asc") {
+    query = query.order("price_cents", { ascending: true });
+  } else if (sort === "price_desc") {
+    query = query.order("price_cents", { ascending: false });
+  } else {
+    query = query.order("created_at", { ascending: true });
+  }
+
   const [{ data: products, error }, heroImages, activePromo, featureItems, featureRowSettings] =
     await Promise.all([
       query.returns<Product[]>(),
-      getHeroBanners(),
-      getActivePromoBanner(),
-      getFeatureItems(),
-      getFeatureRowSettings(),
+      hasFilter ? Promise.resolve([]) : getHeroBanners(),
+      hasFilter ? Promise.resolve(null) : getActivePromoBanner(),
+      hasFilter ? Promise.resolve([]) : getFeatureItems(),
+      hasFilter ? Promise.resolve(null) : getFeatureRowSettings(),
     ]);
 
   if (error) {
@@ -116,11 +128,15 @@ export default async function Home({
 
   return (
     <div>
-      <Hero slides={heroSlides} />
-      {(featureRowSettings?.show_on_home ?? true) && <IconFeatureRow items={featureItems} />}
-      <PromoStrip promo={activePromo} />
+      {!hasFilter && (
+        <>
+          <Hero slides={heroSlides} />
+          {(featureRowSettings?.show_on_home ?? true) && <IconFeatureRow items={featureItems} />}
+          <PromoStrip promo={activePromo} />
+        </>
+      )}
       <div id="shop" className="mx-auto max-w-[480px] scroll-mt-16 px-4 pb-8 pt-[1.125rem]">
-        <div className="mb-4 flex items-center justify-between">
+        <div className="mb-3 flex items-center justify-between">
           <h2 className="font-heading text-xl font-semibold text-ink">{heading}</h2>
           <Link
             href="/"
@@ -129,6 +145,11 @@ export default async function Home({
             View all
             <ChevronRightIcon className="h-4 w-4" />
           </Link>
+        </div>
+        <div className="mb-4 flex justify-end">
+          <Suspense fallback={null}>
+            <SortSelect />
+          </Suspense>
         </div>
         {products.length === 0 ? (
           <p className="text-ink-muted">No sarees found for this filter.</p>
