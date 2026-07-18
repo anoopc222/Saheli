@@ -5,31 +5,31 @@ export function PromoStrip({ promo }: { promo: PromoBanner | null }) {
   if (!promo) return null;
 
   return (
-    <div className="mx-auto max-w-[480px] px-4 pb-5">
-      <div className="relative overflow-hidden rounded-2xl">
+    <div className="mx-auto max-w-[480px] px-4 pb-4">
+      <div className="relative aspect-[343/116] w-full overflow-hidden rounded-[1.125rem] bg-line">
         {promo.image_url ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={promo.image_url}
             alt=""
-            className="h-44 w-full object-cover"
+            className="absolute inset-0 h-full w-full object-cover"
           />
         ) : (
-          <div className="h-44 w-full bg-accent-soft" />
+          <div className="absolute inset-0 bg-accent-soft" />
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-paper/90 via-paper/40 to-transparent" />
-        <div className="absolute inset-x-0 bottom-0 flex flex-col items-center gap-1.5 p-4 text-center">
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 px-4 text-center">
           {promo.title && (
-            <p className="font-heading text-lg font-semibold uppercase tracking-wide text-ink">
+            <p className="font-heading text-[1.125rem] font-semibold uppercase tracking-wide text-ink">
               {promo.title}
             </p>
           )}
           {promo.subtitle && (
-            <p className="text-xs text-ink-muted">{promo.subtitle}</p>
+            <p className="text-sm text-ink-muted">{promo.subtitle}</p>
           )}
           <Link
             href={promo.button_link || "/"}
-            className="mt-1 inline-flex items-center gap-1.5 rounded-full bg-ink px-5 py-2.5 text-xs font-semibold uppercase tracking-wide text-white transition-colors hover:bg-accent"
+            className="mt-1.5 flex h-[2.625rem] w-[8.75rem] items-center justify-center gap-1.5 rounded-[1.25rem] bg-brand text-xs font-semibold uppercase tracking-wide text-white transition-colors hover:bg-brand-dark"
           >
             {promo.button_text || "Shop Now"}
             <span aria-hidden>&rarr;</span>

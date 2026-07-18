@@ -30,9 +30,9 @@ export function ProductCard({ product }: { product: Product }) {
             wishlisted ? "text-accent" : "text-ink"
           }`}
         >
-          <HeartIcon className="h-4.5 w-4.5" filled={wishlisted} />
+          <HeartIcon className="h-[1.375rem] w-[1.375rem]" filled={wishlisted} />
         </button>
-        <div className="aspect-[3/4] w-full overflow-hidden bg-line">
+        <div className="aspect-[164/180] w-full overflow-hidden bg-line">
           {product.image_url && (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -66,7 +66,7 @@ export function ProductCard({ product }: { product: Product }) {
         <button
           onClick={() => addItem(product)}
           disabled={product.stock <= 0}
-          className="mt-2 rounded-full bg-ink px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-accent disabled:opacity-40"
+          className="mt-2 rounded-full bg-brand px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-dark disabled:opacity-40"
         >
           {product.stock > 0 ? "Add to cart" : "Out of stock"}
         </button>

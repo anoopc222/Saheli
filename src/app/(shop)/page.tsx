@@ -66,12 +66,12 @@ export default async function Home({
       <Hero images={heroImages.map((h) => h.image_url)} />
       <IconFeatureRow />
       <PromoStrip promo={activePromo} />
-      <div id="shop" className="mx-auto max-w-[480px] scroll-mt-16 px-4 pb-8 pt-2">
+      <div id="shop" className="mx-auto max-w-[480px] scroll-mt-16 px-4 pb-8 pt-[1.125rem]">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="font-heading text-xl font-bold text-ink">{heading}</h2>
+          <h2 className="font-heading text-2xl font-semibold text-ink">{heading}</h2>
           <Link
             href="/"
-            className="flex items-center gap-0.5 text-sm font-medium text-accent transition-colors hover:text-accent-dark"
+            className="flex items-center gap-0.5 text-base font-medium text-accent transition-colors hover:text-accent-dark"
           >
             View all
             <ChevronRightIcon className="h-4 w-4" />
