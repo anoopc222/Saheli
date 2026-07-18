@@ -105,44 +105,28 @@ export function ProductForm({
   const [costPrice, setCostPrice] = useState(
     product?.cost_price_cents ? product.cost_price_cents / 100 : 0
   );
-  const [sellingPrice, setSellingPrice] = useState(product ? product.price_cents / 100 : 0);
-  const [strikePrice, setStrikePrice] = useState(
-    product?.compare_at_price_cents ? product.compare_at_price_cents / 100 : 0
-  );
-  // Existing products already have real, admin-chosen prices — only
-  // auto-suggest selling/strike price from cost for a product being
-  // created for the first time, and stop as soon as the admin edits
-  // either field directly.
-  const [sellingTouched, setSellingTouched] = useState(Boolean(product));
-  const [strikeTouched, setStrikeTouched] = useState(Boolean(product));
+  // Strike price is a dummy "was" price meant only to catch the
+  // customer's eye, entered as a percentage above the selling price
+  // rather than an absolute amount. Back-derive that percentage from
+  // whatever was last saved so editing a product shows the same %.
+  const [strikePercent, setStrikePercent] = useState(() => {
+    if (product?.compare_at_price_cents && product.price_cents > 0) {
+      return Math.round(
+        ((product.compare_at_price_cents - product.price_cents) / product.price_cents) * 100
+      );
+    }
+    return 0;
+  });
 
+  // Selling price is always cost + 40% margin. A product saved before
+  // cost tracking existed has no cost price on file — keep showing its
+  // existing selling price as-is until a cost is entered, instead of
+  // silently zeroing it out.
+  const sellingPrice =
+    costPrice > 0 ? Math.round(costPrice * 1.4) : product ? product.price_cents / 100 : 0;
   const marginAmount = sellingPrice - costPrice;
-  const marginPct = sellingPrice > 0 ? (marginAmount / sellingPrice) * 100 : 0;
-  const discountAmount = strikePrice - sellingPrice;
-  const discountPct = strikePrice > 0 ? (discountAmount / strikePrice) * 100 : 0;
-
-  function handleCostChange(value: number) {
-    setCostPrice(value);
-    if (sellingTouched) return;
-    const suggestedSelling = Math.round(value * 1.4);
-    setSellingPrice(suggestedSelling);
-    if (!strikeTouched) {
-      setStrikePrice(Math.round(suggestedSelling * 1.2));
-    }
-  }
-
-  function handleSellingChange(value: number) {
-    setSellingPrice(value);
-    setSellingTouched(true);
-    if (!strikeTouched) {
-      setStrikePrice(Math.round(value * 1.2));
-    }
-  }
-
-  function handleStrikeChange(value: number) {
-    setStrikePrice(value);
-    setStrikeTouched(true);
-  }
+  const marginPct = costPrice > 0 ? (marginAmount / costPrice) * 100 : 0;
+  const strikePrice = strikePercent > 0 ? Math.round(sellingPrice * (1 + strikePercent / 100)) : 0;
 
   // Revoke every preview blob URL on unmount so selected-but-unsaved images
   // don't linger in memory after leaving the page.
@@ -347,13 +331,12 @@ export function ProductForm({
             min="0"
             name="cost_price"
             value={costPrice || ""}
-            onChange={(e) => handleCostChange(Number(e.target.value) || 0)}
+            onChange={(e) => setCostPrice(Number(e.target.value) || 0)}
             placeholder="What this product costs you"
             className={inputClasses}
           />
           <p className="mt-1.5 text-xs text-ink-muted">
-            Selling price and strike price are suggested at +40% and a
-            further +20% — edit either one any time.
+            Selling price is always cost + 40% margin.
           </p>
         </div>
         <div className="grid grid-cols-2 gap-3">
@@ -361,13 +344,11 @@ export function ProductForm({
             <FieldLabel>Selling price (₹)</FieldLabel>
             <input
               type="number"
-              step="0.01"
-              min="0"
               name="price"
               value={sellingPrice || ""}
-              onChange={(e) => handleSellingChange(Number(e.target.value) || 0)}
+              readOnly
               required
-              className={inputClasses}
+              className={`${inputClasses} bg-paper text-ink-muted`}
             />
             {costPrice > 0 && (
               <p className="mt-1.5 text-xs text-ink-muted">
@@ -377,22 +358,26 @@ export function ProductForm({
             )}
           </div>
           <div>
-            <FieldLabel>Strike price (₹)</FieldLabel>
-            <input
-              type="number"
-              step="0.01"
-              min="0"
-              name="compare_price"
-              value={strikePrice || ""}
-              onChange={(e) => handleStrikeChange(Number(e.target.value) || 0)}
-              className={inputClasses}
-            />
-            {strikePrice > 0 && sellingPrice > 0 && (
-              <p className="mt-1.5 text-xs text-ink-muted">
-                Off: <span className="font-medium text-ink">₹{discountAmount.toFixed(2)}</span>{" "}
-                ({discountPct.toFixed(1)}%)
-              </p>
-            )}
+            <FieldLabel>Strike price (% above selling)</FieldLabel>
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                step="1"
+                min="0"
+                name="strike_percent"
+                value={strikePercent || ""}
+                onChange={(e) => setStrikePercent(Number(e.target.value) || 0)}
+                placeholder="e.g. 10"
+                className={inputClasses}
+              />
+              <span className="shrink-0 text-sm text-ink-muted">%</span>
+            </div>
+            <input type="hidden" name="compare_price" value={strikePrice || ""} />
+            <p className="mt-1.5 text-xs text-ink-muted">
+              {strikePrice > 0
+                ? <>Shown as <span className="font-medium text-ink">₹{strikePrice.toFixed(2)}</span> — a dummy price to attract customers, not a real discount.</>
+                : "Optional — a crossed-out price shown above the selling price to attract customers."}
+            </p>
           </div>
         </div>
         <div>

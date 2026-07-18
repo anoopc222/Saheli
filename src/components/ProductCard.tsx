@@ -13,6 +13,11 @@ export function ProductCard({ product }: { product: Product }) {
   const { addItem } = useCart();
   const { isWishlisted, toggle } = useWishlist();
   const wishlisted = isWishlisted(product.id);
+  const discountPct = product.compare_at_price_cents
+    ? Math.round(
+        ((product.compare_at_price_cents - product.price_cents) / product.compare_at_price_cents) * 100
+      )
+    : 0;
 
   return (
     <div className="group flex flex-col overflow-hidden rounded-md border border-line bg-paper-raised shadow-sm transition-shadow hover:shadow-md">
@@ -61,6 +66,9 @@ export function ProductCard({ product }: { product: Product }) {
             <p className="text-xs tabular-nums text-ink-muted line-through">
               {formatPrice(product.compare_at_price_cents)}
             </p>
+          )}
+          {discountPct > 0 && (
+            <p className="text-xs font-medium text-accent">{discountPct}% off</p>
           )}
         </div>
         <button

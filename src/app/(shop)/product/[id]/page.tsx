@@ -59,6 +59,16 @@ export default async function ProductPage({
                 {formatPrice(product.compare_at_price_cents)}
               </p>
             )}
+            {product.compare_at_price_cents && (
+              <p className="text-sm font-medium text-accent">
+                {Math.round(
+                  ((product.compare_at_price_cents - product.price_cents) /
+                    product.compare_at_price_cents) *
+                    100
+                )}
+                % off
+              </p>
+            )}
           </div>
           <p className="mt-4 text-sm leading-relaxed text-ink-muted">
             {product.description}
