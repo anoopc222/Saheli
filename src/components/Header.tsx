@@ -13,7 +13,7 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-30 border-b border-line bg-paper/95 backdrop-blur">
-      <div className="mx-auto flex min-h-[5.125rem] max-w-[480px] items-center justify-between px-4">
+      <div className="mx-auto flex min-h-[3.5875rem] max-w-[480px] items-center justify-between px-4">
         <div className="flex items-center gap-3">
           <button
             type="button"
