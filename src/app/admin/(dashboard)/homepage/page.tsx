@@ -1,17 +1,21 @@
 import Link from "next/link";
 import { getHeroBanners, getAllPromoBanners } from "@/lib/homepage-data";
 import { getCategories } from "@/lib/categories-data";
+import { getFeatureItems, getFeatureRowSettings } from "@/lib/feature-items-data";
 import { HeroImagesManager } from "@/components/admin/HeroImagesManager";
+import { FeatureRowManager } from "@/components/admin/FeatureRowManager";
 import { deletePromoAction, setActivePromoAction } from "@/lib/promo-actions";
 import { ConfirmSubmitButton } from "@/components/admin/ConfirmSubmitButton";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminHomepagePage() {
-  const [heroImages, promos, categories] = await Promise.all([
+  const [heroImages, promos, categories, featureItems, featureRowSettings] = await Promise.all([
     getHeroBanners(),
     getAllPromoBanners(),
     getCategories(),
+    getFeatureItems(),
+    getFeatureRowSettings(),
   ]);
 
   return (
@@ -23,6 +27,13 @@ export default async function AdminHomepagePage() {
           Hero images
         </h2>
         <HeroImagesManager images={heroImages} categories={categories} />
+      </section>
+
+      <section>
+        <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-ink-muted">
+          Trust badges strip
+        </h2>
+        <FeatureRowManager items={featureItems} settings={featureRowSettings} />
       </section>
 
       <section>

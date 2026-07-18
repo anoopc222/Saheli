@@ -8,6 +8,7 @@ import { PromoStrip } from "@/components/PromoStrip";
 import { ChevronRightIcon } from "@/components/icons";
 import { getCategories, getMainCategories } from "@/lib/categories-data";
 import { getHeroBanners, getActivePromoBanner } from "@/lib/homepage-data";
+import { getFeatureItems, getFeatureRowSettings } from "@/lib/feature-items-data";
 
 const FILTER_LABELS: Record<string, string> = {
   new: "New Arrivals",
@@ -48,11 +49,14 @@ export default async function Home({
     query = query.eq("badge", filter);
   }
 
-  const [{ data: products, error }, heroImages, activePromo] = await Promise.all([
-    query.returns<Product[]>(),
-    getHeroBanners(),
-    getActivePromoBanner(),
-  ]);
+  const [{ data: products, error }, heroImages, activePromo, featureItems, featureRowSettings] =
+    await Promise.all([
+      query.returns<Product[]>(),
+      getHeroBanners(),
+      getActivePromoBanner(),
+      getFeatureItems(),
+      getFeatureRowSettings(),
+    ]);
 
   if (error) {
     return (
@@ -100,7 +104,7 @@ export default async function Home({
   return (
     <div>
       <Hero slides={heroSlides} />
-      <IconFeatureRow />
+      {(featureRowSettings?.show_on_home ?? true) && <IconFeatureRow items={featureItems} />}
       <PromoStrip promo={activePromo} />
       <div id="shop" className="mx-auto max-w-[480px] scroll-mt-16 px-4 pb-8 pt-[1.125rem]">
         <div className="mb-4 flex items-center justify-between">
