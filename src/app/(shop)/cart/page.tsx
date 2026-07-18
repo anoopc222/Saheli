@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useCart } from "@/lib/cart-context";
 import { formatPrice } from "@/lib/format";
 import { getProductSettings, ProductSettings } from "@/lib/product-settings-data";
-import { totalGstCents } from "@/lib/gst";
+import { computeOrderTotals } from "@/lib/pricing";
 
 type AppliedCoupon = {
   code: string;
@@ -28,20 +28,17 @@ export default function CartPage() {
     getProductSettings().then(setSettings);
   }, []);
 
-  const shippingFeeCents = settings?.shipping_fee_cents ?? 0;
-  const gstCents = settings
-    ? totalGstCents(
+  const totals = settings
+    ? computeOrderTotals(
         lines.map((l) => ({ unitPriceCents: l.product.price_cents, quantity: l.quantity })),
+        appliedCoupon,
         settings
       )
-    : 0;
-
-  const discountCents = appliedCoupon
-    ? appliedCoupon.percentOff
-      ? Math.round((totalCents * appliedCoupon.percentOff) / 100)
-      : Math.min(appliedCoupon.amountOffCents ?? 0, totalCents)
-    : 0;
-  const discountedTotalCents = Math.max(0, totalCents - discountCents) + shippingFeeCents;
+    : null;
+  const discountCents = totals?.discountCents ?? 0;
+  const gstCents = totals?.gstCents ?? 0;
+  const shippingFeeCents = totals?.shippingFeeCents ?? settings?.shipping_fee_cents ?? 0;
+  const discountedTotalCents = totals?.grandTotalCents ?? totalCents;
 
   async function handleApplyCoupon() {
     setCouponLoading(true);
@@ -201,15 +198,16 @@ export default function CartPage() {
           <p className="text-sm text-ink-muted">Subtotal</p>
           <p className="text-sm tabular-nums text-ink">{formatPrice(totalCents)}</p>
         </div>
-        {gstCents > 0 && (
-          <p className="text-xs text-ink-muted">
-            (includes GST of {formatPrice(gstCents)})
-          </p>
-        )}
         {discountCents > 0 && (
           <div className="flex items-center justify-between">
             <p className="text-sm text-ink-muted">Discount</p>
             <p className="text-sm tabular-nums text-accent">-{formatPrice(discountCents)}</p>
+          </div>
+        )}
+        {gstCents > 0 && (
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-ink-muted">GST</p>
+            <p className="text-sm tabular-nums text-ink">{formatPrice(gstCents)}</p>
           </div>
         )}
         <div className="flex items-center justify-between">

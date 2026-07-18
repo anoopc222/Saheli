@@ -101,6 +101,9 @@ export default async function TrackOrderPage({
                   .filter(Boolean)
                   .join(", ")}
               </p>
+              {order.customer_gstin && (
+                <p className="mt-1 text-xs text-ink-muted">GSTIN: {order.customer_gstin}</p>
+              )}
             </div>
           )}
 
@@ -121,21 +124,24 @@ export default async function TrackOrderPage({
                 </div>
               ))}
             </div>
-            <div className="mt-3 flex items-center justify-between border-t border-line pt-3 text-sm">
-              <p className="text-ink-muted">Shipping</p>
-              <p className="tabular-nums text-ink">
-                {order.shipping_fee_cents > 0 ? formatPrice(order.shipping_fee_cents) : "Free"}
-              </p>
+            <div className="mt-3 flex flex-col gap-1 border-t border-line pt-3 text-sm">
+              {order.gst_amount_cents > 0 && (
+                <div className="flex items-center justify-between">
+                  <p className="text-ink-muted">GST</p>
+                  <p className="tabular-nums text-ink">{formatPrice(order.gst_amount_cents)}</p>
+                </div>
+              )}
+              <div className="flex items-center justify-between">
+                <p className="text-ink-muted">Shipping</p>
+                <p className="tabular-nums text-ink">
+                  {order.shipping_fee_cents > 0 ? formatPrice(order.shipping_fee_cents) : "Free"}
+                </p>
+              </div>
+              <div className="flex items-center justify-between font-semibold">
+                <p className="text-ink">Total</p>
+                <p className="tabular-nums text-ink">{formatPrice(order.amount_total_cents)}</p>
+              </div>
             </div>
-            <div className="mt-1 flex items-center justify-between text-sm font-semibold">
-              <p className="text-ink">Total</p>
-              <p className="tabular-nums text-ink">{formatPrice(order.amount_total_cents)}</p>
-            </div>
-            {order.gst_amount_cents > 0 && (
-              <p className="mt-1 text-xs text-ink-muted">
-                Includes GST of {formatPrice(order.gst_amount_cents)}
-              </p>
-            )}
           </div>
 
           <Link

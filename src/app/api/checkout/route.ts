@@ -3,8 +3,10 @@ import { getRazorpay } from "@/lib/razorpay";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/server";
 import { validateDiscountCode } from "@/lib/discount-data";
 import { getProductSettings } from "@/lib/product-settings-data";
-import { totalGstCents } from "@/lib/gst";
+import { applyDiscountToItems, computeOrderTotals } from "@/lib/pricing";
 import { Product } from "@/types/product";
+
+const GSTIN_PATTERN = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/;
 
 type CheckoutItem = { productId: string; quantity: number };
 type ShippingDetails = {
@@ -17,6 +19,7 @@ type ShippingDetails = {
   state: string;
   postalCode: string;
   country?: string;
+  gstin?: string;
 };
 
 export async function POST(request: Request) {
@@ -42,6 +45,14 @@ export async function POST(request: Request) {
     ) {
       return NextResponse.json(
         { error: "Please fill in all the required shipping details." },
+        { status: 400 }
+      );
+    }
+
+    const gstin = shipping.gstin?.trim().toUpperCase() || null;
+    if (gstin && !GSTIN_PATTERN.test(gstin)) {
+      return NextResponse.json(
+        { error: "That GSTIN doesn't look right. Double-check it or leave it blank." },
         { status: 400 }
       );
     }
@@ -80,48 +91,32 @@ export async function POST(request: Request) {
       );
     }
 
-    const subtotalCents = items.reduce((sum, item) => {
-      const product = products.find((p) => p.id === item.productId);
-      return sum + (product?.price_cents ?? 0) * item.quantity;
-    }, 0);
-
-    const discountedItems = items.map((item) => {
-      const product = products.find((p) => p.id === item.productId)!;
-      const itemTotal = product.price_cents * item.quantity;
-
-      let discountedItemTotal = itemTotal;
-      if (discount?.valid) {
-        if (discount.percentOff) {
-          discountedItemTotal = Math.round((itemTotal * (100 - discount.percentOff)) / 100);
-        } else if (discount.amountOffCents && subtotalCents > 0) {
-          const share = itemTotal / subtotalCents;
-          discountedItemTotal = Math.max(
-            0,
-            itemTotal - Math.round(discount.amountOffCents * share)
-          );
-        }
-      }
-
-      return {
-        product,
-        quantity: item.quantity,
-        unitPriceCents: Math.max(0, Math.round(discountedItemTotal / item.quantity)),
-      };
-    });
-
-    const itemsTotalCents = discountedItems.reduce(
-      (sum, i) => sum + i.unitPriceCents * i.quantity,
-      0
+    const priceInputs = items.map((item) => ({
+      unitPriceCents: products.find((p) => p.id === item.productId)!.price_cents,
+      quantity: item.quantity,
+    }));
+    const discountedLines = applyDiscountToItems(
+      priceInputs,
+      discount?.valid
+        ? { percentOff: discount.percentOff, amountOffCents: discount.amountOffCents }
+        : null
     );
+    const discountedItems = items.map((item, index) => ({
+      product: products.find((p) => p.id === item.productId)!,
+      quantity: item.quantity,
+      unitPriceCents: discountedLines[index].unitPriceCents,
+    }));
+
     const settings = await getProductSettings();
-    const shippingFeeCents = settings.shipping_fee_cents;
-    const amountTotalCents = itemsTotalCents + shippingFeeCents;
-    // Informational only — GST is already included in each product's price,
-    // this just records how much of that price was tax at the time of sale.
-    const gstAmountCents = totalGstCents(
-      discountedItems.map((i) => ({ unitPriceCents: i.unitPriceCents, quantity: i.quantity })),
+    const totals = computeOrderTotals(
+      priceInputs,
+      discount?.valid
+        ? { percentOff: discount.percentOff, amountOffCents: discount.amountOffCents }
+        : null,
       settings
     );
+    const { gstCents: gstAmountCents, shippingFeeCents, grandTotalCents: amountTotalCents } =
+      totals;
 
     // The order (and its items) are recorded up front, before payment —
     // Razorpay's checkout widget doesn't collect shipping details for us
@@ -137,6 +132,7 @@ export async function POST(request: Request) {
         shipping_fee_cents: shippingFeeCents,
         gst_amount_cents: gstAmountCents,
         customer_email: shipping.email.trim(),
+        customer_gstin: gstin,
         discount_code: discount?.valid ? discount.code : null,
         shipping_name: shipping.name.trim(),
         shipping_phone: shipping.phone.trim(),
@@ -194,6 +190,7 @@ export async function POST(request: Request) {
       razorpayOrderId: razorpayOrder.id,
       amount: amountTotalCents,
       shippingFeeCents,
+      gstAmountCents,
       orderId: order.id,
       customerName: shipping.name.trim(),
       customerEmail: shipping.email.trim(),

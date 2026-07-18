@@ -128,10 +128,9 @@ export default async function AdminHomePage() {
           GST
         </h2>
         <p className="mb-3 text-sm text-ink-muted">
-          Product prices are treated as GST-inclusive. This breaks out how much tax is
-          already in the price on receipts and order pages — it doesn&apos;t add anything
-          extra to the charge. Sarees/garments priced up to the threshold use the lower
-          rate; above it, the higher rate applies.
+          Product prices are GST-exclusive — this rate is added on top of the price at
+          checkout. Sarees/garments priced up to the threshold use the lower rate; above
+          it, the higher rate applies.
         </p>
         <form action={updateProductSettingsAction} className="flex flex-col gap-2">
           <div className="flex items-center gap-2">

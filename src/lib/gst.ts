@@ -4,9 +4,9 @@ export type GstSettings = {
   gst_high_rate_percent: number;
 };
 
-// Prices are GST-inclusive, so this backs the tax out of what was actually
-// charged (unit_price_cents is already the final, post-discount price) —
-// it's a display breakdown, never an amount added on top.
+// Prices are GST-exclusive — this is tax added on top of what's charged,
+// not backed out of it. unitPriceCents is the base (post-discount) price;
+// the per-piece sale value decides which slab applies.
 export function gstRateForUnitPrice(unitPriceCents: number, settings: GstSettings): number {
   return unitPriceCents <= settings.gst_threshold_cents
     ? settings.gst_low_rate_percent
@@ -20,7 +20,7 @@ export function gstAmountForLine(
 ): number {
   const rate = gstRateForUnitPrice(unitPriceCents, settings);
   const lineTotal = unitPriceCents * quantity;
-  return Math.round((lineTotal * rate) / (100 + rate));
+  return Math.round((lineTotal * rate) / 100);
 }
 
 export function totalGstCents(

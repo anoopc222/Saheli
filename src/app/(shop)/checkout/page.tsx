@@ -7,7 +7,7 @@ import Script from "next/script";
 import { useCart } from "@/lib/cart-context";
 import { formatPrice } from "@/lib/format";
 import { getProductSettings, ProductSettings } from "@/lib/product-settings-data";
-import { totalGstCents } from "@/lib/gst";
+import { computeOrderTotals } from "@/lib/pricing";
 
 type Discount = {
   code: string;
@@ -51,6 +51,7 @@ type ShippingForm = {
   city: string;
   state: string;
   postalCode: string;
+  gstin: string;
 };
 
 export default function CheckoutPage() {
@@ -81,6 +82,7 @@ function CheckoutForm() {
     city: "",
     state: "",
     postalCode: "",
+    gstin: "",
   });
 
   useEffect(() => {
@@ -107,19 +109,17 @@ function CheckoutForm() {
       .catch(() => {});
   }, [couponCode]);
 
-  const discountCents = discount
-    ? discount.percentOff
-      ? Math.round((totalCents * discount.percentOff) / 100)
-      : Math.min(discount.amountOffCents ?? 0, totalCents)
-    : 0;
-  const shippingFeeCents = settings?.shipping_fee_cents ?? 0;
-  const payableCents = Math.max(0, totalCents - discountCents) + shippingFeeCents;
-  const gstCents = settings
-    ? totalGstCents(
+  const totals = settings
+    ? computeOrderTotals(
         lines.map((l) => ({ unitPriceCents: l.product.price_cents, quantity: l.quantity })),
+        discount,
         settings
       )
-    : 0;
+    : null;
+  const discountCents = totals?.discountCents ?? 0;
+  const gstCents = totals?.gstCents ?? 0;
+  const shippingFeeCents = totals?.shippingFeeCents ?? settings?.shipping_fee_cents ?? 0;
+  const payableCents = totals?.grandTotalCents ?? totalCents;
 
   function updateField(field: keyof ShippingForm, value: string) {
     setForm((f) => ({ ...f, [field]: value }));
@@ -226,15 +226,16 @@ function CheckoutForm() {
           <p className="text-ink-muted">Subtotal</p>
           <p className="tabular-nums text-ink">{formatPrice(totalCents)}</p>
         </div>
-        {gstCents > 0 && (
-          <p className="text-xs text-ink-muted">
-            (includes GST of {formatPrice(gstCents)})
-          </p>
-        )}
         {discountCents > 0 && (
           <div className="mt-1 flex items-center justify-between text-sm">
             <p className="text-ink-muted">Discount ({discount?.code})</p>
             <p className="tabular-nums text-accent">-{formatPrice(discountCents)}</p>
+          </div>
+        )}
+        {gstCents > 0 && (
+          <div className="mt-1 flex items-center justify-between text-sm">
+            <p className="text-ink-muted">GST</p>
+            <p className="tabular-nums text-ink">{formatPrice(gstCents)}</p>
           </div>
         )}
         <div className="mt-1 flex items-center justify-between text-sm">
@@ -313,6 +314,12 @@ function CheckoutForm() {
           value={form.postalCode}
           onChange={(e) => updateField("postalCode", e.target.value)}
           className={inputClasses}
+        />
+        <input
+          placeholder="GSTIN (optional, for a business invoice)"
+          value={form.gstin}
+          onChange={(e) => updateField("gstin", e.target.value.toUpperCase())}
+          className={`${inputClasses} uppercase`}
         />
 
         {error && (
