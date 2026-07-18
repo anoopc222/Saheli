@@ -15,6 +15,7 @@ import {
   HeartIcon,
   UserIcon,
   PhoneIcon,
+  TruckIcon,
   DressIcon,
   ShirtIcon,
   DiamondIcon,
@@ -136,6 +137,7 @@ export function NavDrawer({
     !searchParams.get("tag") &&
     !searchParams.get("filter");
   const isWishlistActive = pathname === "/wishlist";
+  const isOrdersActive = pathname === "/orders";
   const isAboutActive = pathname === "/about";
   const isContactActive = pathname === "/contact";
 
@@ -362,6 +364,13 @@ export function NavDrawer({
             label="Wishlist"
             onClick={close}
             active={isWishlistActive}
+          />
+          <NavLink
+            href="/orders"
+            icon={<TruckIcon className="h-5 w-5" />}
+            label="Track Order"
+            onClick={close}
+            active={isOrdersActive}
           />
           <NavLink
             href="/about"

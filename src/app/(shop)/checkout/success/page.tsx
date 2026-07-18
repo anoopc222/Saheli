@@ -1,5 +1,8 @@
 import Link from "next/link";
 import { ClearCartOnLoad } from "@/components/ClearCartOnLoad";
+import { getOrderBySessionId } from "@/lib/order-lookup-data";
+
+export const dynamic = "force-dynamic";
 
 export default async function CheckoutSuccessPage({
   searchParams,
@@ -7,6 +10,7 @@ export default async function CheckoutSuccessPage({
   searchParams: Promise<{ session_id?: string }>;
 }) {
   const { session_id } = await searchParams;
+  const order = session_id ? await getOrderBySessionId(session_id) : null;
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-16 text-center">
@@ -17,11 +21,25 @@ export default async function CheckoutSuccessPage({
       <p className="mt-3 text-ink-muted">
         Thanks for your order! A confirmation has been recorded.
       </p>
-      {session_id && (
-        <p className="mt-1 text-xs text-ink-muted/70">
-          Session: {session_id}
+      {order ? (
+        <div className="mx-auto mt-4 max-w-sm rounded-2xl border border-line bg-paper-raised p-4 text-left">
+          <p className="text-xs font-medium uppercase tracking-wide text-ink-muted">
+            Save this order reference
+          </p>
+          <p className="mt-1 break-all text-sm font-medium text-ink">{order.id}</p>
+          <p className="mt-2 text-xs text-ink-muted">
+            Use it with your email on the{" "}
+            <Link href="/orders" className="text-accent hover:underline">
+              Track your order
+            </Link>{" "}
+            page any time.
+          </p>
+        </div>
+      ) : session_id ? (
+        <p className="mt-2 text-xs text-ink-muted">
+          Still finalizing your order — refresh in a moment to see your reference number.
         </p>
-      )}
+      ) : null}
       <Link
         href="/"
         className="mt-6 inline-block rounded-full bg-ink px-5 py-2.5 text-sm font-medium text-white hover:bg-accent"
