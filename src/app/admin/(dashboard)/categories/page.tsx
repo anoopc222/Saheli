@@ -8,19 +8,29 @@ import {
   deleteMainCategoryAction,
 } from "@/lib/main-category-actions";
 import { getCategories, getMainCategories } from "@/lib/categories-data";
+import { getMenuItems } from "@/lib/menu-items-data";
 import { CategoryNameEditor } from "@/components/admin/CategoryNameEditor";
 import { CategoryMenuToggle } from "@/components/admin/CategoryMenuToggle";
 import { SubcategoryChip } from "@/components/admin/SubcategoryChip";
 import { ConfirmSubmitButton } from "@/components/admin/ConfirmSubmitButton";
 import { MainCategoryNameEditor } from "@/components/admin/MainCategoryNameEditor";
 import { MainCategoryReorderButtons } from "@/components/admin/MainCategoryReorderButtons";
+import { MenuItemLabelEditor } from "@/components/admin/MenuItemLabelEditor";
+import { MenuItemVisibilityToggle } from "@/components/admin/MenuItemVisibilityToggle";
 
 export const dynamic = "force-dynamic";
 
+const MENU_ITEM_FALLBACK_LABEL: Record<string, string> = {
+  onam: "Onam Collection 2026",
+  new_arrivals: "New Arrivals",
+  bestsellers: "Best Sellers",
+};
+
 export default async function AdminCategoriesPage() {
-  const [categories, mainCategories] = await Promise.all([
+  const [categories, mainCategories, menuItems] = await Promise.all([
     getCategories(),
     getMainCategories(),
+    getMenuItems(),
   ]);
 
   return (
@@ -73,6 +83,32 @@ export default async function AdminCategoriesPage() {
             Add main category
           </button>
         </form>
+      </section>
+
+      <section className="mb-8">
+        <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-ink-muted">
+          Promotional menu items
+        </h2>
+        <div className="flex flex-col gap-2">
+          {menuItems.map((item) => (
+            <div
+              key={item.id}
+              className="flex items-center justify-between gap-3 rounded-xl border border-line bg-paper-raised p-3"
+            >
+              {item.key === "onam" ? (
+                <MenuItemLabelEditor
+                  id={item.id}
+                  label={item.label || MENU_ITEM_FALLBACK_LABEL[item.key]}
+                />
+              ) : (
+                <p className="font-heading text-sm font-semibold text-ink">
+                  {MENU_ITEM_FALLBACK_LABEL[item.key]}
+                </p>
+              )}
+              <MenuItemVisibilityToggle id={item.id} showOnMenu={item.show_on_menu} />
+            </div>
+          ))}
+        </div>
       </section>
 
       <form action={createCategoryAction} className="mb-8 flex flex-col gap-3 rounded-2xl border border-line bg-paper-raised p-4">

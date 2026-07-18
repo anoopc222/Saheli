@@ -5,11 +5,13 @@ import { NavDrawer } from "@/components/NavDrawer";
 import { NavDrawerProvider } from "@/lib/nav-drawer-context";
 import { getMenuTree } from "@/lib/categories-data";
 import { getActivePromoBanner } from "@/lib/homepage-data";
+import { getMenuItems } from "@/lib/menu-items-data";
 
 export async function AppShell({ children }: { children: React.ReactNode }) {
-  const [menuTree, activePromo] = await Promise.all([
+  const [menuTree, activePromo, menuItems] = await Promise.all([
     getMenuTree(),
     getActivePromoBanner(),
+    getMenuItems(),
   ]);
 
   return (
@@ -22,6 +24,7 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
       <NavDrawer
         menuTree={menuTree}
         onamHref={activePromo?.button_link || "/"}
+        menuItems={menuItems}
       />
     </NavDrawerProvider>
   );

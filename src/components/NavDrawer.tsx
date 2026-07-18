@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useNavDrawer } from "@/lib/nav-drawer-context";
 import { MenuMainCategory } from "@/lib/categories-data";
+import { MenuItemRow } from "@/lib/menu-items-data";
 import {
   XIcon,
   HomeIcon,
@@ -40,14 +41,23 @@ const SHOP_ICONS: Record<string, IconComponent> = {
 export function NavDrawer({
   menuTree,
   onamHref,
+  menuItems,
 }: {
   menuTree: MenuMainCategory[];
   onamHref: string;
+  menuItems: MenuItemRow[];
 }) {
   const { isOpen, close } = useNavDrawer();
   const [shopOpen, setShopOpen] = useState(false);
   const [expandedMainId, setExpandedMainId] = useState<string | null>(null);
   const [expandedCategoryId, setExpandedCategoryId] = useState<string | null>(null);
+
+  const onamItem = menuItems.find((item) => item.key === "onam");
+  const newArrivalsItem = menuItems.find((item) => item.key === "new_arrivals");
+  const bestsellersItem = menuItems.find((item) => item.key === "bestsellers");
+  const showOnam = onamItem?.show_on_menu ?? true;
+  const showNewArrivals = newArrivalsItem?.show_on_menu ?? true;
+  const showBestsellers = bestsellersItem?.show_on_menu ?? true;
 
   return (
     <div className={`fixed inset-0 z-40 ${isOpen ? "" : "pointer-events-none"}`} aria-hidden={!isOpen}>
@@ -199,19 +209,30 @@ export function NavDrawer({
             onClick={close}
             chevron
           />
-          <NavLink
-            href={onamHref}
-            icon={<SparkleIcon className="h-5 w-5" />}
-            label="Onam Collection 2026"
-            onClick={close}
-          />
-          <NavLink href="/?filter=new" icon={<TagIcon className="h-5 w-5" />} label="New Arrivals" onClick={close} />
-          <NavLink
-            href="/?filter=bestseller"
-            icon={<StarIcon className="h-5 w-5" />}
-            label="Best Sellers"
-            onClick={close}
-          />
+          {showOnam && (
+            <NavLink
+              href={onamHref}
+              icon={<SparkleIcon className="h-5 w-5" />}
+              label={onamItem?.label || "Onam Collection 2026"}
+              onClick={close}
+            />
+          )}
+          {showNewArrivals && (
+            <NavLink
+              href="/?filter=new"
+              icon={<TagIcon className="h-5 w-5" />}
+              label="New Arrivals"
+              onClick={close}
+            />
+          )}
+          {showBestsellers && (
+            <NavLink
+              href="/?filter=bestseller"
+              icon={<StarIcon className="h-5 w-5" />}
+              label="Best Sellers"
+              onClick={close}
+            />
+          )}
           <NavLink href="/wishlist" icon={<HeartIcon className="h-5 w-5" />} label="Wishlist" onClick={close} />
           <NavLink href="/about" icon={<UserIcon className="h-5 w-5" />} label="About Us" onClick={close} />
           <NavLink
