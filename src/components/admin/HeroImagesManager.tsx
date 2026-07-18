@@ -1,7 +1,6 @@
 "use client";
 
 import { useActionState, useEffect, useRef, useState } from "react";
-import { useFormStatus } from "react-dom";
 import {
   addHeroImagesAction,
   deleteHeroImageAction,
@@ -14,24 +13,13 @@ import { HeroBanner } from "@/lib/homepage-data";
 
 const MAX_HERO_IMAGES = 6;
 const HERO_MAX_DIMENSION = 1600;
+// Vercel hard-caps serverless request bodies at ~4.5MB regardless of Next.js's
+// own bodySizeLimit config, and it rejects oversized requests before our code
+// even runs (no error surfaces). Uploading one photo per request — well under
+// that ceiling — avoids the multi-file bundle ever getting close to it.
+const MAX_UPLOAD_BYTES = 3.5 * 1024 * 1024;
 
 type PendingImage = { key: string; file: File; previewUrl: string };
-
-function UploadButton({ count }: { count: number }) {
-  const { pending } = useFormStatus();
-  return (
-    <button
-      type="submit"
-      disabled={pending}
-      className="flex w-full items-center justify-center gap-2 rounded-full bg-ink px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-accent disabled:opacity-50"
-    >
-      {pending && (
-        <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
-      )}
-      {pending ? "Uploading…" : `Upload ${count} image${count === 1 ? "" : "s"}`}
-    </button>
-  );
-}
 
 const initialAddState: AddHeroImagesState = { error: null };
 
@@ -40,10 +28,14 @@ export function HeroImagesManager({ images }: { images: HeroBanner[] }) {
   const [prevImages, setPrevImages] = useState(images);
   const [pending, setPending] = useState<PendingImage[]>([]);
   const [isCompressing, setIsCompressing] = useState(false);
+  const [sizeWarning, setSizeWarning] = useState<string | null>(null);
   const [reorderError, setReorderError] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
   const [addState, formAction] = useActionState(addHeroImagesAction, initialAddState);
   const isFirstAddState = useRef(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
+  const uploadQueueRef = useRef<PendingImage[]>([]);
   const dragIndex = useRef<number | null>(null);
   const pendingDragIndex = useRef<number | null>(null);
 
@@ -61,56 +53,84 @@ export function HeroImagesManager({ images }: { images: HeroBanner[] }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Once a submitted batch finishes without error, clear the pending
-  // previews — the server-revalidated `images` prop now includes them.
+  function syncFileInput(files: PendingImage[]) {
+    const dataTransfer = new DataTransfer();
+    files.forEach((img) => dataTransfer.items.add(img.file));
+    if (fileInputRef.current) fileInputRef.current.files = dataTransfer.files;
+  }
+
+  function submitNextInQueue() {
+    const next = uploadQueueRef.current[0];
+    if (!next) {
+      setUploading(false);
+      return;
+    }
+    syncFileInput([next]);
+    formRef.current?.requestSubmit();
+  }
+
+  // Each submission uploads exactly one queued file. When it resolves, drop
+  // that file (success or not) and either advance the queue or stop on error.
   useEffect(() => {
     if (isFirstAddState.current) {
       isFirstAddState.current = false;
       return;
     }
-    if (!addState.error) {
-      pending.forEach((img) => URL.revokeObjectURL(img.previewUrl));
-      setPending([]);
+    if (addState.error) {
+      setUploading(false);
+      return;
+    }
+    const finished = uploadQueueRef.current.shift();
+    if (finished) {
+      URL.revokeObjectURL(finished.previewUrl);
+      setPending((prev) => prev.filter((img) => img.key !== finished.key));
+    }
+    if (uploadQueueRef.current.length > 0) {
+      submitNextInQueue();
+    } else {
+      setUploading(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [addState]);
 
   const remainingSlots = Math.max(0, MAX_HERO_IMAGES - order.length - pending.length);
 
-  function syncFileInput(images: PendingImage[]) {
-    const dataTransfer = new DataTransfer();
-    images.forEach((img) => dataTransfer.items.add(img.file));
-    if (fileInputRef.current) fileInputRef.current.files = dataTransfer.files;
-  }
-
   async function handleFilesSelected(selected: FileList | null) {
     if (!selected || selected.length === 0) return;
     const picked = Array.from(selected).slice(0, remainingSlots);
 
     setIsCompressing(true);
+    setSizeWarning(null);
     try {
       const compressed: PendingImage[] = [];
+      let skipped = 0;
       for (const file of picked) {
         const compressedFile = await compressImageFile(file, HERO_MAX_DIMENSION);
+        if (compressedFile.size > MAX_UPLOAD_BYTES) {
+          skipped++;
+          continue;
+        }
         compressed.push({
           key: crypto.randomUUID(),
           file: compressedFile,
           previewUrl: URL.createObjectURL(compressedFile),
         });
       }
-      const combined = [...pending, ...compressed].slice(0, MAX_HERO_IMAGES - order.length);
-      setPending(combined);
-      syncFileInput(combined);
+      if (skipped > 0) {
+        setSizeWarning(
+          `${skipped} photo${skipped === 1 ? "" : "s"} couldn't be added — still too large after compression. Try a smaller or less detailed photo.`
+        );
+      }
+      setPending((prev) => [...prev, ...compressed].slice(0, MAX_HERO_IMAGES - order.length));
     } finally {
       setIsCompressing(false);
     }
   }
 
   function removePending(index: number) {
+    if (uploading) return;
     URL.revokeObjectURL(pending[index].previewUrl);
-    const next = pending.filter((_, i) => i !== index);
-    setPending(next);
-    syncFileInput(next);
+    setPending((prev) => prev.filter((_, i) => i !== index));
   }
 
   function handleDrop(dropIndex: number) {
@@ -129,13 +149,20 @@ export function HeroImagesManager({ images }: { images: HeroBanner[] }) {
   }
 
   function handlePendingDrop(dropIndex: number) {
+    if (uploading) return;
     if (pendingDragIndex.current === null || pendingDragIndex.current === dropIndex) return;
     const next = [...pending];
     const [moved] = next.splice(pendingDragIndex.current, 1);
     next.splice(dropIndex, 0, moved);
     pendingDragIndex.current = null;
     setPending(next);
-    syncFileInput(next);
+  }
+
+  function startUpload() {
+    if (uploading || pending.length === 0) return;
+    uploadQueueRef.current = [...pending];
+    setUploading(true);
+    submitNextInQueue();
   }
 
   return (
@@ -181,7 +208,7 @@ export function HeroImagesManager({ images }: { images: HeroBanner[] }) {
         {remainingSlots > 0 && (
           <label
             className={`flex aspect-square flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-line text-ink-muted transition-colors ${
-              isCompressing ? "opacity-50" : "cursor-pointer hover:border-accent hover:text-accent"
+              isCompressing || uploading ? "opacity-50" : "cursor-pointer hover:border-accent hover:text-accent"
             }`}
           >
             <span className="text-2xl leading-none">+</span>
@@ -190,7 +217,7 @@ export function HeroImagesManager({ images }: { images: HeroBanner[] }) {
               type="file"
               accept="image/*"
               multiple
-              disabled={isCompressing}
+              disabled={isCompressing || uploading}
               onChange={(e) => handleFilesSelected(e.target.files)}
               className="hidden"
             />
@@ -202,6 +229,12 @@ export function HeroImagesManager({ images }: { images: HeroBanner[] }) {
           ? "Compressing images…"
           : `${order.length}/${MAX_HERO_IMAGES} images · drag to reorder · rotates every 8s on the homepage.`}
       </p>
+
+      {sizeWarning && (
+        <div className="mt-3 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">
+          {sizeWarning}
+        </div>
+      )}
 
       {addState.error && (
         <div className="mt-3 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">
@@ -218,11 +251,11 @@ export function HeroImagesManager({ images }: { images: HeroBanner[] }) {
             {pending.map((image, index) => (
               <div
                 key={image.key}
-                draggable
+                draggable={!uploading}
                 onDragStart={() => (pendingDragIndex.current = index)}
                 onDragOver={(e) => e.preventDefault()}
                 onDrop={() => handlePendingDrop(index)}
-                className="relative aspect-square cursor-grab active:cursor-grabbing"
+                className={`relative aspect-square ${uploading ? "" : "cursor-grab active:cursor-grabbing"}`}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
@@ -233,21 +266,37 @@ export function HeroImagesManager({ images }: { images: HeroBanner[] }) {
                 <span className="absolute left-1 top-1 rounded-full bg-accent px-1.5 py-0.5 text-[10px] font-medium text-white">
                   {order.length + index + 1}
                 </span>
-                <button
-                  type="button"
-                  onClick={() => removePending(index)}
-                  aria-label="Remove image"
-                  className="absolute -right-1.5 -top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-ink text-xs text-white shadow-sm"
-                >
-                  &times;
-                </button>
+                {!uploading && (
+                  <button
+                    type="button"
+                    onClick={() => removePending(index)}
+                    aria-label="Remove image"
+                    className="absolute -right-1.5 -top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-ink text-xs text-white shadow-sm"
+                  >
+                    &times;
+                  </button>
+                )}
               </div>
             ))}
           </div>
 
-          <form action={formAction} className="mt-3">
-            <input ref={fileInputRef} type="file" name="images" multiple className="hidden" />
-            <UploadButton count={pending.length} />
+          {/* Hidden form submitted once per queued file — never all at once,
+              to stay well under Vercel's per-request body-size ceiling. */}
+          <form ref={formRef} action={formAction} className="mt-3">
+            <input ref={fileInputRef} type="file" name="images" className="hidden" />
+            <button
+              type="button"
+              disabled={uploading}
+              onClick={startUpload}
+              className="flex w-full items-center justify-center gap-2 rounded-full bg-ink px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-accent disabled:opacity-50"
+            >
+              {uploading && (
+                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+              )}
+              {uploading
+                ? `Uploading… ${pending.length} left`
+                : `Upload ${pending.length} image${pending.length === 1 ? "" : "s"}`}
+            </button>
           </form>
         </div>
       )}
