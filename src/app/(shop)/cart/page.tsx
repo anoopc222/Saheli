@@ -7,6 +7,8 @@ import { useCart } from "@/lib/cart-context";
 import { formatPrice } from "@/lib/format";
 import { getProductSettings, ProductSettings } from "@/lib/product-settings-data";
 import { computeOrderTotals } from "@/lib/pricing";
+import { createBrowserSupabaseClient } from "@/lib/supabase/client";
+import { Product } from "@/types/product";
 
 type AppliedCoupon = {
   code: string;
@@ -16,8 +18,9 @@ type AppliedCoupon = {
 
 export default function CartPage() {
   const router = useRouter();
-  const { lines, setQuantity, removeItem, totalCents } = useCart();
+  const { lines, setQuantity, removeItem, totalCents, syncWithLiveProducts } = useCart();
   const [settings, setSettings] = useState<ProductSettings | null>(null);
+  const [stockAdjusted, setStockAdjusted] = useState(false);
 
   const [couponInput, setCouponInput] = useState("");
   const [couponLoading, setCouponLoading] = useState(false);
@@ -27,6 +30,31 @@ export default function CartPage() {
   useEffect(() => {
     getProductSettings().then(setSettings);
   }, []);
+
+  // Cart lines are a localStorage snapshot, so stock shown there can go
+  // stale (another sale, an admin adjustment) — refresh against the live
+  // product rows on load and clamp any quantity that now exceeds stock.
+  useEffect(() => {
+    if (lines.length === 0) return;
+    const ids = lines.map((l) => l.product.id);
+    const supabase = createBrowserSupabaseClient();
+    supabase
+      .from("products")
+      .select("*")
+      .in("id", ids)
+      .returns<Product[]>()
+      .then(({ data }) => {
+        if (!data) return;
+        const reduced = lines.some((line) => {
+          const live = data.find((p) => p.id === line.product.id);
+          return !live || live.stock < line.quantity;
+        });
+        syncWithLiveProducts(data);
+        if (reduced) setStockAdjusted(true);
+      });
+    // Only re-check when the set of product ids in the cart changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lines.map((l) => l.product.id).join(",")]);
 
   // The destination pincode (and so the real shipping fee) isn't known
   // until the checkout page's shipping form — this total is subtotal,
@@ -105,6 +133,11 @@ export default function CartPage() {
       <h1 className="mb-6 font-heading text-2xl font-semibold text-ink">
         Your cart
       </h1>
+      {stockAdjusted && (
+        <p className="mb-4 rounded-xl border border-accent bg-accent-soft px-3 py-2.5 text-sm text-accent">
+          We adjusted a quantity or two to match what&apos;s currently in stock.
+        </p>
+      )}
       <div className="flex flex-col gap-4">
         {lines.map((line) => (
           <div

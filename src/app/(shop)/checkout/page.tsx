@@ -10,6 +10,8 @@ import { getProductSettings, ProductSettings } from "@/lib/product-settings-data
 import { getShippingZones } from "@/lib/shipping-zones-data";
 import { matchShippingZone, ShippingZone } from "@/lib/shipping-zones";
 import { computeOrderTotals } from "@/lib/pricing";
+import { createBrowserSupabaseClient } from "@/lib/supabase/client";
+import { Product } from "@/types/product";
 
 type Discount = {
   code: string;
@@ -68,7 +70,7 @@ function CheckoutForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const couponCode = searchParams.get("coupon") ?? "";
-  const { lines, totalCents, clear } = useCart();
+  const { lines, totalCents, clear, syncWithLiveProducts } = useCart();
 
   const [discount, setDiscount] = useState<Discount>(null);
   const [settings, setSettings] = useState<ProductSettings | null>(null);
@@ -92,6 +94,24 @@ function CheckoutForm() {
     getProductSettings().then(setSettings);
     getShippingZones().then(setShippingZones);
   }, []);
+
+  // Same staleness guard as the cart page — a customer can land here
+  // directly (back button, bookmark) without the cart page's own sync
+  // having run first.
+  useEffect(() => {
+    if (lines.length === 0) return;
+    const ids = lines.map((l) => l.product.id);
+    const supabase = createBrowserSupabaseClient();
+    supabase
+      .from("products")
+      .select("*")
+      .in("id", ids)
+      .returns<Product[]>()
+      .then(({ data }) => {
+        if (data) syncWithLiveProducts(data);
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lines.map((l) => l.product.id).join(",")]);
 
   useEffect(() => {
     if (!couponCode) return;

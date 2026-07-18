@@ -100,6 +100,26 @@ export async function POST(request: Request) {
       );
     }
 
+    // Never trust the client's idea of available stock — the cart is a
+    // localStorage snapshot that can go stale (another sale, an admin
+    // adjustment), so this is the actual gate against overselling.
+    const overStockedItem = items.find((item) => {
+      const product = products.find((p) => p.id === item.productId)!;
+      return item.quantity > product.stock;
+    });
+    if (overStockedItem) {
+      const product = products.find((p) => p.id === overStockedItem.productId)!;
+      return NextResponse.json(
+        {
+          error:
+            product.stock > 0
+              ? `Only ${product.stock} of "${product.name}" left in stock. Please update the quantity in your cart.`
+              : `"${product.name}" just sold out. Please remove it from your cart.`,
+        },
+        { status: 400 }
+      );
+    }
+
     const priceInputs = items.map((item) => ({
       unitPriceCents: products.find((p) => p.id === item.productId)!.price_cents,
       quantity: item.quantity,
