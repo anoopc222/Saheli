@@ -76,8 +76,15 @@ export default function CartPage() {
           couponCode: appliedCoupon?.code,
         }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Checkout failed");
+      let data: { url?: string; error?: string };
+      try {
+        data = await res.json();
+      } catch {
+        throw new Error("Something went wrong. Please try again.");
+      }
+      if (!res.ok || !data.url) {
+        throw new Error(data.error || "Checkout failed. Please try again.");
+      }
       window.location.href = data.url;
     } catch (e) {
       setError(e instanceof Error ? e.message : "Checkout failed");
