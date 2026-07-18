@@ -96,6 +96,7 @@ export default async function AdminStockPage() {
                 productId={product.id}
                 productName={product.name}
                 currentStock={product.stock}
+                priceCents={product.price_cents}
               />
             </div>
           ))}
@@ -124,7 +125,12 @@ export default async function AdminStockPage() {
                     {adj.delta > 0 ? `+${adj.delta}` : adj.delta}
                   </span>
                 </div>
-                {adj.reason && <p className="text-xs text-ink-muted">{adj.reason}</p>}
+                {adj.counted_as_sale && (
+                  <span className="mt-1 inline-block rounded-full bg-accent-soft px-2 py-0.5 text-[11px] font-medium text-accent">
+                    Counted as a sale
+                  </span>
+                )}
+                {adj.reason && <p className="mt-1 text-xs text-ink-muted">{adj.reason}</p>}
                 <p className="text-xs text-ink-muted">
                   {new Date(adj.created_at).toLocaleString("en-IN", {
                     dateStyle: "medium",

@@ -112,6 +112,7 @@ export type StockAdjustmentRow = {
   product_name: string;
   delta: number;
   reason: string;
+  counted_as_sale: boolean;
   created_at: string;
 };
 
@@ -119,7 +120,7 @@ export async function getRecentStockAdjustments(limit = 15): Promise<StockAdjust
   const supabase = createServiceRoleSupabaseClient();
   const { data } = await supabase
     .from("stock_adjustments")
-    .select("id, product_name, delta, reason, created_at")
+    .select("id, product_name, delta, reason, counted_as_sale, created_at")
     .order("created_at", { ascending: false })
     .limit(limit)
     .returns<StockAdjustmentRow[]>();
