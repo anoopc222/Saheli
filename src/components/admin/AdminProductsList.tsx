@@ -3,9 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { formatPrice } from "@/lib/format";
-import { deleteProductAction, setProductVisibilityAction } from "@/lib/product-actions";
+import { deleteProductAction } from "@/lib/product-actions";
 import { ConfirmSubmitButton } from "@/components/admin/ConfirmSubmitButton";
-import { VisibilityToggle } from "@/components/admin/VisibilityToggle";
 import { Product } from "@/types/product";
 import { CategoryRow } from "@/lib/categories-data";
 import { PencilIcon, TrashIcon } from "@/components/icons";
@@ -116,13 +115,6 @@ export function AdminProductsList({
                 </div>
               </div>
               <div className="flex shrink-0 items-center gap-1">
-                <VisibilityToggle
-                  id={product.id}
-                  checked={product.show_on_store}
-                  action={setProductVisibilityAction}
-                  label={`Show ${product.name} on store`}
-                  field="show_on_store"
-                />
                 <Link
                   href={`/admin/products/${product.id}/edit`}
                   aria-label={`Edit ${product.name}`}

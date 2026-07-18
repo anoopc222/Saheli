@@ -5,18 +5,16 @@ export function VisibilityToggle({
   checked,
   action,
   label,
-  field = "show_on_menu",
 }: {
   id: string;
   checked: boolean;
   action: (formData: FormData) => void | Promise<void>;
   label: string;
-  field?: string;
 }) {
   return (
     <form action={action} className="shrink-0">
       <input type="hidden" name="id" value={id} />
-      <input type="hidden" name={field} value={(!checked).toString()} />
+      <input type="hidden" name="show_on_menu" value={(!checked).toString()} />
       <button
         type="submit"
         role="switch"
