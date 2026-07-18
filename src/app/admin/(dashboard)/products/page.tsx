@@ -7,7 +7,12 @@ import { sweepExpiredNewBadges } from "@/lib/badge-sweep";
 
 export const dynamic = "force-dynamic";
 
-export default async function AdminProductsPage() {
+export default async function AdminProductsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ deleteBlocked?: string }>;
+}) {
+  const { deleteBlocked } = await searchParams;
   await sweepExpiredNewBadges();
   const supabase = createBrowserSupabaseClient();
   const [{ data: products }, categories] = await Promise.all([
@@ -32,6 +37,12 @@ export default async function AdminProductsPage() {
           Add product
         </Link>
       </div>
+      {deleteBlocked && (
+        <p className="mb-4 rounded-xl border border-accent bg-accent-soft px-3 py-2.5 text-sm text-accent">
+          Can&apos;t delete that product — it has past orders on record. Open it and turn
+          off &quot;Show on store&quot; to hide it from customers instead.
+        </p>
+      )}
       <AdminProductsList products={products ?? []} categories={categories} />
     </div>
   );

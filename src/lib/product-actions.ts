@@ -117,7 +117,17 @@ export async function deleteProductAction(formData: FormData) {
   const imageUrls = formData.getAll("image_urls").map(String);
   const supabase = createServiceRoleSupabaseClient();
   const { error } = await supabase.from("products").delete().eq("id", id);
-  if (error) throw new Error(error.message);
+
+  if (error) {
+    // Products that have ever been ordered are referenced by order_items
+    // (product_id has no cascade there, by design, so order history survives
+    // a product being removed from the catalog). Deleting is blocked in that
+    // case — send the admin to hide it instead.
+    if (error.code === "23503") {
+      redirect("/admin/products?deleteBlocked=1");
+    }
+    throw new Error(error.message);
+  }
 
   await deleteManagedImages(imageUrls);
 
