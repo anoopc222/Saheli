@@ -47,6 +47,7 @@ export function NavDrawer({
   const { isOpen, close } = useNavDrawer();
   const [shopOpen, setShopOpen] = useState(false);
   const [expandedMainId, setExpandedMainId] = useState<string | null>(null);
+  const [expandedCategoryId, setExpandedCategoryId] = useState<string | null>(null);
 
   return (
     <div className={`fixed inset-0 z-40 ${isOpen ? "" : "pointer-events-none"}`} aria-hidden={!isOpen}>
@@ -134,31 +135,52 @@ export function NavDrawer({
                             {mainCategory.categories.length === 0 ? (
                               <p className="text-xs text-ink-muted">Nothing here yet.</p>
                             ) : (
-                              mainCategory.categories.map((category) => (
-                                <div key={category.id}>
-                                  <Link
-                                    href={`/?category=${category.id}`}
-                                    onClick={close}
-                                    className="mb-1.5 block text-sm font-medium text-ink transition-colors hover:text-accent"
-                                  >
-                                    {category.name}
-                                  </Link>
-                                  {category.subcategories.length > 0 && (
-                                    <div className="flex flex-wrap gap-1.5">
-                                      {category.subcategories.map((sub) => (
+                              mainCategory.categories.map((category) => {
+                                const isCatExpanded = expandedCategoryId === category.id;
+                                return (
+                                  <div key={category.id}>
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        setExpandedCategoryId(isCatExpanded ? null : category.id)
+                                      }
+                                      className="flex w-full items-center justify-between gap-3 py-1 text-sm font-medium text-ink transition-colors hover:text-accent"
+                                    >
+                                      <span>{category.name}</span>
+                                      <ChevronDownIcon
+                                        className={`h-3 w-3 text-ink-muted transition-transform ${
+                                          isCatExpanded ? "rotate-180" : ""
+                                        }`}
+                                      />
+                                    </button>
+                                    {isCatExpanded && (
+                                      <div className="flex flex-col gap-2 py-1.5 pl-3">
                                         <Link
-                                          key={sub.id}
-                                          href={`/?fabric=${encodeURIComponent(sub.fabric)}`}
+                                          href={`/?category=${category.id}`}
                                           onClick={close}
-                                          className="rounded-full border border-line px-3 py-1 text-xs font-medium text-ink transition-colors hover:border-accent hover:bg-accent-soft hover:text-accent"
+                                          className="text-xs font-medium text-accent hover:underline"
                                         >
-                                          {sub.name}
+                                          View all {category.name}
                                         </Link>
-                                      ))}
-                                    </div>
-                                  )}
-                                </div>
-                              ))
+                                        {category.subcategories.length > 0 && (
+                                          <div className="flex flex-wrap gap-1.5">
+                                            {category.subcategories.map((sub) => (
+                                              <Link
+                                                key={sub.id}
+                                                href={`/?fabric=${encodeURIComponent(sub.fabric)}`}
+                                                onClick={close}
+                                                className="rounded-full border border-line px-3 py-1 text-xs font-medium text-ink transition-colors hover:border-accent hover:bg-accent-soft hover:text-accent"
+                                              >
+                                                {sub.name}
+                                              </Link>
+                                            ))}
+                                          </div>
+                                        )}
+                                      </div>
+                                    )}
+                                  </div>
+                                );
+                              })
                             )}
                           </div>
                         )}
