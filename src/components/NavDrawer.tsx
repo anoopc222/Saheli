@@ -94,20 +94,27 @@ export function NavDrawer({
           <NavLink href="/" icon={<HomeIcon className="h-5 w-5" />} label="Home" onClick={close} />
 
           <div className="border-b border-line">
-            <button
-              type="button"
-              onClick={() => setShopOpen((v) => !v)}
-              className={`flex w-full items-center justify-between gap-3 py-3.5 text-sm font-medium transition-colors ${
-                shopOpen ? "text-accent" : "text-ink"
-              }`}
-            >
-              <span className="flex items-center gap-3">
-                <BagIcon className={`h-5 w-5 ${shopOpen ? "text-accent" : "text-ink-muted"}`} /> Shop
-              </span>
-              <ChevronDownIcon
-                className={`h-4 w-4 transition-transform ${shopOpen ? "rotate-180 text-accent" : "text-ink-muted"}`}
-              />
-            </button>
+            {(() => {
+              const shopIsActive = shopOpen && expandedMainId === null;
+              return (
+                <button
+                  type="button"
+                  onClick={() => setShopOpen((v) => !v)}
+                  className={`flex w-full items-center justify-between gap-3 py-3.5 text-sm font-medium transition-colors ${
+                    shopIsActive ? "text-accent" : "text-ink"
+                  }`}
+                >
+                  <span className="flex items-center gap-3">
+                    <BagIcon className={`h-5 w-5 ${shopIsActive ? "text-accent" : "text-ink-muted"}`} /> Shop
+                  </span>
+                  <ChevronDownIcon
+                    className={`h-4 w-4 transition-transform ${
+                      shopOpen ? "rotate-180" : ""
+                    } ${shopIsActive ? "text-accent" : "text-ink-muted"}`}
+                  />
+                </button>
+              );
+            })()}
             {shopOpen && (
               <div className="flex flex-col gap-0.5 pb-2 pl-6">
                 {menuTree.length === 0 ? (
@@ -116,6 +123,7 @@ export function NavDrawer({
                   menuTree.map((mainCategory) => {
                     const Icon = SHOP_ICONS[mainCategory.slug] ?? TagIcon;
                     const isExpanded = expandedMainId === mainCategory.id;
+                    const isActive = isExpanded && expandedCategoryId === null;
                     return (
                       <div key={mainCategory.id}>
                         <button
@@ -124,16 +132,16 @@ export function NavDrawer({
                             setExpandedMainId(isExpanded ? null : mainCategory.id)
                           }
                           className={`flex w-full items-center justify-between gap-3 py-2 text-sm transition-colors hover:text-accent ${
-                            isExpanded ? "text-accent" : "text-ink"
+                            isActive ? "text-accent" : "text-ink"
                           }`}
                         >
                           <span className="flex items-center gap-3">
-                            <Icon className={`h-4.5 w-4.5 ${isExpanded ? "text-accent" : "text-ink-muted"}`} />
+                            <Icon className={`h-4.5 w-4.5 ${isActive ? "text-accent" : "text-ink-muted"}`} />
                             {mainCategory.name}
                           </span>
                           <ChevronDownIcon
-                            className={`h-3.5 w-3.5 transition-transform ${
-                              isExpanded ? "rotate-180 text-accent" : "text-ink-muted"
+                            className={`h-3.5 w-3.5 transition-transform ${isExpanded ? "rotate-180" : ""} ${
+                              isActive ? "text-accent" : "text-ink-muted"
                             }`}
                           />
                         </button>

@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { Product } from "@/types/product";
-import { CategoryRow } from "@/lib/categories-data";
+import { CategoryRow, MainCategoryRow } from "@/lib/categories-data";
 import { compressImageFile } from "@/lib/client-image-compression";
 
 const MAX_IMAGES = 4;
@@ -65,10 +65,12 @@ export function ProductForm({
   action,
   product,
   categories,
+  mainCategories,
 }: {
   action: (formData: FormData) => void;
   product?: Product;
   categories: CategoryRow[];
+  mainCategories: MainCategoryRow[];
 }) {
   const [keptUrls, setKeptUrls] = useState<string[]>(
     product?.image_urls?.length
@@ -85,6 +87,13 @@ export function ProductForm({
   const [subcategoryId, setSubcategoryId] = useState(
     product?.subcategory_id ?? ""
   );
+  const [mainCategoryId, setMainCategoryId] = useState(() => {
+    if (!product?.category_id) return "";
+    return categories.find((c) => c.id === product.category_id)?.main_category_id ?? "";
+  });
+  const categoryOptions = mainCategoryId
+    ? categories.filter((c) => c.main_category_id === mainCategoryId)
+    : [];
   const subcategoryOptions =
     categories.find((c) => c.id === categoryId)?.subcategories ?? [];
 
@@ -207,47 +216,61 @@ export function ProductForm({
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
+            <FieldLabel>Main Category</FieldLabel>
+            <select
+              value={mainCategoryId}
+              onChange={(e) => {
+                setMainCategoryId(e.target.value);
+                setCategoryId("");
+                setSubcategoryId("");
+              }}
+              className={inputClasses}
+            >
+              <option value="">None</option>
+              {mainCategories.map((mc) => (
+                <option key={mc.id} value={mc.id}>
+                  {mc.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
             <FieldLabel>Category</FieldLabel>
             <select
               name="category_id"
-              required
+              disabled={!mainCategoryId}
               value={categoryId}
               onChange={(e) => {
                 setCategoryId(e.target.value);
                 setSubcategoryId("");
               }}
-              className={inputClasses}
+              className={`${inputClasses} disabled:opacity-50`}
             >
-              <option value="" disabled>
-                Select category
-              </option>
-              {categories.map((cat) => (
+              <option value="">{mainCategoryId ? "None" : "Select main category first"}</option>
+              {categoryOptions.map((cat) => (
                 <option key={cat.id} value={cat.id}>
                   {cat.name}
                 </option>
               ))}
             </select>
           </div>
-          <div>
-            <FieldLabel>Subcategory</FieldLabel>
-            <select
-              name="subcategory_id"
-              required={subcategoryOptions.length > 0}
-              disabled={subcategoryOptions.length === 0}
-              value={subcategoryId}
-              onChange={(e) => setSubcategoryId(e.target.value)}
-              className={`${inputClasses} disabled:opacity-50`}
-            >
-              <option value="" disabled>
-                {subcategoryOptions.length === 0 ? "None available" : "Select subcategory"}
+        </div>
+        <div>
+          <FieldLabel>Subcategory</FieldLabel>
+          <select
+            name="subcategory_id"
+            disabled={subcategoryOptions.length === 0}
+            value={subcategoryId}
+            onChange={(e) => setSubcategoryId(e.target.value)}
+            className={`${inputClasses} disabled:opacity-50`}
+          >
+            <option value="">{subcategoryOptions.length === 0 ? "None available" : "None"}</option>
+            {subcategoryOptions.map((sub) => (
+              <option key={sub.id} value={sub.id}>
+                {sub.name}
               </option>
-              {subcategoryOptions.map((sub) => (
-                <option key={sub.id} value={sub.id}>
-                  {sub.name}
-                </option>
-              ))}
-            </select>
-          </div>
+            ))}
+          </select>
         </div>
       </Section>
 
