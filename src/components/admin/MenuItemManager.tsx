@@ -79,11 +79,22 @@ function ItemRow({
   const displayLabel = item.label || fallbackLabel;
 
   return (
-    <div className="flex items-center justify-between gap-2 rounded-xl border border-line bg-paper-raised px-3 py-2.5">
+    <div
+      className={`flex items-center justify-between gap-2 rounded-xl border border-line bg-paper-raised px-3 py-2.5 transition-opacity ${
+        item.show_on_menu ? "" : "opacity-50"
+      }`}
+    >
       <div className="flex min-w-0 items-center gap-2">
         <ReorderButtons id={item.id} disableUp={disableUp} disableDown={disableDown} />
         <div className="min-w-0">
-          <p className="truncate font-heading text-sm font-semibold text-ink">{displayLabel}</p>
+          <div className="flex items-center gap-2">
+            <p className="truncate font-heading text-sm font-semibold text-ink">{displayLabel}</p>
+            {!item.show_on_menu && (
+              <span className="shrink-0 rounded-full bg-line px-2 py-0.5 text-[11px] font-medium text-ink-muted">
+                Hidden
+              </span>
+            )}
+          </div>
           {isCustom && item.tag && (
             <p className="truncate text-xs text-ink-muted">Tag: {item.tag}</p>
           )}

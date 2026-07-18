@@ -19,8 +19,19 @@ const inputClasses =
 
 function CategoryRowItem({ category }: { category: CategoryRow }) {
   return (
-    <div className="flex items-center gap-2 rounded-lg border border-line bg-paper px-2.5 py-2">
-      <p className="min-w-0 flex-1 truncate text-sm font-semibold text-ink">{category.name}</p>
+    <div
+      className={`flex items-center gap-2 rounded-lg border border-line bg-paper px-2.5 py-2 transition-opacity ${
+        category.show_on_menu ? "" : "opacity-50"
+      }`}
+    >
+      <div className="flex min-w-0 flex-1 items-center gap-2">
+        <p className="min-w-0 truncate text-sm font-semibold text-ink">{category.name}</p>
+        {!category.show_on_menu && (
+          <span className="shrink-0 rounded-full bg-line px-2 py-0.5 text-[11px] font-medium text-ink-muted">
+            Hidden
+          </span>
+        )}
+      </div>
       <EditModal label={`Edit ${category.name}`} title={category.name}>
         {(close) => (
           <>

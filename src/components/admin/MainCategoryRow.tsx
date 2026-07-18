@@ -28,9 +28,22 @@ export function MainCategoryRow({
   disableDown: boolean;
 }) {
   return (
-    <div className="flex items-center gap-2 rounded-xl border border-line bg-paper-raised px-3 py-2.5">
+    <div
+      className={`flex items-center gap-2 rounded-xl border px-3 py-2.5 transition-opacity ${
+        showOnMenu
+          ? "border-line bg-paper-raised"
+          : "border-line bg-paper-raised opacity-50"
+      }`}
+    >
       <MainCategoryReorderButtons id={id} disableUp={disableUp} disableDown={disableDown} />
-      <p className="min-w-0 flex-1 truncate font-heading text-sm font-semibold text-ink">{name}</p>
+      <div className="flex min-w-0 flex-1 items-center gap-2">
+        <p className="min-w-0 truncate font-heading text-sm font-semibold text-ink">{name}</p>
+        {!showOnMenu && (
+          <span className="shrink-0 rounded-full bg-line px-2 py-0.5 text-[11px] font-medium text-ink-muted">
+            Hidden
+          </span>
+        )}
+      </div>
       <EditModal label={`Edit ${name}`} title={name}>
         {(close) => (
           <>
