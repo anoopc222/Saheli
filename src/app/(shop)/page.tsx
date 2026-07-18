@@ -9,6 +9,7 @@ import { ChevronRightIcon } from "@/components/icons";
 import { getCategories, getMainCategories } from "@/lib/categories-data";
 import { getHeroBanners, getActivePromoBanner } from "@/lib/homepage-data";
 import { getFeatureItems, getFeatureRowSettings } from "@/lib/feature-items-data";
+import { getMenuItems } from "@/lib/menu-items-data";
 
 const FILTER_LABELS: Record<string, string> = {
   new: "New Arrivals",
@@ -24,12 +25,17 @@ export default async function Home({
     fabric?: string;
     category?: string;
     main_category?: string;
+    tag?: string;
   }>;
 }) {
-  const { filter, fabric, category, main_category: mainCategoryId } = await searchParams;
+  const { filter, fabric, category, main_category: mainCategoryId, tag } = await searchParams;
   const supabase = createBrowserSupabaseClient();
 
-  const [categories, mainCategories] = await Promise.all([getCategories(), getMainCategories()]);
+  const [categories, mainCategories, menuItems] = await Promise.all([
+    getCategories(),
+    getMainCategories(),
+    getMenuItems(),
+  ]);
 
   let query = supabase
     .from("products")
@@ -45,6 +51,8 @@ export default async function Home({
       .filter((cat) => cat.main_category_id === mainCategoryId)
       .map((cat) => cat.id);
     query = query.in("category_id", categoryIds.length > 0 ? categoryIds : [mainCategoryId]);
+  } else if (tag) {
+    query = query.contains("tags", [tag]);
   } else if (filter && FILTER_LABELS[filter]) {
     query = query.eq("badge", filter);
   }
@@ -77,6 +85,7 @@ export default async function Home({
   const matchedMainCategory = mainCategoryId
     ? mainCategories.find((mc) => mc.id === mainCategoryId)
     : undefined;
+  const matchedTagItem = tag ? menuItems.find((item) => item.tag === tag) : undefined;
 
   const heading = subcategory
     ? subcategory.name
@@ -84,9 +93,13 @@ export default async function Home({
       ? matchedCategory.name
       : matchedMainCategory
         ? matchedMainCategory.name
-        : filter && FILTER_LABELS[filter]
-          ? FILTER_LABELS[filter]
-          : "All Sarees";
+        : matchedTagItem
+          ? matchedTagItem.label || tag
+          : tag
+            ? tag
+            : filter && FILTER_LABELS[filter]
+              ? FILTER_LABELS[filter]
+              : "All Sarees";
 
   const heroSlides = heroImages.map((banner) => {
     let href = "/";

@@ -5,6 +5,7 @@ import { useFormStatus } from "react-dom";
 import { Product } from "@/types/product";
 import { CategoryRow, MainCategoryRow } from "@/lib/categories-data";
 import { compressImageFile } from "@/lib/client-image-compression";
+import { TagChipInput } from "@/components/admin/TagChipInput";
 
 const MAX_IMAGES = 4;
 
@@ -50,8 +51,8 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <section className="border-t border-line pt-5 first:border-t-0 first:pt-0">
-      <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-ink-muted">
+    <section className="rounded-2xl border border-line bg-paper-raised p-4">
+      <h2 className="mb-4 border-b border-line pb-3 text-xs font-semibold uppercase tracking-wide text-ink-muted">
         {title}
       </h2>
       <div className="flex flex-col gap-4">{children}</div>
@@ -66,11 +67,13 @@ export function ProductForm({
   product,
   categories,
   mainCategories,
+  tagSuggestions,
 }: {
   action: (formData: FormData) => void;
   product?: Product;
   categories: CategoryRow[];
   mainCategories: MainCategoryRow[];
+  tagSuggestions: string[];
 }) {
   const [keptUrls, setKeptUrls] = useState<string[]>(
     product?.image_urls?.length
@@ -98,6 +101,13 @@ export function ProductForm({
     categories.find((c) => c.id === categoryId)?.subcategories ?? [];
 
   const [priceError, setPriceError] = useState<string | null>(null);
+
+  const [sellingPrice, setSellingPrice] = useState(product ? product.price_cents / 100 : 0);
+  const [costPrice, setCostPrice] = useState(
+    product?.cost_price_cents ? product.cost_price_cents / 100 : 0
+  );
+  const marginAmount = sellingPrice - costPrice;
+  const marginPct = sellingPrice > 0 ? (marginAmount / sellingPrice) * 100 : 0;
 
   // Revoke every preview blob URL on unmount so selected-but-unsaved images
   // don't linger in memory after leaving the page.
@@ -171,14 +181,25 @@ export function ProductForm({
       )}
 
       <Section title="Details">
-        <div>
-          <FieldLabel>Name</FieldLabel>
-          <input
-            name="name"
-            defaultValue={product?.name}
-            required
-            className={inputClasses}
-          />
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <FieldLabel>Name</FieldLabel>
+            <input
+              name="name"
+              defaultValue={product?.name}
+              required
+              className={inputClasses}
+            />
+          </div>
+          <div>
+            <FieldLabel>Product code</FieldLabel>
+            <input
+              name="product_code"
+              defaultValue={product?.product_code ?? ""}
+              placeholder="e.g. SKU-1042"
+              className={inputClasses}
+            />
+          </div>
         </div>
         <div>
           <FieldLabel>Description</FieldLabel>
@@ -274,6 +295,13 @@ export function ProductForm({
         </div>
       </Section>
 
+      <Section title="Tags">
+        <div>
+          <FieldLabel>Tags</FieldLabel>
+          <TagChipInput initialTags={product?.tags ?? []} suggestions={tagSuggestions} />
+        </div>
+      </Section>
+
       <Section title="Pricing & stock">
         <div className="grid grid-cols-2 gap-3">
           <div>
@@ -283,7 +311,8 @@ export function ProductForm({
               step="0.01"
               min="0"
               name="price"
-              defaultValue={product ? product.price_cents / 100 : undefined}
+              value={sellingPrice}
+              onChange={(e) => setSellingPrice(Number(e.target.value) || 0)}
               required
               className={inputClasses}
             />
@@ -303,6 +332,25 @@ export function ProductForm({
               className={inputClasses}
             />
           </div>
+        </div>
+        <div>
+          <FieldLabel>Actual price / cost (₹)</FieldLabel>
+          <input
+            type="number"
+            step="0.01"
+            min="0"
+            name="cost_price"
+            value={costPrice || ""}
+            onChange={(e) => setCostPrice(Number(e.target.value) || 0)}
+            placeholder="What this product costs you"
+            className={inputClasses}
+          />
+          {costPrice > 0 && (
+            <p className="mt-1.5 text-xs text-ink-muted">
+              Margin: <span className="font-medium text-ink">₹{marginAmount.toFixed(2)}</span>{" "}
+              ({marginPct.toFixed(1)}%)
+            </p>
+          )}
         </div>
         <div>
           <FieldLabel>Stock</FieldLabel>

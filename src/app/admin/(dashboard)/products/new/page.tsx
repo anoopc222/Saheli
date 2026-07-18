@@ -1,13 +1,15 @@
 import { ProductForm } from "@/components/admin/ProductForm";
 import { createProductAction } from "@/lib/product-actions";
 import { getCategories, getMainCategories } from "@/lib/categories-data";
+import { getAllTags } from "@/lib/tags-data";
 
 export const dynamic = "force-dynamic";
 
 export default async function NewProductPage() {
-  const [categories, mainCategories] = await Promise.all([
+  const [categories, mainCategories, tagSuggestions] = await Promise.all([
     getCategories(),
     getMainCategories(),
+    getAllTags(),
   ]);
   return (
     <div>
@@ -18,6 +20,7 @@ export default async function NewProductPage() {
         action={createProductAction}
         categories={categories}
         mainCategories={mainCategories}
+        tagSuggestions={tagSuggestions}
       />
     </div>
   );

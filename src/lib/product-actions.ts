@@ -25,25 +25,35 @@ const deleteManagedImages = deleteStoredImages;
 
 function parseProductFields(formData: FormData) {
   const comparePrice = formData.get("compare_price");
+  const costPrice = formData.get("cost_price");
   const priceCents = Math.round(Number(formData.get("price") || 0) * 100);
   const compareAtPriceCents = comparePrice
     ? Math.round(Number(comparePrice) * 100)
     : null;
+  const costPriceCents = costPrice ? Math.round(Number(costPrice) * 100) : null;
 
   if (compareAtPriceCents !== null && compareAtPriceCents <= priceCents) {
     throw new Error("Strike price must be higher than the selling price.");
   }
 
+  const tags = String(formData.get("tags") || "")
+    .split(",")
+    .map((tag) => tag.trim())
+    .filter(Boolean);
+
   return {
     name: String(formData.get("name") || ""),
     description: String(formData.get("description") || ""),
     fabric: String(formData.get("fabric") || ""),
+    product_code: String(formData.get("product_code") || "").trim() || null,
     price_cents: priceCents,
     compare_at_price_cents: compareAtPriceCents,
+    cost_price_cents: costPriceCents,
     badge: (formData.get("badge") as string) || null,
     stock: Number(formData.get("stock") || 0),
     category_id: (formData.get("category_id") as string) || null,
     subcategory_id: (formData.get("subcategory_id") as string) || null,
+    tags,
   };
 }
 

@@ -71,6 +71,25 @@ function resolveActivePath(
   return { mainId: null, categoryId: null, subId: null };
 }
 
+const PROMO_ITEM_FALLBACK_LABEL: Record<string, string> = {
+  onam: "Onam Collection 2026",
+  new_arrivals: "New Arrivals",
+  bestsellers: "Best Sellers",
+};
+
+function promoItemHref(item: MenuItemRow, onamHref: string): string {
+  if (item.key === "onam") return onamHref;
+  if (item.key === "new_arrivals") return "/?filter=new";
+  if (item.key === "bestsellers") return "/?filter=bestseller";
+  return item.tag ? `/?tag=${encodeURIComponent(item.tag)}` : "/";
+}
+
+function promoItemIcon(item: MenuItemRow): IconComponent {
+  if (item.key === "onam") return SparkleIcon;
+  if (item.key === "bestsellers") return StarIcon;
+  return TagIcon;
+}
+
 export function NavDrawer({
   menuTree,
   onamHref,
@@ -106,12 +125,7 @@ export function NavDrawer({
     setExpandedCategoryId(activePath.categoryId);
   }
 
-  const onamItem = menuItems.find((item) => item.key === "onam");
-  const newArrivalsItem = menuItems.find((item) => item.key === "new_arrivals");
-  const bestsellersItem = menuItems.find((item) => item.key === "bestsellers");
-  const showOnam = onamItem?.show_on_menu ?? true;
-  const showNewArrivals = newArrivalsItem?.show_on_menu ?? true;
-  const showBestsellers = bestsellersItem?.show_on_menu ?? true;
+  const visiblePromoItems = menuItems.filter((item) => item.show_on_menu);
 
   return (
     <div className={`fixed inset-0 z-40 ${isOpen ? "" : "pointer-events-none"}`} aria-hidden={!isOpen}>
@@ -276,30 +290,19 @@ export function NavDrawer({
             onClick={close}
             chevron
           />
-          {showOnam && (
-            <NavLink
-              href={onamHref}
-              icon={<SparkleIcon className="h-5 w-5" />}
-              label={onamItem?.label || "Onam Collection 2026"}
-              onClick={close}
-            />
-          )}
-          {showNewArrivals && (
-            <NavLink
-              href="/?filter=new"
-              icon={<TagIcon className="h-5 w-5" />}
-              label="New Arrivals"
-              onClick={close}
-            />
-          )}
-          {showBestsellers && (
-            <NavLink
-              href="/?filter=bestseller"
-              icon={<StarIcon className="h-5 w-5" />}
-              label="Best Sellers"
-              onClick={close}
-            />
-          )}
+          {visiblePromoItems.map((item) => {
+            const Icon = promoItemIcon(item);
+            const label = item.label || (item.key ? PROMO_ITEM_FALLBACK_LABEL[item.key] : "");
+            return (
+              <NavLink
+                key={item.id}
+                href={promoItemHref(item, onamHref)}
+                icon={<Icon className="h-5 w-5" />}
+                label={label}
+                onClick={close}
+              />
+            );
+          })}
           <NavLink href="/wishlist" icon={<HeartIcon className="h-5 w-5" />} label="Wishlist" onClick={close} />
           <NavLink href="/about" icon={<UserIcon className="h-5 w-5" />} label="About Us" onClick={close} />
           <NavLink
