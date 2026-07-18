@@ -9,13 +9,13 @@ const FEATURES = [
 
 export function IconFeatureRow() {
   return (
-    <div className="mx-auto max-w-[480px] px-4 pt-4">
-      <div className="grid min-h-[6.75rem] grid-cols-4 rounded-[1.125rem] bg-paper-raised px-2 py-4 shadow-sm">
+    <div className="mx-auto max-w-[480px] px-4 pb-3 pt-4">
+      <div className="grid min-h-[4.05rem] grid-cols-4 rounded-md bg-paper-raised px-1.5 py-2 shadow-sm">
         {FEATURES.map(({ icon: Icon, label, sub }) => (
-          <div key={label} className="flex flex-col items-center gap-1.5 px-1 text-center">
-            <Icon className="h-6 w-6 text-accent" />
-            <p className="text-xs font-semibold leading-tight text-ink">{label}</p>
-            {sub && <p className="text-[11px] leading-tight text-ink-muted">{sub}</p>}
+          <div key={label} className="flex flex-col items-center gap-1 px-1 text-center">
+            <Icon className="h-4 w-4 text-accent" />
+            <p className="text-[10px] font-semibold leading-tight text-ink">{label}</p>
+            {sub && <p className="text-[9px] leading-tight text-ink-muted">{sub}</p>}
           </div>
         ))}
       </div>

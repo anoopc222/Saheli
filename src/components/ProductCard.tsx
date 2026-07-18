@@ -15,7 +15,7 @@ export function ProductCard({ product }: { product: Product }) {
   const wishlisted = isWishlisted(product.id);
 
   return (
-    <div className="group flex flex-col overflow-hidden rounded-2xl border border-line bg-paper-raised shadow-sm transition-shadow hover:shadow-md">
+    <div className="group flex flex-col overflow-hidden rounded-md border border-line bg-paper-raised shadow-sm transition-shadow hover:shadow-md">
       <Link href={`/product/${product.id}`} className="relative block">
         <ProductBadge badge={product.badge} />
         <button
@@ -66,7 +66,7 @@ export function ProductCard({ product }: { product: Product }) {
         <button
           onClick={() => addItem(product)}
           disabled={product.stock <= 0}
-          className="mt-2 rounded-full bg-brand px-3 py-2 text-xs font-medium text-white transition-colors hover:bg-brand-dark disabled:opacity-40"
+          className="mt-2 rounded-md bg-brand px-3 py-2 text-xs font-medium text-white transition-colors hover:bg-brand-dark disabled:opacity-40"
         >
           {product.stock > 0 ? "Add to cart" : "Out of stock"}
         </button>

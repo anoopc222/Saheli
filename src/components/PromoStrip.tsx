@@ -6,7 +6,7 @@ export function PromoStrip({ promo }: { promo: PromoBanner | null }) {
 
   return (
     <div className="mx-auto max-w-[480px] px-4 pb-4">
-      <div className="relative aspect-[343/116] w-full overflow-hidden rounded-[1.125rem] bg-line">
+      <div className="relative aspect-[343/116] w-full overflow-hidden rounded-md bg-line">
         {promo.image_url ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -29,7 +29,7 @@ export function PromoStrip({ promo }: { promo: PromoBanner | null }) {
           )}
           <Link
             href={promo.button_link || "/"}
-            className="mt-1.5 flex h-[2.625rem] w-[8.75rem] items-center justify-center gap-1.5 rounded-[1.25rem] bg-brand text-xs font-semibold uppercase tracking-wide text-white transition-colors hover:bg-brand-dark"
+            className="mt-1.5 flex h-[2.625rem] w-[8.75rem] items-center justify-center gap-1.5 rounded-md bg-brand/85 text-xs font-semibold uppercase tracking-wide text-white transition-colors hover:bg-brand-dark hover:opacity-100"
           >
             {promo.button_text || "Shop Now"}
             <span aria-hidden>&rarr;</span>

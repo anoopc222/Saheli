@@ -20,7 +20,7 @@ export function Hero({ images }: { images: string[] }) {
   if (images.length === 0) return null;
 
   return (
-    <section className="relative mx-auto aspect-[343/330] max-w-[480px] overflow-hidden border-b border-line bg-line">
+    <section className="relative mx-auto aspect-[343/231] max-w-[480px] overflow-hidden border-b border-line bg-line">
       {images.map((url, i) => (
         // eslint-disable-next-line @next/next/no-img-element
         <img
@@ -34,7 +34,7 @@ export function Hero({ images }: { images: string[] }) {
       ))}
 
       {images.length > 1 && (
-        <div className="absolute bottom-3 right-4 flex gap-2.5 rounded-full bg-ink/25 px-2.5 py-1.5 backdrop-blur-sm">
+        <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 gap-2.5 rounded-full bg-ink/25 px-2.5 py-1.5 backdrop-blur-sm">
           {images.map((_, i) => (
             <button
               key={i}
