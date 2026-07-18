@@ -8,9 +8,11 @@ import {
   updateMenuItemTagAction,
   deleteMenuItemAction,
   moveMenuItemAction,
+  setMenuItemVisibilityAction,
 } from "@/lib/menu-item-actions";
 import { ConfirmSubmitButton } from "@/components/admin/ConfirmSubmitButton";
-import { MenuItemVisibilityToggle } from "@/components/admin/MenuItemVisibilityToggle";
+import { VisibilityToggle } from "@/components/admin/VisibilityToggle";
+import { InlineAddForm } from "@/components/admin/InlineAddForm";
 import { TrashIcon } from "@/components/icons";
 
 const FALLBACK_LABEL: Record<string, string> = {
@@ -92,9 +94,9 @@ function ItemRow({
   }
 
   return (
-    <div className="flex items-center justify-between gap-3 rounded-xl border border-line bg-paper-raised p-3">
-      <div className="flex items-center gap-2">
-        <div className="flex items-center gap-1">
+    <div className="flex items-center justify-between gap-2 rounded-xl border border-line bg-paper-raised px-3 py-2.5">
+      <div className="flex min-w-0 items-center gap-2">
+        <div className="flex shrink-0 items-center gap-1">
           <form action={moveMenuItemAction}>
             <input type="hidden" name="id" value={item.id} />
             <input type="hidden" name="direction" value="up" />
@@ -124,16 +126,23 @@ function ItemRow({
           type="button"
           onClick={() => (item.protected ? undefined : setEditing(true))}
           disabled={item.protected}
-          className="text-left"
+          className="min-w-0 text-left"
         >
-          <p className="font-heading text-sm font-semibold text-ink hover:text-accent">
+          <p className="truncate font-heading text-sm font-semibold text-ink hover:text-accent">
             {item.label || fallbackLabel}
           </p>
-          {isCustom && item.tag && <p className="text-xs text-ink-muted">Tag: {item.tag}</p>}
+          {isCustom && item.tag && (
+            <p className="truncate text-xs text-ink-muted">Tag: {item.tag}</p>
+          )}
         </button>
       </div>
-      <div className="flex items-center gap-3">
-        <MenuItemVisibilityToggle id={item.id} showOnMenu={item.show_on_menu} />
+      <div className="flex shrink-0 items-center gap-2">
+        <VisibilityToggle
+          id={item.id}
+          checked={item.show_on_menu}
+          action={setMenuItemVisibilityAction}
+          label={`Show ${item.label || fallbackLabel} on menu`}
+        />
         {!item.protected && (
           <form action={deleteMenuItemAction}>
             <input type="hidden" name="id" value={item.id} />
@@ -159,7 +168,7 @@ export function MenuItemManager({
   tagSuggestions: string[];
 }) {
   return (
-    <div>
+    <div className="flex flex-col gap-2.5">
       <div className="flex flex-col gap-2">
         {items.map((item, index) => (
           <ItemRow
@@ -171,36 +180,34 @@ export function MenuItemManager({
           />
         ))}
       </div>
-      <form
-        action={createMenuItemAction}
-        className="mt-3 flex flex-col gap-2 rounded-xl border border-dashed border-line p-3"
-      >
-        <p className="text-xs font-medium text-ink">Add promotional item</p>
-        <div className="grid grid-cols-2 gap-2">
-          <input name="label" required placeholder="Label" className={inputClasses} />
-          <input
-            name="tag"
-            list="menu-item-tag-suggestions-new"
-            required
-            placeholder="Tag to match"
-            className={inputClasses}
-          />
-          <datalist id="menu-item-tag-suggestions-new">
-            {tagSuggestions.map((tag) => (
-              <option key={tag} value={tag} />
-            ))}
-          </datalist>
-        </div>
-        <p className="text-xs text-ink-muted">
-          Shows every product tagged with this tag when tapped in the menu.
-        </p>
-        <button
-          type="submit"
-          className="self-start rounded-full bg-ink px-3.5 py-1.5 text-xs font-medium text-white transition-colors hover:bg-accent"
-        >
-          Add
-        </button>
-      </form>
+      <InlineAddForm label="Add promotional item">
+        <form action={createMenuItemAction} className="flex flex-col gap-2">
+          <div className="grid grid-cols-2 gap-2">
+            <input name="label" required placeholder="Label" className={inputClasses} />
+            <input
+              name="tag"
+              list="menu-item-tag-suggestions-new"
+              required
+              placeholder="Tag to match"
+              className={inputClasses}
+            />
+            <datalist id="menu-item-tag-suggestions-new">
+              {tagSuggestions.map((tag) => (
+                <option key={tag} value={tag} />
+              ))}
+            </datalist>
+          </div>
+          <p className="text-xs text-ink-muted">
+            Shows every product tagged with this tag when tapped in the menu.
+          </p>
+          <button
+            type="submit"
+            className="self-start rounded-full bg-ink px-3.5 py-1.5 text-xs font-medium text-white transition-colors hover:bg-accent"
+          >
+            Add
+          </button>
+        </form>
+      </InlineAddForm>
     </div>
   );
 }
