@@ -1,98 +1,27 @@
 "use server";
 
-import sharp from "sharp";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/server";
+import { optimizeAndUploadImage, deleteStoredImages } from "@/lib/image-optimize";
 
-const MAX_UPLOAD_BYTES = 20 * 1024 * 1024; // 20MB raw upload ceiling
-const MAX_DIMENSION = 1200; // longest side, px
-const WEBP_QUALITY = 85;
-const STORAGE_PATH_MARKER = "/object/public/product-images/";
-
+const PRODUCT_MAX_DIMENSION = 1200; // longest side, px
 const MAX_IMAGES = 4;
-
-async function uploadImage(file: File): Promise<string | null> {
-  if (!file || file.size === 0) return null;
-  if (file.size > MAX_UPLOAD_BYTES) {
-    throw new Error("Image is too large (max 20MB).");
-  }
-
-  const inputBuffer = Buffer.from(await file.arrayBuffer());
-
-  // The client already resizes and compresses to WebP before upload. Only
-  // re-encode here as a fallback (e.g. the browser couldn't compress, or a
-  // non-standard file slipped through) — re-encoding an already-optimized
-  // WebP would just add a second lossy pass for no benefit.
-  let outputBuffer: Buffer;
-  if (file.type === "image/webp") {
-    const meta = await sharp(inputBuffer).metadata();
-    const withinBounds =
-      (meta.width ?? 0) <= MAX_DIMENSION && (meta.height ?? 0) <= MAX_DIMENSION;
-    outputBuffer = withinBounds
-      ? inputBuffer
-      : await sharp(inputBuffer)
-          .rotate()
-          .resize({
-            width: MAX_DIMENSION,
-            height: MAX_DIMENSION,
-            fit: "inside",
-            withoutEnlargement: true,
-          })
-          .webp({ quality: WEBP_QUALITY })
-          .toBuffer();
-  } else {
-    outputBuffer = await sharp(inputBuffer)
-      .rotate()
-      .resize({
-        width: MAX_DIMENSION,
-        height: MAX_DIMENSION,
-        fit: "inside",
-        withoutEnlargement: true,
-      })
-      .webp({ quality: WEBP_QUALITY })
-      .toBuffer();
-  }
-
-  const supabase = createServiceRoleSupabaseClient();
-  const path = `${crypto.randomUUID()}.webp`;
-  const { error } = await supabase.storage
-    .from("product-images")
-    .upload(path, outputBuffer, {
-      contentType: "image/webp",
-      upsert: false,
-    });
-  if (error) throw new Error(error.message);
-
-  const { data } = supabase.storage.from("product-images").getPublicUrl(path);
-  return data.publicUrl;
-}
 
 async function uploadImages(files: File[]): Promise<string[]> {
   const valid = files.filter((file) => file && file.size > 0).slice(0, MAX_IMAGES);
   const urls: string[] = [];
   for (const file of valid) {
-    const url = await uploadImage(file);
+    const url = await optimizeAndUploadImage(file, {
+      folder: "",
+      maxDimension: PRODUCT_MAX_DIMENSION,
+    });
     if (url) urls.push(url);
   }
   return urls;
 }
 
-function extractStoragePath(imageUrl: string | null | undefined): string | null {
-  if (!imageUrl) return null;
-  const idx = imageUrl.indexOf(STORAGE_PATH_MARKER);
-  if (idx === -1) return null;
-  return imageUrl.slice(idx + STORAGE_PATH_MARKER.length);
-}
-
-async function deleteManagedImages(imageUrls: (string | null | undefined)[]) {
-  const paths = imageUrls
-    .map(extractStoragePath)
-    .filter((path): path is string => Boolean(path));
-  if (paths.length === 0) return;
-  const supabase = createServiceRoleSupabaseClient();
-  await supabase.storage.from("product-images").remove(paths);
-}
+const deleteManagedImages = deleteStoredImages;
 
 function parseProductFields(formData: FormData) {
   const comparePrice = formData.get("compare_price");

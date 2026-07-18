@@ -1,5 +1,5 @@
 const DEFAULT_MAX_DIMENSION = 1200;
-const IMAGE_QUALITY = 0.88;
+const IMAGE_QUALITY = 0.8;
 
 // Resize + re-encode an image in the browser before upload. Server Actions
 // (and Vercel's underlying function invocation) cap request bodies well
