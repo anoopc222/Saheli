@@ -102,12 +102,47 @@ export function ProductForm({
 
   const [priceError, setPriceError] = useState<string | null>(null);
 
-  const [sellingPrice, setSellingPrice] = useState(product ? product.price_cents / 100 : 0);
   const [costPrice, setCostPrice] = useState(
     product?.cost_price_cents ? product.cost_price_cents / 100 : 0
   );
+  const [sellingPrice, setSellingPrice] = useState(product ? product.price_cents / 100 : 0);
+  const [strikePrice, setStrikePrice] = useState(
+    product?.compare_at_price_cents ? product.compare_at_price_cents / 100 : 0
+  );
+  // Existing products already have real, admin-chosen prices — only
+  // auto-suggest selling/strike price from cost for a product being
+  // created for the first time, and stop as soon as the admin edits
+  // either field directly.
+  const [sellingTouched, setSellingTouched] = useState(Boolean(product));
+  const [strikeTouched, setStrikeTouched] = useState(Boolean(product));
+
   const marginAmount = sellingPrice - costPrice;
   const marginPct = sellingPrice > 0 ? (marginAmount / sellingPrice) * 100 : 0;
+  const discountAmount = strikePrice - sellingPrice;
+  const discountPct = strikePrice > 0 ? (discountAmount / strikePrice) * 100 : 0;
+
+  function handleCostChange(value: number) {
+    setCostPrice(value);
+    if (sellingTouched) return;
+    const suggestedSelling = Math.round(value * 1.4);
+    setSellingPrice(suggestedSelling);
+    if (!strikeTouched) {
+      setStrikePrice(Math.round(suggestedSelling * 1.2));
+    }
+  }
+
+  function handleSellingChange(value: number) {
+    setSellingPrice(value);
+    setSellingTouched(true);
+    if (!strikeTouched) {
+      setStrikePrice(Math.round(value * 1.2));
+    }
+  }
+
+  function handleStrikeChange(value: number) {
+    setStrikePrice(value);
+    setStrikeTouched(true);
+  }
 
   // Revoke every preview blob URL on unmount so selected-but-unsaved images
   // don't linger in memory after leaving the page.
@@ -303,36 +338,6 @@ export function ProductForm({
       </Section>
 
       <Section title="Pricing & stock">
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <FieldLabel>Selling price (₹)</FieldLabel>
-            <input
-              type="number"
-              step="0.01"
-              min="0"
-              name="price"
-              value={sellingPrice}
-              onChange={(e) => setSellingPrice(Number(e.target.value) || 0)}
-              required
-              className={inputClasses}
-            />
-          </div>
-          <div>
-            <FieldLabel>Strike price (₹)</FieldLabel>
-            <input
-              type="number"
-              step="0.01"
-              min="0"
-              name="compare_price"
-              defaultValue={
-                product?.compare_at_price_cents
-                  ? product.compare_at_price_cents / 100
-                  : undefined
-              }
-              className={inputClasses}
-            />
-          </div>
-        </div>
         <div>
           <FieldLabel>Actual price / cost (₹)</FieldLabel>
           <input
@@ -341,16 +346,53 @@ export function ProductForm({
             min="0"
             name="cost_price"
             value={costPrice || ""}
-            onChange={(e) => setCostPrice(Number(e.target.value) || 0)}
+            onChange={(e) => handleCostChange(Number(e.target.value) || 0)}
             placeholder="What this product costs you"
             className={inputClasses}
           />
-          {costPrice > 0 && (
-            <p className="mt-1.5 text-xs text-ink-muted">
-              Margin: <span className="font-medium text-ink">₹{marginAmount.toFixed(2)}</span>{" "}
-              ({marginPct.toFixed(1)}%)
-            </p>
-          )}
+          <p className="mt-1.5 text-xs text-ink-muted">
+            Selling price and strike price are suggested at +40% and a
+            further +20% — edit either one any time.
+          </p>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <FieldLabel>Selling price (₹)</FieldLabel>
+            <input
+              type="number"
+              step="0.01"
+              min="0"
+              name="price"
+              value={sellingPrice || ""}
+              onChange={(e) => handleSellingChange(Number(e.target.value) || 0)}
+              required
+              className={inputClasses}
+            />
+            {costPrice > 0 && (
+              <p className="mt-1.5 text-xs text-ink-muted">
+                Margin: <span className="font-medium text-ink">₹{marginAmount.toFixed(2)}</span>{" "}
+                ({marginPct.toFixed(1)}%)
+              </p>
+            )}
+          </div>
+          <div>
+            <FieldLabel>Strike price (₹)</FieldLabel>
+            <input
+              type="number"
+              step="0.01"
+              min="0"
+              name="compare_price"
+              value={strikePrice || ""}
+              onChange={(e) => handleStrikeChange(Number(e.target.value) || 0)}
+              className={inputClasses}
+            />
+            {strikePrice > 0 && sellingPrice > 0 && (
+              <p className="mt-1.5 text-xs text-ink-muted">
+                Off: <span className="font-medium text-ink">₹{discountAmount.toFixed(2)}</span>{" "}
+                ({discountPct.toFixed(1)}%)
+              </p>
+            )}
+          </div>
         </div>
         <div>
           <FieldLabel>Stock</FieldLabel>

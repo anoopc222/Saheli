@@ -3,15 +3,101 @@
 import { useState } from "react";
 import { CategoryRow } from "@/lib/categories-data";
 import {
+  updateCategoryAction,
   deleteCategoryAction,
   createSubcategoryAction,
   setCategoryMenuVisibilityAction,
 } from "@/lib/category-actions";
-import { CategoryNameEditor } from "@/components/admin/CategoryNameEditor";
 import { VisibilityToggle } from "@/components/admin/VisibilityToggle";
+import { EditModal } from "@/components/admin/EditModal";
 import { SubcategoryChip } from "@/components/admin/SubcategoryChip";
 import { ConfirmSubmitButton } from "@/components/admin/ConfirmSubmitButton";
 import { ChevronDownIcon, PlusIcon, TrashIcon } from "@/components/icons";
+
+const inputClasses =
+  "min-w-0 flex-1 rounded-lg border border-line bg-paper px-2.5 py-1.5 text-xs outline-none focus:border-accent";
+
+function CategoryRowItem({ category }: { category: CategoryRow }) {
+  return (
+    <div className="flex items-center gap-2 rounded-lg border border-line bg-paper px-2.5 py-2">
+      <p className="min-w-0 flex-1 truncate text-sm font-semibold text-ink">{category.name}</p>
+      <EditModal label={`Edit ${category.name}`} title={category.name}>
+        {(close) => (
+          <>
+            <form
+              action={async (formData) => {
+                await updateCategoryAction(formData);
+                close();
+              }}
+              className="flex items-center gap-2"
+            >
+              <input type="hidden" name="id" value={category.id} />
+              <input
+                name="name"
+                defaultValue={category.name}
+                required
+                className="min-w-0 flex-1 rounded-xl border border-line bg-paper-raised px-3 py-2 text-sm outline-none focus:border-accent"
+              />
+              <button
+                type="submit"
+                className="shrink-0 rounded-full bg-ink px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-accent"
+              >
+                Save
+              </button>
+            </form>
+
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-ink">Show on menu</span>
+              <VisibilityToggle
+                id={category.id}
+                checked={category.show_on_menu}
+                action={setCategoryMenuVisibilityAction}
+                label={`Show ${category.name} on menu`}
+              />
+            </div>
+
+            <div>
+              <p className="mb-1.5 text-xs font-medium uppercase tracking-wide text-ink-muted">
+                Subcategories
+              </p>
+              {category.subcategories.length > 0 && (
+                <div className="mb-2 flex flex-wrap gap-1.5">
+                  {category.subcategories.map((sub) => (
+                    <SubcategoryChip key={sub.id} id={sub.id} name={sub.name} fabric={sub.fabric} />
+                  ))}
+                </div>
+              )}
+              <form action={createSubcategoryAction} className="flex flex-wrap items-center gap-1.5">
+                <input type="hidden" name="category_id" value={category.id} />
+                <input name="name" required placeholder="Subcategory" className={inputClasses} />
+                <input name="fabric" required placeholder="Fabric" className={inputClasses} />
+                <button
+                  type="submit"
+                  aria-label="Add subcategory"
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-ink text-white transition-colors hover:bg-accent"
+                >
+                  <PlusIcon className="h-4 w-4" />
+                </button>
+              </form>
+            </div>
+
+            <form action={deleteCategoryAction}>
+              <input type="hidden" name="id" value={category.id} />
+              <ConfirmSubmitButton
+                confirmMessage={`Delete "${category.name}" and all its subcategories? This can't be undone.`}
+                ariaLabel={`Delete ${category.name}`}
+                className="flex w-full items-center justify-center gap-1.5 rounded-full border border-line px-4 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-50"
+              >
+                <TrashIcon className="h-4 w-4" />
+                Delete category
+              </ConfirmSubmitButton>
+            </form>
+          </>
+        )}
+      </EditModal>
+    </div>
+  );
+}
 
 export function CategoryGroup({
   name,
@@ -45,63 +131,7 @@ export function CategoryGroup({
             <p className="px-1 py-1 text-xs text-ink-muted">No categories yet.</p>
           ) : (
             categories.map((category) => (
-              <div key={category.id} className="rounded-lg border border-line bg-paper p-2.5">
-                <div className="flex items-center gap-2">
-                  <div className="min-w-0 flex-1">
-                    <CategoryNameEditor id={category.id} name={category.name} />
-                  </div>
-                  <VisibilityToggle
-                    id={category.id}
-                    checked={category.show_on_menu}
-                    action={setCategoryMenuVisibilityAction}
-                    label={`Show ${category.name} on menu`}
-                  />
-                  <form action={deleteCategoryAction}>
-                    <input type="hidden" name="id" value={category.id} />
-                    <ConfirmSubmitButton
-                      confirmMessage={`Delete "${category.name}" and all its subcategories? This can't be undone.`}
-                      ariaLabel={`Delete ${category.name}`}
-                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-ink-muted transition-colors hover:bg-accent-soft hover:text-accent"
-                    >
-                      <TrashIcon className="h-4 w-4" />
-                    </ConfirmSubmitButton>
-                  </form>
-                </div>
-
-                {category.subcategories.length > 0 && (
-                  <div className="mt-2 flex flex-wrap gap-1.5">
-                    {category.subcategories.map((sub) => (
-                      <SubcategoryChip key={sub.id} id={sub.id} name={sub.name} fabric={sub.fabric} />
-                    ))}
-                  </div>
-                )}
-
-                <form
-                  action={createSubcategoryAction}
-                  className="mt-2 flex flex-wrap items-center gap-1.5"
-                >
-                  <input type="hidden" name="category_id" value={category.id} />
-                  <input
-                    name="name"
-                    required
-                    placeholder="Subcategory"
-                    className="w-28 min-w-0 flex-1 rounded-lg border border-line bg-paper-raised px-2 py-1.5 text-xs outline-none focus:border-accent"
-                  />
-                  <input
-                    name="fabric"
-                    required
-                    placeholder="Fabric"
-                    className="w-24 min-w-0 flex-1 rounded-lg border border-line bg-paper-raised px-2 py-1.5 text-xs outline-none focus:border-accent"
-                  />
-                  <button
-                    type="submit"
-                    aria-label="Add subcategory"
-                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-ink text-white transition-colors hover:bg-accent"
-                  >
-                    <PlusIcon className="h-3.5 w-3.5" />
-                  </button>
-                </form>
-              </div>
+              <CategoryRowItem key={category.id} category={category} />
             ))
           )}
         </div>

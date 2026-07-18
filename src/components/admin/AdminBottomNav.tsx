@@ -2,10 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { HomeIcon, BoxIcon, GridIcon, ImageIcon } from "@/components/icons";
+import { BoxIcon, GridIcon, ImageIcon } from "@/components/icons";
 
 const TABS = [
-  { href: "/admin", label: "Dashboard", icon: HomeIcon, exact: true },
   { href: "/admin/products", label: "Products", icon: BoxIcon, exact: false },
   { href: "/admin/categories", label: "Categories", icon: GridIcon, exact: false },
   { href: "/admin/homepage", label: "Homepage", icon: ImageIcon, exact: false },
@@ -21,7 +20,7 @@ export function AdminBottomNav() {
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-paper-raised pb-[env(safe-area-inset-bottom)]">
-      <div className="mx-auto grid max-w-4xl grid-cols-4 gap-1 px-2 py-2">
+      <div className="mx-auto grid max-w-4xl grid-cols-3 gap-1 px-2 py-2">
         {TABS.map(({ href, label, icon: Icon, exact }) => {
           const active = exact ? pathname === href : pathname.startsWith(href);
           return (

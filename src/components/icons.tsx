@@ -279,6 +279,15 @@ export function PlusIcon({ className }: IconProps) {
   );
 }
 
+export function PencilIcon({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className={className}>
+      <path d="M14.5 5.5 18.5 9.5 8 20H4v-4L14.5 5.5Z" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M13 7 17 11" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 export function TrashIcon({ className }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className={className}>

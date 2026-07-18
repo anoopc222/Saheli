@@ -1,22 +1,15 @@
 import {
   createCategoryAction,
 } from "@/lib/category-actions";
-import {
-  createMainCategoryAction,
-  deleteMainCategoryAction,
-  setMainCategoryMenuVisibilityAction,
-} from "@/lib/main-category-actions";
+import { createMainCategoryAction } from "@/lib/main-category-actions";
 import { getCategories, getMainCategories } from "@/lib/categories-data";
 import { getMenuItems } from "@/lib/menu-items-data";
 import { getAllTags } from "@/lib/tags-data";
-import { ConfirmSubmitButton } from "@/components/admin/ConfirmSubmitButton";
-import { MainCategoryNameEditor } from "@/components/admin/MainCategoryNameEditor";
-import { MainCategoryReorderButtons } from "@/components/admin/MainCategoryReorderButtons";
-import { VisibilityToggle } from "@/components/admin/VisibilityToggle";
+import { MainCategoryRow } from "@/components/admin/MainCategoryRow";
 import { InlineAddForm } from "@/components/admin/InlineAddForm";
 import { CategoryGroup } from "@/components/admin/CategoryGroup";
 import { MenuItemManager } from "@/components/admin/MenuItemManager";
-import { TrashIcon, PlusIcon } from "@/components/icons";
+import { PlusIcon } from "@/components/icons";
 
 export const dynamic = "force-dynamic";
 
@@ -38,35 +31,14 @@ export default async function AdminCategoriesPage() {
         </h2>
         <div className="flex flex-col gap-2">
           {mainCategories.map((mainCategory, index) => (
-            <div
+            <MainCategoryRow
               key={mainCategory.id}
-              className="flex items-center gap-2 rounded-xl border border-line bg-paper-raised px-3 py-2.5"
-            >
-              <MainCategoryReorderButtons
-                id={mainCategory.id}
-                disableUp={index === 0}
-                disableDown={index === mainCategories.length - 1}
-              />
-              <div className="min-w-0 flex-1">
-                <MainCategoryNameEditor id={mainCategory.id} name={mainCategory.name} />
-              </div>
-              <VisibilityToggle
-                id={mainCategory.id}
-                checked={mainCategory.show_on_menu}
-                action={setMainCategoryMenuVisibilityAction}
-                label={`Show ${mainCategory.name} on menu`}
-              />
-              <form action={deleteMainCategoryAction}>
-                <input type="hidden" name="id" value={mainCategory.id} />
-                <ConfirmSubmitButton
-                  confirmMessage={`Delete "${mainCategory.name}"? It must have no categories under it.`}
-                  ariaLabel={`Delete ${mainCategory.name}`}
-                  className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-ink-muted transition-colors hover:bg-accent-soft hover:text-accent"
-                >
-                  <TrashIcon className="h-4 w-4" />
-                </ConfirmSubmitButton>
-              </form>
-            </div>
+              id={mainCategory.id}
+              name={mainCategory.name}
+              showOnMenu={mainCategory.show_on_menu}
+              disableUp={index === 0}
+              disableDown={index === mainCategories.length - 1}
+            />
           ))}
         </div>
         <InlineAddForm label="Add main category">

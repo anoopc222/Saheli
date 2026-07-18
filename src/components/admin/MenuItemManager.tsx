@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { MenuItemRow } from "@/lib/menu-items-data";
 import {
   createMenuItemAction,
@@ -13,6 +12,7 @@ import {
 import { ConfirmSubmitButton } from "@/components/admin/ConfirmSubmitButton";
 import { VisibilityToggle } from "@/components/admin/VisibilityToggle";
 import { InlineAddForm } from "@/components/admin/InlineAddForm";
+import { EditModal } from "@/components/admin/EditModal";
 import { TrashIcon } from "@/components/icons";
 
 const FALLBACK_LABEL: Record<string, string> = {
@@ -23,6 +23,45 @@ const FALLBACK_LABEL: Record<string, string> = {
 
 const inputClasses =
   "rounded-lg border border-line bg-paper px-2.5 py-1.5 text-xs outline-none focus:border-accent";
+
+function ReorderButtons({
+  id,
+  disableUp,
+  disableDown,
+}: {
+  id: string;
+  disableUp: boolean;
+  disableDown: boolean;
+}) {
+  return (
+    <div className="flex shrink-0 items-center gap-1">
+      <form action={moveMenuItemAction}>
+        <input type="hidden" name="id" value={id} />
+        <input type="hidden" name="direction" value="up" />
+        <button
+          type="submit"
+          disabled={disableUp}
+          aria-label="Move up"
+          className="flex h-6 w-6 items-center justify-center rounded-full text-ink-muted transition-colors hover:bg-accent-soft hover:text-accent disabled:opacity-30"
+        >
+          &uarr;
+        </button>
+      </form>
+      <form action={moveMenuItemAction}>
+        <input type="hidden" name="id" value={id} />
+        <input type="hidden" name="direction" value="down" />
+        <button
+          type="submit"
+          disabled={disableDown}
+          aria-label="Move down"
+          className="flex h-6 w-6 items-center justify-center rounded-full text-ink-muted transition-colors hover:bg-accent-soft hover:text-accent disabled:opacity-30"
+        >
+          &darr;
+        </button>
+      </form>
+    </div>
+  );
+}
 
 function ItemRow({
   item,
@@ -35,127 +74,98 @@ function ItemRow({
   disableDown: boolean;
   tagSuggestions: string[];
 }) {
-  const [editing, setEditing] = useState(false);
   const isCustom = item.key === null;
   const fallbackLabel = item.key ? FALLBACK_LABEL[item.key] : "";
-
-  if (editing) {
-    return (
-      <form
-        action={async (formData) => {
-          await updateMenuItemLabelAction(formData);
-          if (isCustom) await updateMenuItemTagAction(formData);
-          setEditing(false);
-        }}
-        className="flex flex-col gap-2 rounded-xl border border-accent bg-paper-raised p-3"
-      >
-        <input type="hidden" name="id" value={item.id} />
-        <input
-          name="label"
-          defaultValue={item.label || fallbackLabel}
-          required
-          placeholder="Label"
-          className={inputClasses}
-        />
-        {isCustom && (
-          <>
-            <input
-              name="tag"
-              list="menu-item-tag-suggestions"
-              defaultValue={item.tag ?? ""}
-              required
-              placeholder="Tag to match (e.g. diwali-2026)"
-              className={inputClasses}
-            />
-            <datalist id="menu-item-tag-suggestions">
-              {tagSuggestions.map((tag) => (
-                <option key={tag} value={tag} />
-              ))}
-            </datalist>
-          </>
-        )}
-        <div className="flex gap-3">
-          <button
-            type="submit"
-            className="rounded-full bg-ink px-3.5 py-1.5 text-xs font-medium text-white transition-colors hover:bg-accent"
-          >
-            Save
-          </button>
-          <button
-            type="button"
-            onClick={() => setEditing(false)}
-            className="text-xs text-ink-muted hover:text-accent"
-          >
-            Cancel
-          </button>
-        </div>
-      </form>
-    );
-  }
+  const displayLabel = item.label || fallbackLabel;
 
   return (
     <div className="flex items-center justify-between gap-2 rounded-xl border border-line bg-paper-raised px-3 py-2.5">
       <div className="flex min-w-0 items-center gap-2">
-        <div className="flex shrink-0 items-center gap-1">
-          <form action={moveMenuItemAction}>
-            <input type="hidden" name="id" value={item.id} />
-            <input type="hidden" name="direction" value="up" />
-            <button
-              type="submit"
-              disabled={disableUp}
-              aria-label="Move up"
-              className="flex h-6 w-6 items-center justify-center rounded-full text-ink-muted transition-colors hover:bg-accent-soft hover:text-accent disabled:opacity-30"
-            >
-              &uarr;
-            </button>
-          </form>
-          <form action={moveMenuItemAction}>
-            <input type="hidden" name="id" value={item.id} />
-            <input type="hidden" name="direction" value="down" />
-            <button
-              type="submit"
-              disabled={disableDown}
-              aria-label="Move down"
-              className="flex h-6 w-6 items-center justify-center rounded-full text-ink-muted transition-colors hover:bg-accent-soft hover:text-accent disabled:opacity-30"
-            >
-              &darr;
-            </button>
-          </form>
-        </div>
-        <button
-          type="button"
-          onClick={() => (item.protected ? undefined : setEditing(true))}
-          disabled={item.protected}
-          className="min-w-0 text-left"
-        >
-          <p className="truncate font-heading text-sm font-semibold text-ink hover:text-accent">
-            {item.label || fallbackLabel}
-          </p>
+        <ReorderButtons id={item.id} disableUp={disableUp} disableDown={disableDown} />
+        <div className="min-w-0">
+          <p className="truncate font-heading text-sm font-semibold text-ink">{displayLabel}</p>
           {isCustom && item.tag && (
             <p className="truncate text-xs text-ink-muted">Tag: {item.tag}</p>
           )}
-        </button>
+        </div>
       </div>
-      <div className="flex shrink-0 items-center gap-2">
+      {item.protected ? (
         <VisibilityToggle
           id={item.id}
           checked={item.show_on_menu}
           action={setMenuItemVisibilityAction}
-          label={`Show ${item.label || fallbackLabel} on menu`}
+          label={`Show ${displayLabel} on menu`}
         />
-        {!item.protected && (
-          <form action={deleteMenuItemAction}>
-            <input type="hidden" name="id" value={item.id} />
-            <ConfirmSubmitButton
-              confirmMessage={`Delete "${item.label || fallbackLabel}"?`}
-              ariaLabel={`Delete ${item.label || fallbackLabel}`}
-              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-ink-muted transition-colors hover:bg-accent-soft hover:text-accent"
-            >
-              <TrashIcon className="h-4 w-4" />
-            </ConfirmSubmitButton>
-          </form>
-        )}
-      </div>
+      ) : (
+        <EditModal label={`Edit ${displayLabel}`} title={displayLabel}>
+          {(close) => (
+            <>
+              <form
+                action={async (formData) => {
+                  await updateMenuItemLabelAction(formData);
+                  if (isCustom) await updateMenuItemTagAction(formData);
+                  close();
+                }}
+                className="flex flex-col gap-2"
+              >
+                <input type="hidden" name="id" value={item.id} />
+                <input
+                  name="label"
+                  defaultValue={displayLabel}
+                  required
+                  placeholder="Label"
+                  className="rounded-xl border border-line bg-paper px-3 py-2 text-sm outline-none focus:border-accent"
+                />
+                {isCustom && (
+                  <>
+                    <input
+                      name="tag"
+                      list="menu-item-tag-suggestions"
+                      defaultValue={item.tag ?? ""}
+                      required
+                      placeholder="Tag to match (e.g. diwali-2026)"
+                      className="rounded-xl border border-line bg-paper px-3 py-2 text-sm outline-none focus:border-accent"
+                    />
+                    <datalist id="menu-item-tag-suggestions">
+                      {tagSuggestions.map((tag) => (
+                        <option key={tag} value={tag} />
+                      ))}
+                    </datalist>
+                  </>
+                )}
+                <button
+                  type="submit"
+                  className="self-start rounded-full bg-ink px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-accent"
+                >
+                  Save
+                </button>
+              </form>
+
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-ink">Show on menu</span>
+                <VisibilityToggle
+                  id={item.id}
+                  checked={item.show_on_menu}
+                  action={setMenuItemVisibilityAction}
+                  label={`Show ${displayLabel} on menu`}
+                />
+              </div>
+
+              <form action={deleteMenuItemAction}>
+                <input type="hidden" name="id" value={item.id} />
+                <ConfirmSubmitButton
+                  confirmMessage={`Delete "${displayLabel}"?`}
+                  ariaLabel={`Delete ${displayLabel}`}
+                  className="flex w-full items-center justify-center gap-1.5 rounded-full border border-line px-4 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-50"
+                >
+                  <TrashIcon className="h-4 w-4" />
+                  Delete
+                </ConfirmSubmitButton>
+              </form>
+            </>
+          )}
+        </EditModal>
+      )}
     </div>
   );
 }

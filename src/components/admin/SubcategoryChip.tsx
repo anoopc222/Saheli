@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
 import {
   updateSubcategoryAction,
   deleteSubcategoryAction,
 } from "@/lib/category-actions";
+import { EditModal } from "@/components/admin/EditModal";
 import { ConfirmSubmitButton } from "@/components/admin/ConfirmSubmitButton";
+import { TrashIcon } from "@/components/icons";
 
 export function SubcategoryChip({
   id,
@@ -16,63 +17,58 @@ export function SubcategoryChip({
   name: string;
   fabric: string;
 }) {
-  const [editing, setEditing] = useState(false);
-
-  if (editing) {
-    return (
-      <form
-        action={async (formData) => {
-          await updateSubcategoryAction(formData);
-          setEditing(false);
-        }}
-        className="flex items-center gap-1.5 rounded-full border border-line bg-paper px-2 py-1"
-      >
-        <input type="hidden" name="id" value={id} />
-        <input
-          name="name"
-          defaultValue={name}
-          required
-          autoFocus
-          className="w-24 rounded-lg border border-line bg-paper-raised px-2 py-1 text-xs outline-none focus:border-accent"
-        />
-        <input
-          name="fabric"
-          defaultValue={fabric}
-          required
-          className="w-32 rounded-lg border border-line bg-paper-raised px-2 py-1 text-xs outline-none focus:border-accent"
-        />
-        <button
-          type="submit"
-          className="text-xs font-medium text-accent hover:underline"
-        >
-          Save
-        </button>
-        <button
-          type="button"
-          onClick={() => setEditing(false)}
-          className="text-xs text-ink-muted hover:text-accent"
-        >
-          Cancel
-        </button>
-      </form>
-    );
-  }
-
   return (
-    <div className="flex items-center gap-1.5 rounded-full border border-line px-3 py-1.5 text-xs text-ink">
-      <button type="button" onClick={() => setEditing(true)}>
+    <div className="flex items-center gap-1 rounded-full border border-line py-1 pl-3 pr-1 text-xs text-ink">
+      <span>
         {name} <span className="text-ink-muted">({fabric})</span>
-      </button>
-      <form action={deleteSubcategoryAction}>
-        <input type="hidden" name="id" value={id} />
-        <ConfirmSubmitButton
-          confirmMessage={`Delete subcategory "${name}"?`}
-          ariaLabel={`Delete ${name}`}
-          className="text-ink-muted hover:text-accent"
-        >
-          &times;
-        </ConfirmSubmitButton>
-      </form>
+      </span>
+      <EditModal label={`Edit ${name}`} title={name}>
+        {(close) => (
+          <>
+            <form
+              action={async (formData) => {
+                await updateSubcategoryAction(formData);
+                close();
+              }}
+              className="flex flex-col gap-2"
+            >
+              <input type="hidden" name="id" value={id} />
+              <input
+                name="name"
+                defaultValue={name}
+                required
+                autoFocus
+                placeholder="Subcategory name"
+                className="rounded-xl border border-line bg-paper-raised px-3 py-2 text-sm outline-none focus:border-accent"
+              />
+              <input
+                name="fabric"
+                defaultValue={fabric}
+                required
+                placeholder="Fabric (matches product fabric)"
+                className="rounded-xl border border-line bg-paper-raised px-3 py-2 text-sm outline-none focus:border-accent"
+              />
+              <button
+                type="submit"
+                className="self-start rounded-full bg-ink px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-accent"
+              >
+                Save
+              </button>
+            </form>
+            <form action={deleteSubcategoryAction}>
+              <input type="hidden" name="id" value={id} />
+              <ConfirmSubmitButton
+                confirmMessage={`Delete subcategory "${name}"?`}
+                ariaLabel={`Delete ${name}`}
+                className="flex w-full items-center justify-center gap-1.5 rounded-full border border-line px-4 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-50"
+              >
+                <TrashIcon className="h-4 w-4" />
+                Delete subcategory
+              </ConfirmSubmitButton>
+            </form>
+          </>
+        )}
+      </EditModal>
     </div>
   );
 }
