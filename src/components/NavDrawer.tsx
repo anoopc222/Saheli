@@ -221,6 +221,24 @@ export function NavDrawer({
                                 const isCatExpanded = expandedCategoryId === category.id;
                                 const isCatActive =
                                   activePath.categoryId === category.id && activePath.subId === null;
+
+                                // No subcategories to expand into — just a direct link,
+                                // instead of a toggle that would reveal nothing.
+                                if (category.subcategories.length === 0) {
+                                  return (
+                                    <Link
+                                      key={category.id}
+                                      href={`/?category=${category.id}`}
+                                      onClick={close}
+                                      className={`py-1 text-sm font-medium transition-colors hover:text-accent ${
+                                        isCatActive ? "text-accent" : "text-ink"
+                                      }`}
+                                    >
+                                      {category.name}
+                                    </Link>
+                                  );
+                                }
+
                                 return (
                                   <div key={category.id}>
                                     <button
@@ -241,32 +259,32 @@ export function NavDrawer({
                                     </button>
                                     {isCatExpanded && (
                                       <div className="flex flex-col gap-2 py-1.5 pl-3">
-                                        <Link
-                                          href={`/?category=${category.id}`}
-                                          onClick={close}
-                                          className="text-xs font-medium text-accent hover:underline"
-                                        >
-                                          View all {category.name}
-                                        </Link>
-                                        {category.subcategories.length > 0 && (
-                                          <div className="flex flex-col gap-2">
-                                            {category.subcategories.map((sub) => {
-                                              const isSubActive = activePath.subId === sub.id;
-                                              return (
-                                                <Link
-                                                  key={sub.id}
-                                                  href={`/?fabric=${encodeURIComponent(sub.fabric)}`}
-                                                  onClick={close}
-                                                  className={`text-xs transition-colors hover:text-accent ${
-                                                    isSubActive ? "font-semibold text-accent" : "text-ink"
-                                                  }`}
-                                                >
-                                                  {sub.name}
-                                                </Link>
-                                              );
-                                            })}
-                                          </div>
+                                        {category.subcategories.length > 1 && (
+                                          <Link
+                                            href={`/?category=${category.id}`}
+                                            onClick={close}
+                                            className="text-xs font-medium text-accent hover:underline"
+                                          >
+                                            View all {category.name}
+                                          </Link>
                                         )}
+                                        <div className="flex flex-col gap-2">
+                                          {category.subcategories.map((sub) => {
+                                            const isSubActive = activePath.subId === sub.id;
+                                            return (
+                                              <Link
+                                                key={sub.id}
+                                                href={`/?fabric=${encodeURIComponent(sub.fabric)}`}
+                                                onClick={close}
+                                                className={`text-xs transition-colors hover:text-accent ${
+                                                  isSubActive ? "font-semibold text-accent" : "text-ink"
+                                                }`}
+                                              >
+                                                {sub.name}
+                                              </Link>
+                                            );
+                                          })}
+                                        </div>
                                       </div>
                                     )}
                                   </div>
