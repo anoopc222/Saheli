@@ -7,6 +7,7 @@ import { deleteProductAction } from "@/lib/product-actions";
 import { ConfirmSubmitButton } from "@/components/admin/ConfirmSubmitButton";
 import { Product } from "@/types/product";
 import { CategoryRow } from "@/lib/categories-data";
+import { PencilIcon, TrashIcon } from "@/components/icons";
 
 const selectClasses =
   "rounded-xl border border-line bg-paper-raised px-3 py-2 text-sm outline-none transition-colors focus:border-accent disabled:opacity-50";
@@ -87,6 +88,9 @@ export function AdminProductsList({
                 />
                 <div>
                   <p className="text-sm font-medium text-ink">{product.name}</p>
+                  {product.product_code && (
+                    <p className="text-xs text-ink-muted">{product.product_code}</p>
+                  )}
                   <p className="text-xs text-ink-muted">
                     {product.fabric} &middot;{" "}
                     <span className="text-ink">
@@ -101,12 +105,13 @@ export function AdminProductsList({
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1">
                 <Link
                   href={`/admin/products/${product.id}/edit`}
-                  className="text-sm text-accent hover:underline"
+                  aria-label={`Edit ${product.name}`}
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-ink-muted transition-colors hover:bg-accent-soft hover:text-accent"
                 >
-                  Edit
+                  <PencilIcon className="h-4 w-4" />
                 </Link>
                 <form action={deleteProductAction}>
                   <input type="hidden" name="id" value={product.id} />
@@ -120,9 +125,10 @@ export function AdminProductsList({
                     ))}
                   <ConfirmSubmitButton
                     confirmMessage={`Delete "${product.name}"? This can't be undone.`}
-                    className="text-sm text-ink-muted hover:text-accent"
+                    ariaLabel={`Delete ${product.name}`}
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-ink-muted transition-colors hover:bg-accent-soft hover:text-accent"
                   >
-                    Delete
+                    <TrashIcon className="h-4 w-4" />
                   </ConfirmSubmitButton>
                 </form>
               </div>

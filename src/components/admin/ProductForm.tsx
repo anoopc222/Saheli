@@ -232,6 +232,7 @@ export function ProductForm({
               name="product_code"
               defaultValue={product?.product_code ?? ""}
               placeholder="e.g. SKU-1042"
+              required
               className={inputClasses}
             />
           </div>
