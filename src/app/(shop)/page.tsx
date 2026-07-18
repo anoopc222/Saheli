@@ -139,10 +139,10 @@ export default async function Home({
         <div className="mb-3 flex items-center justify-between">
           <h2 className="font-heading text-xl font-semibold text-ink">{heading}</h2>
           <Link
-            href="/"
+            href="/categories"
             className="flex items-center gap-0.5 text-sm font-medium text-accent transition-colors hover:text-accent-dark"
           >
-            View all
+            View all collections
             <ChevronRightIcon className="h-4 w-4" />
           </Link>
         </div>

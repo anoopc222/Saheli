@@ -16,7 +16,9 @@ import { SubcategoryChip } from "@/components/admin/SubcategoryChip";
 import { ConfirmSubmitButton } from "@/components/admin/ConfirmSubmitButton";
 import { MainCategoryNameEditor } from "@/components/admin/MainCategoryNameEditor";
 import { MainCategoryReorderButtons } from "@/components/admin/MainCategoryReorderButtons";
+import { MainCategoryMenuToggle } from "@/components/admin/MainCategoryMenuToggle";
 import { MenuItemManager } from "@/components/admin/MenuItemManager";
+import { TrashIcon } from "@/components/icons";
 
 export const dynamic = "force-dynamic";
 
@@ -42,7 +44,7 @@ export default async function AdminCategoriesPage() {
           {mainCategories.map((mainCategory, index) => (
             <div
               key={mainCategory.id}
-              className="flex items-center justify-between gap-3 rounded-xl border border-line bg-paper-raised p-3"
+              className="flex flex-col gap-2 rounded-xl border border-line bg-paper-raised p-3"
             >
               <div className="flex items-center gap-2">
                 <MainCategoryReorderButtons
@@ -52,28 +54,38 @@ export default async function AdminCategoriesPage() {
                 />
                 <MainCategoryNameEditor id={mainCategory.id} name={mainCategory.name} />
               </div>
-              <form action={deleteMainCategoryAction}>
-                <input type="hidden" name="id" value={mainCategory.id} />
-                <ConfirmSubmitButton
-                  confirmMessage={`Delete "${mainCategory.name}"? It must have no categories under it.`}
-                  className="text-xs text-ink-muted hover:text-accent"
-                >
-                  Delete
-                </ConfirmSubmitButton>
-              </form>
+              <div className="flex items-center justify-between">
+                <MainCategoryMenuToggle
+                  id={mainCategory.id}
+                  showOnMenu={mainCategory.show_on_menu}
+                />
+                <form action={deleteMainCategoryAction}>
+                  <input type="hidden" name="id" value={mainCategory.id} />
+                  <ConfirmSubmitButton
+                    confirmMessage={`Delete "${mainCategory.name}"? It must have no categories under it.`}
+                    ariaLabel={`Delete ${mainCategory.name}`}
+                    className="flex h-7 w-7 items-center justify-center rounded-full text-ink-muted transition-colors hover:bg-accent-soft hover:text-accent"
+                  >
+                    <TrashIcon className="h-4 w-4" />
+                  </ConfirmSubmitButton>
+                </form>
+              </div>
             </div>
           ))}
         </div>
-        <form action={createMainCategoryAction} className="flex items-end gap-2">
+        <form
+          action={createMainCategoryAction}
+          className="flex flex-col gap-2 rounded-xl border border-dashed border-line p-3 sm:flex-row sm:items-center"
+        >
           <input
             name="name"
             required
             placeholder="e.g. Footwear"
-            className="w-52 rounded-xl border border-line bg-paper px-3 py-2 text-sm outline-none focus:border-accent"
+            className="w-full rounded-xl border border-line bg-paper px-3 py-2 text-sm outline-none focus:border-accent sm:w-52"
           />
           <button
             type="submit"
-            className="rounded-full bg-ink px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-accent"
+            className="shrink-0 self-start rounded-full bg-ink px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-accent sm:self-auto"
           >
             Add main category
           </button>
@@ -150,9 +162,10 @@ export default async function AdminCategoriesPage() {
                             <input type="hidden" name="id" value={category.id} />
                             <ConfirmSubmitButton
                               confirmMessage={`Delete "${category.name}" and all its subcategories? This can't be undone.`}
-                              className="text-xs text-ink-muted hover:text-accent"
+                              ariaLabel={`Delete ${category.name}`}
+                              className="flex h-7 w-7 items-center justify-center rounded-full text-ink-muted transition-colors hover:bg-accent-soft hover:text-accent"
                             >
-                              Delete category
+                              <TrashIcon className="h-4 w-4" />
                             </ConfirmSubmitButton>
                           </form>
                         </div>

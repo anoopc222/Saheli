@@ -11,6 +11,7 @@ import {
 } from "@/lib/menu-item-actions";
 import { ConfirmSubmitButton } from "@/components/admin/ConfirmSubmitButton";
 import { MenuItemVisibilityToggle } from "@/components/admin/MenuItemVisibilityToggle";
+import { TrashIcon } from "@/components/icons";
 
 const FALLBACK_LABEL: Record<string, string> = {
   onam: "Onam Collection 2026",
@@ -138,9 +139,10 @@ function ItemRow({
             <input type="hidden" name="id" value={item.id} />
             <ConfirmSubmitButton
               confirmMessage={`Delete "${item.label || fallbackLabel}"?`}
-              className="shrink-0 text-xs text-ink-muted hover:text-accent"
+              ariaLabel={`Delete ${item.label || fallbackLabel}`}
+              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-ink-muted transition-colors hover:bg-accent-soft hover:text-accent"
             >
-              Delete
+              <TrashIcon className="h-4 w-4" />
             </ConfirmSubmitButton>
           </form>
         )}

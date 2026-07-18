@@ -270,3 +270,14 @@ export function FacebookIcon({ className }: IconProps) {
     </svg>
   );
 }
+
+export function TrashIcon({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className={className}>
+      <path d="M5 7h14" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M9.5 7V5.5a1.5 1.5 0 0 1 1.5-1.5h2a1.5 1.5 0 0 1 1.5 1.5V7" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M7 7l.7 12a1.5 1.5 0 0 0 1.5 1.4h5.6a1.5 1.5 0 0 0 1.5-1.4L17 7" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M10.2 11v6M13.8 11v6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}

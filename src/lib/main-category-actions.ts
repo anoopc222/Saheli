@@ -33,6 +33,18 @@ export async function createMainCategoryAction(formData: FormData) {
   revalidateAll();
 }
 
+export async function setMainCategoryMenuVisibilityAction(formData: FormData) {
+  const id = String(formData.get("id"));
+  const showOnMenu = formData.get("show_on_menu") === "true";
+  const supabase = createServiceRoleSupabaseClient();
+  const { error } = await supabase
+    .from("main_categories")
+    .update({ show_on_menu: showOnMenu })
+    .eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidateAll();
+}
+
 export async function updateMainCategoryAction(formData: FormData) {
   const id = String(formData.get("id"));
   const name = String(formData.get("name") || "").trim();

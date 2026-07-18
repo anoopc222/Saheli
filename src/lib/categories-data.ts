@@ -9,7 +9,12 @@ export type CategoryRow = {
   show_on_menu: boolean;
   subcategories: SubcategoryRow[];
 };
-export type MainCategoryRow = { id: string; name: string; slug: string };
+export type MainCategoryRow = {
+  id: string;
+  name: string;
+  slug: string;
+  show_on_menu: boolean;
+};
 
 export type MenuMainCategory = MainCategoryRow & {
   categories: CategoryRow[];
@@ -19,7 +24,7 @@ export async function getMainCategories(): Promise<MainCategoryRow[]> {
   const supabase = createBrowserSupabaseClient();
   const { data } = await supabase
     .from("main_categories")
-    .select("id, name, slug")
+    .select("id, name, slug, show_on_menu")
     .order("sort_order")
     .returns<MainCategoryRow[]>();
   return data ?? [];
@@ -44,11 +49,13 @@ export async function getMenuTree(): Promise<MenuMainCategory[]> {
     getCategories(),
   ]);
 
-  return mainCategories.map((mainCategory) => ({
-    ...mainCategory,
-    categories: categories.filter(
-      (category) =>
-        category.main_category_id === mainCategory.id && category.show_on_menu
-    ),
-  }));
+  return mainCategories
+    .filter((mainCategory) => mainCategory.show_on_menu)
+    .map((mainCategory) => ({
+      ...mainCategory,
+      categories: categories.filter(
+        (category) =>
+          category.main_category_id === mainCategory.id && category.show_on_menu
+      ),
+    }));
 }
