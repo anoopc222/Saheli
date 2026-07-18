@@ -1,16 +1,16 @@
 import Link from "next/link";
 import { ClearCartOnLoad } from "@/components/ClearCartOnLoad";
-import { getOrderBySessionId } from "@/lib/order-lookup-data";
+import { getOrderById } from "@/lib/order-lookup-data";
 
 export const dynamic = "force-dynamic";
 
 export default async function CheckoutSuccessPage({
   searchParams,
 }: {
-  searchParams: Promise<{ session_id?: string }>;
+  searchParams: Promise<{ order_id?: string }>;
 }) {
-  const { session_id } = await searchParams;
-  const order = session_id ? await getOrderBySessionId(session_id) : null;
+  const { order_id } = await searchParams;
+  const order = order_id ? await getOrderById(order_id) : null;
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-16 text-center">
@@ -55,7 +55,7 @@ export default async function CheckoutSuccessPage({
             </div>
           )}
         </div>
-      ) : session_id ? (
+      ) : order_id ? (
         <p className="mt-2 text-xs text-ink-muted">
           Still finalizing your order — refresh in a moment to see your reference number.
         </p>

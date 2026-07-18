@@ -1,92 +1,57 @@
 import { NextResponse } from "next/server";
-import Stripe from "stripe";
-import { getStripe } from "@/lib/stripe";
+import { Razorpay } from "@/lib/razorpay";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/server";
+import { finalizePaidOrder } from "@/lib/order-fulfillment";
 
+// Razorpay's server-to-server webhook — the authoritative fallback in case
+// the client never gets back to /api/verify-payment (closed tab, network
+// drop right after paying, etc). Both paths call the same idempotent
+// finalizePaidOrder, so whichever fires first wins and the other is a no-op.
 export async function POST(request: Request) {
   const body = await request.text();
-  const signature = request.headers.get("stripe-signature");
+  const signature = request.headers.get("x-razorpay-signature");
 
-  let event: Stripe.Event;
-  try {
-    event = getStripe().webhooks.constructEvent(
-      body,
-      signature!,
-      process.env.STRIPE_WEBHOOK_SECRET!
-    );
-  } catch (err) {
-    const message = err instanceof Error ? err.message : "Invalid signature";
-    return NextResponse.json({ error: message }, { status: 400 });
+  if (!signature || !process.env.RAZORPAY_WEBHOOK_SECRET) {
+    return NextResponse.json({ error: "Missing signature" }, { status: 400 });
   }
 
-  if (event.type === "checkout.session.completed") {
-    try {
-      const session = event.data.object as Stripe.Checkout.Session;
-      const items = JSON.parse(session.metadata?.items ?? "[]") as {
-        productId: string;
-        quantity: number;
-        unitPriceCents?: number;
-      }[];
+  let isValid = false;
+  try {
+    isValid = Razorpay.validateWebhookSignature(
+      body,
+      signature,
+      process.env.RAZORPAY_WEBHOOK_SECRET
+    );
+  } catch (err) {
+    console.error("Webhook signature validation error:", err);
+  }
+  if (!isValid) {
+    return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
+  }
 
-      const supabase = createServiceRoleSupabaseClient();
-      const { data: products } = await supabase
-        .from("products")
-        .select("*")
-        .in(
-          "id",
-          items.map((i) => i.productId)
-        );
+  try {
+    const event = JSON.parse(body) as {
+      event: string;
+      payload?: { payment?: { entity?: { id: string; order_id: string } } };
+    };
 
-      const shipping = session.collected_information?.shipping_details;
+    if (event.event === "payment.captured") {
+      const payment = event.payload?.payment?.entity;
+      if (payment?.order_id && payment.id) {
+        const supabase = createServiceRoleSupabaseClient();
+        const { data: order } = await supabase
+          .from("orders")
+          .select("id")
+          .eq("razorpay_order_id", payment.order_id)
+          .maybeSingle<{ id: string }>();
 
-      const { data: order, error: orderError } = await supabase
-        .from("orders")
-        .insert({
-          stripe_session_id: session.id,
-          customer_email: session.customer_details?.email,
-          amount_total_cents: session.amount_total ?? 0,
-          status: "paid",
-          discount_code: session.metadata?.discount_code || null,
-          shipping_name: shipping?.name ?? null,
-          shipping_phone: session.customer_details?.phone ?? null,
-          shipping_address_line1: shipping?.address?.line1 ?? null,
-          shipping_address_line2: shipping?.address?.line2 ?? null,
-          shipping_city: shipping?.address?.city ?? null,
-          shipping_state: shipping?.address?.state ?? null,
-          shipping_postal_code: shipping?.address?.postal_code ?? null,
-          shipping_country: shipping?.address?.country ?? null,
-        })
-        .select()
-        .single();
-
-      if (!orderError && order) {
-        const orderItems = items.map((item) => {
-          const product = products?.find((p) => p.id === item.productId);
-          return {
-            order_id: order.id,
-            product_id: item.productId,
-            product_name: product?.name ?? "Unknown product",
-            unit_price_cents: item.unitPriceCents ?? product?.price_cents ?? 0,
-            quantity: item.quantity,
-          };
-        });
-        await supabase.from("order_items").insert(orderItems);
-
-        for (const item of items) {
-          const product = products?.find((p) => p.id === item.productId);
-          if (product) {
-            await supabase
-              .from("products")
-              .update({ stock: Math.max(product.stock - item.quantity, 0) })
-              .eq("id", item.productId);
-          }
+        if (order) {
+          await finalizePaidOrder(supabase, order.id, payment.id);
         }
-      } else if (orderError) {
-        console.error("Webhook order insert error:", orderError);
       }
-    } catch (err) {
-      console.error("Webhook processing error:", err);
     }
+  } catch (err) {
+    console.error("Webhook processing error:", err);
   }
 
   return NextResponse.json({ received: true });

@@ -104,12 +104,12 @@ export async function getOrderByReference(
   };
 }
 
-export async function getOrderBySessionId(sessionId: string): Promise<OrderDetail | null> {
+export async function getOrderById(id: string): Promise<OrderDetail | null> {
   const supabase = createServiceRoleSupabaseClient();
   const { data: order } = await supabase
     .from("orders")
     .select(`id, status, amount_total_cents, created_at, ${SHIPPING_COLUMNS}`)
-    .eq("stripe_session_id", sessionId)
+    .eq("id", id)
     .maybeSingle<
       { id: string; status: string; amount_total_cents: number; created_at: string } & ShippingRow
     >();

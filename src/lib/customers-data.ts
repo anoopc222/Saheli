@@ -42,7 +42,7 @@ export type CustomerDetail = {
   orders: CustomerOrder[];
 };
 
-// Customers are tracked by the phone number Stripe collects at checkout —
+// Customers are tracked by the phone number collected at checkout —
 // offline sales (recorded from the Stock page) have no customer_email or
 // shipping_phone, so they never show up here; this is customer history,
 // not a general sales ledger (that's what the Stock page is for).

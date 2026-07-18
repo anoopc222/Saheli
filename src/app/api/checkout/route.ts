@@ -1,20 +1,47 @@
 import { NextResponse } from "next/server";
-import { getStripe } from "@/lib/stripe";
+import { getRazorpay } from "@/lib/razorpay";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/server";
 import { validateDiscountCode } from "@/lib/discount-data";
 import { Product } from "@/types/product";
 
 type CheckoutItem = { productId: string; quantity: number };
+type ShippingDetails = {
+  name: string;
+  email: string;
+  phone: string;
+  addressLine1: string;
+  addressLine2?: string;
+  city: string;
+  state: string;
+  postalCode: string;
+  country?: string;
+};
 
 export async function POST(request: Request) {
   try {
-    const { items, couponCode } = (await request.json()) as {
+    const { items, couponCode, shipping } = (await request.json()) as {
       items: CheckoutItem[];
       couponCode?: string;
+      shipping: ShippingDetails;
     };
 
     if (!items || items.length === 0) {
       return NextResponse.json({ error: "Cart is empty" }, { status: 400 });
+    }
+
+    if (
+      !shipping?.name?.trim() ||
+      !shipping.email?.trim() ||
+      !shipping.phone?.trim() ||
+      !shipping.addressLine1?.trim() ||
+      !shipping.city?.trim() ||
+      !shipping.state?.trim() ||
+      !shipping.postalCode?.trim()
+    ) {
+      return NextResponse.json(
+        { error: "Please fill in all the required shipping details." },
+        { status: 400 }
+      );
     }
 
     const supabase = createServiceRoleSupabaseClient();
@@ -30,8 +57,8 @@ export async function POST(request: Request) {
     }
 
     // Never trust a discount amount computed on the client — re-validate
-    // the code here and apply it ourselves so the Stripe session, and the
-    // order/order_items rows the webhook records, always agree.
+    // the code here and apply it ourselves so the order/order_items rows
+    // always agree with what actually gets charged.
     let discount: Awaited<ReturnType<typeof validateDiscountCode>> | null = null;
     if (couponCode?.trim()) {
       const result = await validateDiscountCode(couponCode);
@@ -40,11 +67,6 @@ export async function POST(request: Request) {
       }
       discount = result;
     }
-
-    const subtotalCents = items.reduce((sum, item) => {
-      const product = products.find((p) => p.id === item.productId);
-      return sum + (product?.price_cents ?? 0) * item.quantity;
-    }, 0);
 
     const missingProduct = items.find(
       (item) => !products.find((p) => p.id === item.productId)
@@ -55,6 +77,11 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
+
+    const subtotalCents = items.reduce((sum, item) => {
+      const product = products.find((p) => p.id === item.productId);
+      return sum + (product?.price_cents ?? 0) * item.quantity;
+    }, 0);
 
     const discountedItems = items.map((item) => {
       const product = products.find((p) => p.id === item.productId)!;
@@ -80,39 +107,84 @@ export async function POST(request: Request) {
       };
     });
 
-    const lineItems = discountedItems.map(({ product, quantity, unitPriceCents }) => ({
+    const amountTotalCents = discountedItems.reduce(
+      (sum, i) => sum + i.unitPriceCents * i.quantity,
+      0
+    );
+
+    // The order (and its items) are recorded up front, before payment —
+    // Razorpay's checkout widget doesn't collect shipping details for us
+    // the way Stripe's hosted page did, so we need it in hand already.
+    // Status starts "pending" and only flips to "paid" once the payment
+    // is verified (see /api/verify-payment and /api/webhook).
+    const { data: order, error: orderError } = await supabase
+      .from("orders")
+      .insert({
+        status: "pending",
+        source: "razorpay",
+        amount_total_cents: amountTotalCents,
+        customer_email: shipping.email.trim(),
+        discount_code: discount?.valid ? discount.code : null,
+        shipping_name: shipping.name.trim(),
+        shipping_phone: shipping.phone.trim(),
+        shipping_address_line1: shipping.addressLine1.trim(),
+        shipping_address_line2: shipping.addressLine2?.trim() || null,
+        shipping_city: shipping.city.trim(),
+        shipping_state: shipping.state.trim(),
+        shipping_postal_code: shipping.postalCode.trim(),
+        shipping_country: shipping.country?.trim() || "IN",
+      })
+      .select("id")
+      .single<{ id: string }>();
+
+    if (orderError || !order) {
+      console.error("Checkout order insert error:", orderError);
+      return NextResponse.json(
+        { error: "Something went wrong starting checkout. Please try again." },
+        { status: 500 }
+      );
+    }
+
+    const orderItems = discountedItems.map(({ product, quantity, unitPriceCents }) => ({
+      order_id: order.id,
+      product_id: product.id,
+      product_name: product.name,
+      unit_price_cents: unitPriceCents,
       quantity,
-      price_data: {
-        currency: "inr",
-        unit_amount: unitPriceCents,
-        product_data: {
-          name: product.name,
-          images: product.image_url ? [product.image_url] : undefined,
-        },
-      },
     }));
+    await supabase.from("order_items").insert(orderItems);
 
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL!;
-    const session = await getStripe().checkout.sessions.create({
-      mode: "payment",
-      line_items: lineItems,
-      success_url: `${siteUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${siteUrl}/checkout/cancel`,
-      shipping_address_collection: { allowed_countries: ["IN"] },
-      phone_number_collection: { enabled: true },
-      metadata: {
-        items: JSON.stringify(
-          discountedItems.map((i) => ({
-            productId: i.product.id,
-            quantity: i.quantity,
-            unitPriceCents: i.unitPriceCents,
-          }))
-        ),
-        ...(discount?.valid ? { discount_code: discount.code } : {}),
-      },
+    let razorpayOrder;
+    try {
+      razorpayOrder = await getRazorpay().orders.create({
+        amount: amountTotalCents,
+        currency: "INR",
+        receipt: order.id,
+        notes: { order_id: order.id },
+      });
+    } catch (err) {
+      console.error("Razorpay order creation error:", err);
+      await supabase.from("orders").update({ status: "failed" }).eq("id", order.id);
+      return NextResponse.json(
+        { error: "Something went wrong starting checkout. Please try again." },
+        { status: 500 }
+      );
+    }
+
+    await supabase
+      .from("orders")
+      .update({ razorpay_order_id: razorpayOrder.id })
+      .eq("id", order.id);
+
+    return NextResponse.json({
+      keyId: process.env.RAZORPAY_KEY_ID,
+      razorpayOrderId: razorpayOrder.id,
+      amount: amountTotalCents,
+      orderId: order.id,
+      customerName: shipping.name.trim(),
+      customerEmail: shipping.email.trim(),
+      customerPhone: shipping.phone.trim(),
     });
-
-    return NextResponse.json({ url: session.url });
   } catch (err) {
     console.error("Checkout error:", err);
     return NextResponse.json(

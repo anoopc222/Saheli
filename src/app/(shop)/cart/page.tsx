@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCart } from "@/lib/cart-context";
 import { formatPrice } from "@/lib/format";
 
@@ -12,9 +13,8 @@ type AppliedCoupon = {
 };
 
 export default function CartPage() {
+  const router = useRouter();
   const { lines, setQuantity, removeItem, totalCents } = useCart();
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const [couponInput, setCouponInput] = useState("");
   const [couponLoading, setCouponLoading] = useState(false);
@@ -61,35 +61,11 @@ export default function CartPage() {
     setCouponError(null);
   }
 
-  async function handleCheckout() {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch("/api/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          items: lines.map((l) => ({
-            productId: l.product.id,
-            quantity: l.quantity,
-          })),
-          couponCode: appliedCoupon?.code,
-        }),
-      });
-      let data: { url?: string; error?: string };
-      try {
-        data = await res.json();
-      } catch {
-        throw new Error("Something went wrong. Please try again.");
-      }
-      if (!res.ok || !data.url) {
-        throw new Error(data.error || "Checkout failed. Please try again.");
-      }
-      window.location.href = data.url;
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Checkout failed");
-      setLoading(false);
-    }
+  function handleCheckout() {
+    const query = appliedCoupon?.code
+      ? `?coupon=${encodeURIComponent(appliedCoupon.code)}`
+      : "";
+    router.push(`/checkout${query}`);
   }
 
   if (lines.length === 0) {
@@ -224,18 +200,11 @@ export default function CartPage() {
         </div>
       </div>
 
-      {error && (
-        <p className="mt-4 rounded-xl border border-red-300 bg-red-50 px-3 py-2.5 text-sm text-red-700">
-          {error}
-        </p>
-      )}
-
       <button
         onClick={handleCheckout}
-        disabled={loading}
-        className="mt-6 w-full rounded-full bg-ink px-4 py-3.5 text-sm font-medium text-white transition-colors hover:bg-accent disabled:opacity-40"
+        className="mt-6 w-full rounded-full bg-ink px-4 py-3.5 text-sm font-medium text-white transition-colors hover:bg-accent"
       >
-        {loading ? "Redirecting to checkout..." : "Checkout"}
+        Checkout
       </button>
     </div>
   );
