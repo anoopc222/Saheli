@@ -54,7 +54,7 @@ export function ProductCard({ product }: { product: Product }) {
         </p>
         <RatingStars rating={product.rating} count={product.rating_count} />
         <div className="mt-0.5 flex items-baseline gap-2">
-          <p className="font-semibold tabular-nums text-accent">
+          <p className="text-sm font-semibold tabular-nums text-accent">
             {formatPrice(product.price_cents)}
           </p>
           {product.compare_at_price_cents && (
@@ -66,7 +66,7 @@ export function ProductCard({ product }: { product: Product }) {
         <button
           onClick={() => addItem(product)}
           disabled={product.stock <= 0}
-          className="mt-2 rounded-full bg-brand px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-dark disabled:opacity-40"
+          className="mt-2 rounded-full bg-brand px-3 py-2 text-xs font-medium text-white transition-colors hover:bg-brand-dark disabled:opacity-40"
         >
           {product.stock > 0 ? "Add to cart" : "Out of stock"}
         </button>

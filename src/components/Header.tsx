@@ -30,7 +30,7 @@ export function Header() {
               alt="Saheli"
               className="h-11 w-11 rounded-full object-cover"
             />
-            <span className="font-heading text-[1.375rem] font-semibold text-ink">
+            <span className="font-heading text-lg font-semibold text-ink">
               Saheli
             </span>
           </Link>

@@ -20,12 +20,12 @@ export function PromoStrip({ promo }: { promo: PromoBanner | null }) {
         <div className="absolute inset-0 bg-gradient-to-t from-paper/90 via-paper/40 to-transparent" />
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 px-4 text-center">
           {promo.title && (
-            <p className="font-heading text-[1.125rem] font-semibold uppercase tracking-wide text-ink">
+            <p className="font-heading text-base font-semibold uppercase tracking-wide text-ink">
               {promo.title}
             </p>
           )}
           {promo.subtitle && (
-            <p className="text-sm text-ink-muted">{promo.subtitle}</p>
+            <p className="text-xs text-ink-muted">{promo.subtitle}</p>
           )}
           <Link
             href={promo.button_link || "/"}
