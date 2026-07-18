@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/lib/cart-context";
 import { formatPrice } from "@/lib/format";
+import { getProductSettings } from "@/lib/product-settings-data";
 
 type AppliedCoupon = {
   code: string;
@@ -15,18 +16,23 @@ type AppliedCoupon = {
 export default function CartPage() {
   const router = useRouter();
   const { lines, setQuantity, removeItem, totalCents } = useCart();
+  const [shippingFeeCents, setShippingFeeCents] = useState(0);
 
   const [couponInput, setCouponInput] = useState("");
   const [couponLoading, setCouponLoading] = useState(false);
   const [couponError, setCouponError] = useState<string | null>(null);
   const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);
 
+  useEffect(() => {
+    getProductSettings().then((settings) => setShippingFeeCents(settings.shipping_fee_cents));
+  }, []);
+
   const discountCents = appliedCoupon
     ? appliedCoupon.percentOff
       ? Math.round((totalCents * appliedCoupon.percentOff) / 100)
       : Math.min(appliedCoupon.amountOffCents ?? 0, totalCents)
     : 0;
-  const discountedTotalCents = Math.max(0, totalCents - discountCents);
+  const discountedTotalCents = Math.max(0, totalCents - discountCents) + shippingFeeCents;
 
   async function handleApplyCoupon() {
     setCouponLoading(true);
@@ -192,6 +198,12 @@ export default function CartPage() {
             <p className="text-sm tabular-nums text-accent">-{formatPrice(discountCents)}</p>
           </div>
         )}
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-ink-muted">Shipping</p>
+          <p className="text-sm tabular-nums text-ink">
+            {shippingFeeCents > 0 ? formatPrice(shippingFeeCents) : "Free"}
+          </p>
+        </div>
         <div className="flex items-center justify-between pt-1">
           <p className="text-base font-semibold text-ink">Total</p>
           <p className="text-lg font-semibold tabular-nums text-accent">

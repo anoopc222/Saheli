@@ -121,7 +121,13 @@ export default async function TrackOrderPage({
                 </div>
               ))}
             </div>
-            <div className="mt-3 flex items-center justify-between border-t border-line pt-3 text-sm font-semibold">
+            <div className="mt-3 flex items-center justify-between border-t border-line pt-3 text-sm">
+              <p className="text-ink-muted">Shipping</p>
+              <p className="tabular-nums text-ink">
+                {order.shipping_fee_cents > 0 ? formatPrice(order.shipping_fee_cents) : "Free"}
+              </p>
+            </div>
+            <div className="mt-1 flex items-center justify-between text-sm font-semibold">
               <p className="text-ink">Total</p>
               <p className="tabular-nums text-ink">{formatPrice(order.amount_total_cents)}</p>
             </div>

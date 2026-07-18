@@ -6,6 +6,7 @@ import Link from "next/link";
 import Script from "next/script";
 import { useCart } from "@/lib/cart-context";
 import { formatPrice } from "@/lib/format";
+import { getProductSettings } from "@/lib/product-settings-data";
 
 type Discount = {
   code: string;
@@ -66,6 +67,7 @@ function CheckoutForm() {
   const { lines, totalCents, clear } = useCart();
 
   const [discount, setDiscount] = useState<Discount>(null);
+  const [shippingFeeCents, setShippingFeeCents] = useState(0);
   const [scriptReady, setScriptReady] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -79,6 +81,10 @@ function CheckoutForm() {
     state: "",
     postalCode: "",
   });
+
+  useEffect(() => {
+    getProductSettings().then((settings) => setShippingFeeCents(settings.shipping_fee_cents));
+  }, []);
 
   useEffect(() => {
     if (!couponCode) return;
@@ -105,7 +111,7 @@ function CheckoutForm() {
       ? Math.round((totalCents * discount.percentOff) / 100)
       : Math.min(discount.amountOffCents ?? 0, totalCents)
     : 0;
-  const payableCents = Math.max(0, totalCents - discountCents);
+  const payableCents = Math.max(0, totalCents - discountCents) + shippingFeeCents;
 
   function updateField(field: keyof ShippingForm, value: string) {
     setForm((f) => ({ ...f, [field]: value }));
@@ -218,6 +224,12 @@ function CheckoutForm() {
             <p className="tabular-nums text-accent">-{formatPrice(discountCents)}</p>
           </div>
         )}
+        <div className="mt-1 flex items-center justify-between text-sm">
+          <p className="text-ink-muted">Shipping</p>
+          <p className="tabular-nums text-ink">
+            {shippingFeeCents > 0 ? formatPrice(shippingFeeCents) : "Free"}
+          </p>
+        </div>
         <div className="mt-2 flex items-center justify-between border-t border-line pt-2">
           <p className="text-base font-semibold text-ink">Total to pay</p>
           <p className="text-lg font-semibold tabular-nums text-accent">

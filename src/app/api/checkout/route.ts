@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getRazorpay } from "@/lib/razorpay";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/server";
 import { validateDiscountCode } from "@/lib/discount-data";
+import { getProductSettings } from "@/lib/product-settings-data";
 import { Product } from "@/types/product";
 
 type CheckoutItem = { productId: string; quantity: number };
@@ -107,10 +108,12 @@ export async function POST(request: Request) {
       };
     });
 
-    const amountTotalCents = discountedItems.reduce(
+    const itemsTotalCents = discountedItems.reduce(
       (sum, i) => sum + i.unitPriceCents * i.quantity,
       0
     );
+    const { shipping_fee_cents: shippingFeeCents } = await getProductSettings();
+    const amountTotalCents = itemsTotalCents + shippingFeeCents;
 
     // The order (and its items) are recorded up front, before payment —
     // Razorpay's checkout widget doesn't collect shipping details for us
@@ -123,6 +126,7 @@ export async function POST(request: Request) {
         status: "pending",
         source: "razorpay",
         amount_total_cents: amountTotalCents,
+        shipping_fee_cents: shippingFeeCents,
         customer_email: shipping.email.trim(),
         discount_code: discount?.valid ? discount.code : null,
         shipping_name: shipping.name.trim(),
@@ -180,6 +184,7 @@ export async function POST(request: Request) {
       keyId: process.env.RAZORPAY_KEY_ID,
       razorpayOrderId: razorpayOrder.id,
       amount: amountTotalCents,
+      shippingFeeCents,
       orderId: order.id,
       customerName: shipping.name.trim(),
       customerEmail: shipping.email.trim(),

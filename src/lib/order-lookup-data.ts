@@ -21,6 +21,7 @@ export type OrderDetail = {
   id: string;
   status: string;
   amount_total_cents: number;
+  shipping_fee_cents: number;
   created_at: string;
   items: OrderItemDetail[];
   shipping: ShippingDetail | null;
@@ -77,13 +78,16 @@ export async function getOrderByReference(
   const supabase = createServiceRoleSupabaseClient();
   const { data: order } = await supabase
     .from("orders")
-    .select(`id, status, amount_total_cents, created_at, customer_email, ${SHIPPING_COLUMNS}`)
+    .select(
+      `id, status, amount_total_cents, shipping_fee_cents, created_at, customer_email, ${SHIPPING_COLUMNS}`
+    )
     .eq("id", orderId)
     .maybeSingle<
       {
         id: string;
         status: string;
         amount_total_cents: number;
+        shipping_fee_cents: number;
         created_at: string;
         customer_email: string | null;
       } & ShippingRow
@@ -98,6 +102,7 @@ export async function getOrderByReference(
     id: order.id,
     status: order.status,
     amount_total_cents: order.amount_total_cents,
+    shipping_fee_cents: order.shipping_fee_cents,
     created_at: order.created_at,
     items: await loadItems(supabase, order.id),
     shipping: toShippingDetail(order),
@@ -108,10 +113,16 @@ export async function getOrderById(id: string): Promise<OrderDetail | null> {
   const supabase = createServiceRoleSupabaseClient();
   const { data: order } = await supabase
     .from("orders")
-    .select(`id, status, amount_total_cents, created_at, ${SHIPPING_COLUMNS}`)
+    .select(`id, status, amount_total_cents, shipping_fee_cents, created_at, ${SHIPPING_COLUMNS}`)
     .eq("id", id)
     .maybeSingle<
-      { id: string; status: string; amount_total_cents: number; created_at: string } & ShippingRow
+      {
+        id: string;
+        status: string;
+        amount_total_cents: number;
+        shipping_fee_cents: number;
+        created_at: string;
+      } & ShippingRow
     >();
 
   if (!order) return null;
@@ -120,6 +131,7 @@ export async function getOrderById(id: string): Promise<OrderDetail | null> {
     id: order.id,
     status: order.status,
     amount_total_cents: order.amount_total_cents,
+    shipping_fee_cents: order.shipping_fee_cents,
     created_at: order.created_at,
     items: await loadItems(supabase, order.id),
     shipping: toShippingDetail(order),

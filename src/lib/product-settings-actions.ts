@@ -9,6 +9,10 @@ export async function updateProductSettingsAction(formData: FormData) {
     0,
     Math.round(Number(formData.get("bestseller_count")) || 0)
   );
+  const shippingFeeCents = Math.max(
+    0,
+    Math.round(Number(formData.get("shipping_fee")) * 100 || 0)
+  );
   const supabase = createServiceRoleSupabaseClient();
 
   const { data: existing } = await supabase
@@ -20,16 +24,24 @@ export async function updateProductSettingsAction(formData: FormData) {
   if (existing) {
     const { error } = await supabase
       .from("product_settings")
-      .update({ new_badge_days: days, bestseller_count: bestsellerCount })
+      .update({
+        new_badge_days: days,
+        bestseller_count: bestsellerCount,
+        shipping_fee_cents: shippingFeeCents,
+      })
       .eq("id", existing.id);
     if (error) throw new Error(error.message);
   } else {
-    const { error } = await supabase
-      .from("product_settings")
-      .insert({ new_badge_days: days, bestseller_count: bestsellerCount });
+    const { error } = await supabase.from("product_settings").insert({
+      new_badge_days: days,
+      bestseller_count: bestsellerCount,
+      shipping_fee_cents: shippingFeeCents,
+    });
     if (error) throw new Error(error.message);
   }
 
   revalidatePath("/admin");
   revalidatePath("/");
+  revalidatePath("/cart");
+  revalidatePath("/checkout");
 }
