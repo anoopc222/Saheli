@@ -31,10 +31,10 @@ export function EditModal({
           onClick={close}
         >
           <div
-            className="max-h-[85vh] w-full max-w-sm overflow-y-auto rounded-2xl bg-paper p-4"
+            className="flex h-[32rem] max-h-[85vh] w-full max-w-sm flex-col rounded-2xl bg-paper p-4"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="mb-3 flex items-center justify-between">
+            <div className="mb-3 flex shrink-0 items-center justify-between">
               <p className="font-heading text-sm font-semibold text-ink">{title}</p>
               <button
                 type="button"
@@ -45,7 +45,7 @@ export function EditModal({
                 <XIcon className="h-4 w-4" />
               </button>
             </div>
-            <div className="flex flex-col gap-4">{children(close)}</div>
+            <div className="flex flex-1 flex-col gap-4 overflow-y-auto">{children(close)}</div>
           </div>
         </div>
       )}
