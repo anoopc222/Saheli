@@ -5,10 +5,61 @@ import Link from "next/link";
 import { useCart } from "@/lib/cart-context";
 import { formatPrice } from "@/lib/format";
 
+type AppliedCoupon = {
+  code: string;
+  percentOff: number | null;
+  amountOffCents: number | null;
+};
+
 export default function CartPage() {
   const { lines, setQuantity, removeItem, totalCents } = useCart();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const [couponInput, setCouponInput] = useState("");
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [couponError, setCouponError] = useState<string | null>(null);
+  const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);
+
+  const discountCents = appliedCoupon
+    ? appliedCoupon.percentOff
+      ? Math.round((totalCents * appliedCoupon.percentOff) / 100)
+      : Math.min(appliedCoupon.amountOffCents ?? 0, totalCents)
+    : 0;
+  const discountedTotalCents = Math.max(0, totalCents - discountCents);
+
+  async function handleApplyCoupon() {
+    setCouponLoading(true);
+    setCouponError(null);
+    try {
+      const res = await fetch("/api/validate-coupon", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: couponInput }),
+      });
+      const data = await res.json();
+      if (!data.valid) {
+        setAppliedCoupon(null);
+        setCouponError(data.message || "That code isn't valid.");
+        return;
+      }
+      setAppliedCoupon({
+        code: data.code,
+        percentOff: data.percentOff,
+        amountOffCents: data.amountOffCents,
+      });
+    } catch {
+      setCouponError("Couldn't check that code. Try again.");
+    } finally {
+      setCouponLoading(false);
+    }
+  }
+
+  function handleRemoveCoupon() {
+    setAppliedCoupon(null);
+    setCouponInput("");
+    setCouponError(null);
+  }
 
   async function handleCheckout() {
     setLoading(true);
@@ -22,6 +73,7 @@ export default function CartPage() {
             productId: l.product.id,
             quantity: l.quantity,
           })),
+          couponCode: appliedCoupon?.code,
         }),
       });
       const data = await res.json();
@@ -112,11 +164,57 @@ export default function CartPage() {
         ))}
       </div>
 
-      <div className="mt-6 flex items-center justify-between border-t border-line pt-4">
-        <p className="text-base font-semibold text-ink">Total</p>
-        <p className="text-lg font-semibold tabular-nums text-accent">
-          {formatPrice(totalCents)}
-        </p>
+      <div className="mt-6">
+        {appliedCoupon ? (
+          <div className="flex items-center justify-between gap-3 rounded-xl border border-accent bg-accent-soft px-3 py-2.5">
+            <p className="text-sm font-medium text-accent">
+              &quot;{appliedCoupon.code}&quot; applied
+            </p>
+            <button
+              onClick={handleRemoveCoupon}
+              className="shrink-0 text-xs font-medium text-accent hover:underline"
+            >
+              Remove
+            </button>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              value={couponInput}
+              onChange={(e) => setCouponInput(e.target.value)}
+              placeholder="Discount code"
+              className="min-w-0 flex-1 rounded-xl border border-line bg-paper-raised px-3 py-2.5 text-sm uppercase outline-none focus:border-accent"
+            />
+            <button
+              onClick={handleApplyCoupon}
+              disabled={couponLoading || !couponInput.trim()}
+              className="shrink-0 rounded-xl border border-line px-4 py-2.5 text-sm font-medium text-ink transition-colors hover:border-accent hover:text-accent disabled:opacity-40"
+            >
+              {couponLoading ? "Checking..." : "Apply"}
+            </button>
+          </div>
+        )}
+        {couponError && <p className="mt-1.5 text-xs text-accent">{couponError}</p>}
+      </div>
+
+      <div className="mt-4 flex flex-col gap-1.5 border-t border-line pt-4">
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-ink-muted">Subtotal</p>
+          <p className="text-sm tabular-nums text-ink">{formatPrice(totalCents)}</p>
+        </div>
+        {discountCents > 0 && (
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-ink-muted">Discount</p>
+            <p className="text-sm tabular-nums text-accent">-{formatPrice(discountCents)}</p>
+          </div>
+        )}
+        <div className="flex items-center justify-between pt-1">
+          <p className="text-base font-semibold text-ink">Total</p>
+          <p className="text-lg font-semibold tabular-nums text-accent">
+            {formatPrice(discountedTotalCents)}
+          </p>
+        </div>
       </div>
 
       {error && <p className="mt-4 text-sm text-accent">{error}</p>}

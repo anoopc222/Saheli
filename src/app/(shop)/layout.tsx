@@ -3,6 +3,7 @@ import { Inter, Playfair_Display, Dancing_Script } from "next/font/google";
 import "../globals.css";
 import { CartProvider } from "@/lib/cart-context";
 import { WishlistProvider } from "@/lib/wishlist-context";
+import { RecentlyViewedProvider } from "@/lib/recently-viewed-context";
 import { AppShell } from "@/components/AppShell";
 
 const inter = Inter({
@@ -44,7 +45,9 @@ export default function ShopLayout({
       <body className="min-h-full flex flex-col">
         <CartProvider>
           <WishlistProvider>
-            <AppShell>{children}</AppShell>
+            <RecentlyViewedProvider>
+              <AppShell>{children}</AppShell>
+            </RecentlyViewedProvider>
           </WishlistProvider>
         </CartProvider>
       </body>

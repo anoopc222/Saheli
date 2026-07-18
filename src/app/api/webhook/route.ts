@@ -24,6 +24,7 @@ export async function POST(request: Request) {
     const items = JSON.parse(session.metadata?.items ?? "[]") as {
       productId: string;
       quantity: number;
+      unitPriceCents?: number;
     }[];
 
     const supabase = createServiceRoleSupabaseClient();
@@ -42,6 +43,7 @@ export async function POST(request: Request) {
         customer_email: session.customer_details?.email,
         amount_total_cents: session.amount_total ?? 0,
         status: "paid",
+        discount_code: session.metadata?.discount_code || null,
       })
       .select()
       .single();
@@ -53,7 +55,7 @@ export async function POST(request: Request) {
           order_id: order.id,
           product_id: item.productId,
           product_name: product?.name ?? "Unknown product",
-          unit_price_cents: product?.price_cents ?? 0,
+          unit_price_cents: item.unitPriceCents ?? product?.price_cents ?? 0,
           quantity: item.quantity,
         };
       });

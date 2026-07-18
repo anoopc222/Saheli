@@ -6,6 +6,9 @@ import { AddToCartForm } from "@/components/AddToCartForm";
 import { ProductBadge } from "@/components/ProductBadge";
 import { ProductGallery } from "@/components/ProductGallery";
 import { RatingStars } from "@/components/RatingStars";
+import { ProductRail } from "@/components/ProductRail";
+import { RecordRecentlyViewed } from "@/components/RecordRecentlyViewed";
+import { RecentlyViewedRail } from "@/components/RecentlyViewedRail";
 import { sweepExpiredNewBadges } from "@/lib/badge-sweep";
 
 export default async function ProductPage({
@@ -26,8 +29,20 @@ export default async function ProductPage({
     notFound();
   }
 
+  let relatedQuery = supabase
+    .from("products")
+    .select("*")
+    .eq("show_on_store", true)
+    .neq("id", id)
+    .limit(8);
+  relatedQuery = product.category_id
+    ? relatedQuery.eq("category_id", product.category_id)
+    : relatedQuery.eq("fabric", product.fabric);
+  const { data: related } = await relatedQuery.returns<Product[]>();
+
   return (
     <div className="mx-auto max-w-[480px] px-4 py-6">
+      <RecordRecentlyViewed productId={product.id} />
       <div className="flex flex-col gap-6">
         <div className="relative aspect-[3/4] w-full overflow-hidden rounded-2xl bg-line">
           <ProductBadge badge={product.badge} stock={product.stock} />
@@ -75,6 +90,8 @@ export default async function ProductPage({
           </p>
           <AddToCartForm product={product} />
         </div>
+        <ProductRail title="You may also like" products={related ?? []} />
+        <RecentlyViewedRail excludeId={product.id} />
       </div>
     </div>
   );

@@ -13,6 +13,7 @@ import { getHeroBanners, getActivePromoBanner } from "@/lib/homepage-data";
 import { getFeatureItems, getFeatureRowSettings } from "@/lib/feature-items-data";
 import { getMenuItems } from "@/lib/menu-items-data";
 import { sweepExpiredNewBadges } from "@/lib/badge-sweep";
+import { RecentlyViewedRail } from "@/components/RecentlyViewedRail";
 
 const FILTER_LABELS: Record<string, string> = {
   new: "New Arrivals",
@@ -160,6 +161,11 @@ export default async function Home({
             {products.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
+          </div>
+        )}
+        {!hasFilter && (
+          <div className="mt-6">
+            <RecentlyViewedRail />
           </div>
         )}
       </div>
