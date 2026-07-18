@@ -173,13 +173,13 @@ export function NavDrawer({
                                           View all {category.name}
                                         </Link>
                                         {category.subcategories.length > 0 && (
-                                          <div className="flex flex-wrap gap-1.5">
+                                          <div className="flex flex-col gap-2">
                                             {category.subcategories.map((sub) => (
                                               <Link
                                                 key={sub.id}
                                                 href={`/?fabric=${encodeURIComponent(sub.fabric)}`}
                                                 onClick={close}
-                                                className="rounded-full border border-line px-3 py-1 text-xs font-medium text-ink transition-colors hover:border-accent hover:bg-accent-soft hover:text-accent"
+                                                className="text-xs text-ink transition-colors hover:text-accent"
                                               >
                                                 {sub.name}
                                               </Link>
