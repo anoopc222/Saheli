@@ -55,7 +55,9 @@ export function ProductCard({ product }: { product: Product }) {
             <img
               src={product.image_url}
               alt={product.name}
-              className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+              className={`h-full w-full object-cover transition-transform duration-300 group-hover:scale-105 ${
+                product.stock <= 0 ? "grayscale" : ""
+              }`}
             />
           )}
         </div>
