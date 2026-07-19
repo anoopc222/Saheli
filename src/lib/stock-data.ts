@@ -126,3 +126,94 @@ export async function getRecentStockAdjustments(limit = 15): Promise<StockAdjust
     .returns<StockAdjustmentRow[]>();
   return data ?? [];
 }
+
+export type ProductStockDetail = {
+  id: string;
+  name: string;
+  stock: number;
+  price_cents: number;
+  cost_price_cents: number | null;
+};
+
+export async function getProductStockDetail(
+  productId: string
+): Promise<ProductStockDetail | null> {
+  const supabase = createServiceRoleSupabaseClient();
+  const { data } = await supabase
+    .from("products")
+    .select("id, name, stock, price_cents, cost_price_cents")
+    .eq("id", productId)
+    .maybeSingle<ProductStockDetail>();
+  return data ?? null;
+}
+
+export type StockHistoryEntry = {
+  id: string;
+  delta: number;
+  reason: string;
+  createdAt: string;
+  countedAsSale: boolean;
+};
+
+// Merges two independent sources into one timeline: manual stock_adjustments
+// (single edits, bulk edits, offline sales, PO receipts — all logged there
+// already) and online Razorpay sales (which only ever touch products.stock
+// directly in finalizePaidOrder, with no stock_adjustments row of their
+// own). Offline sales are excluded from the order_items side since they're
+// already represented via their stock_adjustments row — including both
+// would double-count the same stock change.
+export async function getProductStockHistory(productId: string): Promise<StockHistoryEntry[]> {
+  const supabase = createServiceRoleSupabaseClient();
+
+  const [{ data: adjustments }, { data: items }] = await Promise.all([
+    supabase
+      .from("stock_adjustments")
+      .select("id, delta, reason, counted_as_sale, created_at")
+      .eq("product_id", productId)
+      .returns<
+        { id: string; delta: number; reason: string; counted_as_sale: boolean; created_at: string }[]
+      >(),
+    supabase
+      .from("order_items")
+      .select("id, order_id, quantity")
+      .eq("product_id", productId)
+      .returns<{ id: string; order_id: string; quantity: number }[]>(),
+  ]);
+
+  const orderIds = [...new Set((items ?? []).map((i) => i.order_id))];
+  const { data: orders } =
+    orderIds.length > 0
+      ? await supabase
+          .from("orders")
+          .select("id, created_at, status, source")
+          .in("id", orderIds)
+          .returns<{ id: string; created_at: string; status: string; source: string }[]>()
+      : { data: [] as { id: string; created_at: string; status: string; source: string }[] };
+  const ordersById = new Map((orders ?? []).map((o) => [o.id, o]));
+
+  const adjustmentEntries: StockHistoryEntry[] = (adjustments ?? []).map((a) => ({
+    id: a.id,
+    delta: a.delta,
+    reason: a.reason || (a.counted_as_sale ? "Offline sale" : "Manual adjustment"),
+    createdAt: a.created_at,
+    countedAsSale: a.counted_as_sale,
+  }));
+
+  const saleEntries: StockHistoryEntry[] = (items ?? [])
+    .map((item) => {
+      const order = ordersById.get(item.order_id);
+      if (!order || order.status !== "paid" || order.source === "offline") return null;
+      return {
+        id: item.id,
+        delta: -item.quantity,
+        reason: "Online sale",
+        createdAt: order.created_at,
+        countedAsSale: true,
+      };
+    })
+    .filter((e): e is StockHistoryEntry => e !== null);
+
+  return [...adjustmentEntries, ...saleEntries].sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
+}

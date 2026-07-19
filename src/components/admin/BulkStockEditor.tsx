@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { bulkAdjustStockAction } from "@/lib/stock-actions";
 import { StockAdjustModal } from "@/components/admin/StockAdjustModal";
 import { ProductStockRow } from "@/lib/stock-data";
@@ -76,7 +77,12 @@ export function BulkStockEditor({ products }: { products: ProductStockRow[] }) {
               className="flex items-center gap-3 rounded-xl border border-line bg-paper-raised p-3"
             >
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium text-ink">{product.name}</p>
+                <Link
+                  href={`/admin/stock/${product.id}`}
+                  className="truncate text-sm font-medium text-ink hover:text-accent hover:underline"
+                >
+                  {product.name}
+                </Link>
                 <p className="text-xs text-ink-muted">
                   {product.stock} in stock &middot; {product.sold_qty} sold
                   {product.stock <= 0 && (

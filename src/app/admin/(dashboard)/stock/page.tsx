@@ -1,6 +1,8 @@
 import { getStockOverview, getRecentStockAdjustments } from "@/lib/stock-data";
+import { getPurchaseOrders } from "@/lib/purchase-orders-data";
 import { formatPrice } from "@/lib/format";
 import { BulkStockEditor } from "@/components/admin/BulkStockEditor";
+import { PurchaseOrderManager } from "@/components/admin/PurchaseOrderManager";
 
 export const dynamic = "force-dynamic";
 
@@ -14,9 +16,10 @@ function StatCard({ label, value }: { label: string; value: string }) {
 }
 
 export default async function AdminStockPage() {
-  const [overview, adjustments] = await Promise.all([
+  const [overview, adjustments, purchaseOrders] = await Promise.all([
     getStockOverview(),
     getRecentStockAdjustments(),
+    getPurchaseOrders(),
   ]);
 
   const topSellers = overview.products.filter((p) => p.sold_qty > 0).slice(0, 10);
@@ -69,6 +72,11 @@ export default async function AdminStockPage() {
       </section>
 
       <BulkStockEditor products={overview.products} />
+
+      <PurchaseOrderManager
+        products={overview.products.map((p) => ({ id: p.id, name: p.name }))}
+        purchaseOrders={purchaseOrders}
+      />
 
       <section className="flex flex-col gap-2.5">
         <h2 className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
