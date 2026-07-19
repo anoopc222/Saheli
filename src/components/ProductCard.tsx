@@ -32,7 +32,7 @@ export function ProductCard({ product }: { product: Product }) {
     : 0;
 
   return (
-    <div className="group flex flex-col overflow-hidden rounded-md border border-line bg-paper-raised shadow-sm transition-shadow hover:shadow-md">
+    <div className="group flex h-full flex-col overflow-hidden rounded-md border border-line bg-paper-raised shadow-sm transition-shadow hover:shadow-md">
       <Link href={`/product/${product.id}`} className="relative block">
         <ProductBadge badge={product.badge} stock={product.stock} />
         <button
@@ -64,7 +64,7 @@ export function ProductCard({ product }: { product: Product }) {
       </Link>
       <div className="flex flex-1 flex-col gap-1.5 p-3.5">
         <Link href={`/product/${product.id}`}>
-          <h3 className="text-sm font-medium leading-snug text-ink">
+          <h3 className="line-clamp-2 text-sm font-medium leading-snug text-ink">
             {product.name}
           </h3>
         </Link>
@@ -85,52 +85,54 @@ export function ProductCard({ product }: { product: Product }) {
             <p className="text-xs font-medium text-accent">{discountPct}% off</p>
           )}
         </div>
-        {product.stock <= 0 ? (
-          <button
-            disabled
-            className="mt-2 rounded-md bg-brand px-3 py-2 text-xs font-medium text-white opacity-40"
-          >
-            Sold Out
-          </button>
-        ) : quantityInCart > 0 ? (
-          <div>
-            <div className="mt-2 flex items-center justify-between rounded-md bg-brand px-1 py-1">
-              <button
-                type="button"
-                onClick={() => setQuantity(product.id, quantityInCart - 1)}
-                aria-label="Decrease quantity"
-                className="flex h-7 w-7 shrink-0 items-center justify-center rounded text-sm font-medium text-white transition-colors hover:bg-brand-dark"
-              >
-                &minus;
-              </button>
-              <span className="text-xs font-medium tabular-nums text-white">
-                {quantityInCart}
-              </span>
-              <button
-                type="button"
-                onClick={handleIncrement}
-                aria-label="Increase quantity"
-                className={`flex h-7 w-7 shrink-0 items-center justify-center rounded text-sm font-medium text-white transition-colors hover:bg-brand-dark ${
-                  quantityInCart >= product.stock ? "opacity-40" : ""
-                }`}
-              >
-                +
-              </button>
+        <div className="mt-auto pt-2">
+          {product.stock <= 0 ? (
+            <button
+              disabled
+              className="rounded-md bg-brand px-3 py-2 text-xs font-medium text-white opacity-40"
+            >
+              Sold Out
+            </button>
+          ) : quantityInCart > 0 ? (
+            <div>
+              <div className="flex items-center justify-between rounded-md bg-brand px-1 py-1">
+                <button
+                  type="button"
+                  onClick={() => setQuantity(product.id, quantityInCart - 1)}
+                  aria-label="Decrease quantity"
+                  className="flex h-7 w-7 shrink-0 items-center justify-center rounded text-sm font-medium text-white transition-colors hover:bg-brand-dark"
+                >
+                  &minus;
+                </button>
+                <span className="text-xs font-medium tabular-nums text-white">
+                  {quantityInCart}
+                </span>
+                <button
+                  type="button"
+                  onClick={handleIncrement}
+                  aria-label="Increase quantity"
+                  className={`flex h-7 w-7 shrink-0 items-center justify-center rounded text-sm font-medium text-white transition-colors hover:bg-brand-dark ${
+                    quantityInCart >= product.stock ? "opacity-40" : ""
+                  }`}
+                >
+                  +
+                </button>
+              </div>
+              {limitMessage && (
+                <p className="mt-1 text-[10px] text-accent">
+                  Only {product.stock} in stock
+                </p>
+              )}
             </div>
-            {limitMessage && (
-              <p className="mt-1 text-[10px] text-accent">
-                Only {product.stock} in stock
-              </p>
-            )}
-          </div>
-        ) : (
-          <button
-            onClick={() => addItem(product)}
-            className="mt-2 rounded-md bg-brand px-3 py-2 text-xs font-medium text-white transition-colors hover:bg-brand-dark"
-          >
-            Add to cart
-          </button>
-        )}
+          ) : (
+            <button
+              onClick={() => addItem(product)}
+              className="rounded-md bg-brand px-3 py-2 text-xs font-medium text-white transition-colors hover:bg-brand-dark"
+            >
+              Add to cart
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

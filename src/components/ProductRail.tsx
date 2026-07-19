@@ -7,7 +7,7 @@ export function ProductRail({ title, products }: { title: string; products: Prod
   return (
     <div>
       <h2 className="mb-3 font-heading text-lg font-semibold text-ink">{title}</h2>
-      <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-1">
+      <div className="-mx-4 flex items-stretch gap-3 overflow-x-auto px-4 pb-1">
         {products.map((product) => (
           <div key={product.id} className="w-36 shrink-0">
             <ProductCard product={product} />
