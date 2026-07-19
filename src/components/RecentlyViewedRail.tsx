@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { useRecentlyViewed } from "@/lib/recently-viewed-context";
-import { ProductCard } from "@/components/ProductCard";
+import { RecentlyViewedItem } from "@/components/RecentlyViewedItem";
 import { Product } from "@/types/product";
 
 export function RecentlyViewedRail({ excludeId }: { excludeId?: string }) {
@@ -42,9 +42,9 @@ export function RecentlyViewedRail({ excludeId }: { excludeId?: string }) {
   return (
     <div>
       <h2 className="mb-3 font-heading text-lg font-semibold text-ink">Recently viewed</h2>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="flex flex-col gap-3">
         {products.map((product) => (
-          <ProductCard key={product.id} product={product} />
+          <RecentlyViewedItem key={product.id} product={product} />
         ))}
       </div>
     </div>
