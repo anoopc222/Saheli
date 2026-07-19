@@ -112,13 +112,22 @@ export default async function AdminHomePage() {
       </section>
 
       <section className="rounded-2xl border border-line bg-paper-raised p-4">
-        <h2 className="mb-1 text-xs font-semibold uppercase tracking-wide text-ink-muted">
-          GST
-        </h2>
+        <div className="mb-1 flex items-center justify-between">
+          <h2 className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
+            GST
+          </h2>
+          <VisibilityToggle
+            id={settings.id}
+            checked={settings.gst_enabled}
+            action={updateProductSettingsAction}
+            label={settings.gst_enabled ? "Disable GST at checkout" : "Enable GST at checkout"}
+            field="gst_enabled"
+          />
+        </div>
         <p className="mb-3 text-sm text-ink-muted">
-          Product prices are GST-exclusive — this rate is added on top of the price at
-          checkout. Sarees/garments priced up to the threshold use the lower rate; above
-          it, the higher rate applies.
+          {settings.gst_enabled
+            ? "Product prices are GST-exclusive — this rate is added on top of the price at checkout. Sarees/garments priced up to the threshold use the lower rate; above it, the higher rate applies."
+            : "GST is currently turned off — checkout won't add or show any GST. Turn it back on to resume charging the rates below."}
         </p>
         <form action={updateProductSettingsAction} className="flex flex-col gap-2">
           <div className="flex items-center gap-2">
@@ -167,6 +176,31 @@ export default async function AdminHomePage() {
             Save
           </button>
         </form>
+      </section>
+
+      <section className="rounded-2xl border border-line bg-paper-raised p-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
+              GSTIN field at checkout
+            </h2>
+            <p className="mt-1 text-sm text-ink-muted">
+              Lets customers enter their own GSTIN for a business invoice. Turn off to
+              remove the field from checkout entirely.
+            </p>
+          </div>
+          <VisibilityToggle
+            id={settings.id}
+            checked={settings.gstin_field_enabled}
+            action={updateProductSettingsAction}
+            label={
+              settings.gstin_field_enabled
+                ? "Hide GSTIN field at checkout"
+                : "Show GSTIN field at checkout"
+            }
+            field="gstin_field_enabled"
+          />
+        </div>
       </section>
 
       <section className="flex flex-col gap-2.5">

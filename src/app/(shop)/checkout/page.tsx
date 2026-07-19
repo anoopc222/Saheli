@@ -351,12 +351,14 @@ function CheckoutForm() {
           onChange={(e) => updateField("postalCode", e.target.value.replace(/\D/g, ""))}
           className={inputClasses}
         />
-        <input
-          placeholder="GSTIN (optional, for a business invoice)"
-          value={form.gstin}
-          onChange={(e) => updateField("gstin", e.target.value.toUpperCase())}
-          className={`${inputClasses} uppercase`}
-        />
+        {(settings?.gstin_field_enabled ?? true) && (
+          <input
+            placeholder="GSTIN (optional, for a business invoice)"
+            value={form.gstin}
+            onChange={(e) => updateField("gstin", e.target.value.toUpperCase())}
+            className={`${inputClasses} uppercase`}
+          />
+        )}
 
         {error && (
           <p className="rounded-xl border border-red-300 bg-red-50 px-3 py-2.5 text-sm text-red-700">
