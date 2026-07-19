@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { useRecentlyViewed } from "@/lib/recently-viewed-context";
-import { ProductRail } from "@/components/ProductRail";
+import { RecentlyViewedCard } from "@/components/RecentlyViewedCard";
 import { Product } from "@/types/product";
 
 export function RecentlyViewedRail({ excludeId }: { excludeId?: string }) {
@@ -37,5 +37,16 @@ export function RecentlyViewedRail({ excludeId }: { excludeId?: string }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [relevantIds.join(",")]);
 
-  return <ProductRail title="Recently viewed" products={products} />;
+  if (products.length === 0) return null;
+
+  return (
+    <div>
+      <h2 className="mb-3 font-heading text-lg font-semibold text-ink">Recently viewed</h2>
+      <div className="-mx-4 flex gap-4 overflow-x-auto px-4 pb-1">
+        {products.map((product) => (
+          <RecentlyViewedCard key={product.id} product={product} />
+        ))}
+      </div>
+    </div>
+  );
 }
