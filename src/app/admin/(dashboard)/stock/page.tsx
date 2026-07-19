@@ -1,6 +1,6 @@
 import { getStockOverview, getRecentStockAdjustments } from "@/lib/stock-data";
 import { formatPrice } from "@/lib/format";
-import { StockAdjustModal } from "@/components/admin/StockAdjustModal";
+import { BulkStockEditor } from "@/components/admin/BulkStockEditor";
 
 export const dynamic = "force-dynamic";
 
@@ -68,40 +68,7 @@ export default async function AdminStockPage() {
         )}
       </section>
 
-      <section className="flex flex-col gap-2.5">
-        <div>
-          <h2 className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
-            Stock by product
-          </h2>
-          <p className="mt-1 text-xs text-ink-muted">
-            Use the adjust icon to add or subtract stock for a sale made outside the site.
-          </p>
-        </div>
-        <div className="flex flex-col gap-2">
-          {overview.products.map((product) => (
-            <div
-              key={product.id}
-              className="flex items-center gap-3 rounded-xl border border-line bg-paper-raised p-3"
-            >
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium text-ink">{product.name}</p>
-                <p className="text-xs text-ink-muted">
-                  {product.stock} in stock &middot; {product.sold_qty} sold
-                  {product.stock <= 0 && (
-                    <span className="ml-1.5 font-medium text-red-600">Sold out</span>
-                  )}
-                </p>
-              </div>
-              <StockAdjustModal
-                productId={product.id}
-                productName={product.name}
-                currentStock={product.stock}
-                priceCents={product.price_cents}
-              />
-            </div>
-          ))}
-        </div>
-      </section>
+      <BulkStockEditor products={overview.products} />
 
       <section className="flex flex-col gap-2.5">
         <h2 className="text-xs font-semibold uppercase tracking-wide text-ink-muted">

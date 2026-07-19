@@ -68,3 +68,55 @@ export async function adjustStockAction(formData: FormData) {
   revalidatePath("/admin/products");
   revalidatePath("/");
 }
+
+// Bulk edit sets each product's stock to an absolute value in one submit
+// (a recount/correction pass), unlike the single-product modal's delta
+// input. Still logged as ordinary stock_adjustments rows so the audit
+// trail covers both paths — just never as a sale, since a recount isn't one.
+export async function bulkAdjustStockAction(formData: FormData) {
+  const entries: { productId: string; newStock: number }[] = [];
+  for (const [key, value] of formData.entries()) {
+    if (!key.startsWith("stock__")) continue;
+    const productId = key.slice("stock__".length);
+    const newStock = Math.round(Number(value));
+    if (!productId || !Number.isFinite(newStock)) continue;
+    entries.push({ productId, newStock: Math.max(0, newStock) });
+  }
+  if (entries.length === 0) return;
+
+  const supabase = createServiceRoleSupabaseClient();
+  const { data: products } = await supabase
+    .from("products")
+    .select("id, name, stock")
+    .in(
+      "id",
+      entries.map((e) => e.productId)
+    )
+    .returns<{ id: string; name: string; stock: number }[]>();
+  const byId = new Map((products ?? []).map((p) => [p.id, p]));
+
+  const changed = entries
+    .map((e) => ({ ...e, product: byId.get(e.productId) }))
+    .filter((e) => e.product && e.product.stock !== e.newStock);
+
+  for (const { productId, newStock, product } of changed) {
+    if (!product) continue;
+    const { error } = await supabase
+      .from("products")
+      .update({ stock: newStock })
+      .eq("id", productId);
+    if (error) throw new Error(error.message);
+
+    await supabase.from("stock_adjustments").insert({
+      product_id: productId,
+      product_name: product.name,
+      delta: newStock - product.stock,
+      reason: "Bulk edit",
+      counted_as_sale: false,
+    });
+  }
+
+  revalidatePath("/admin/stock");
+  revalidatePath("/admin/products");
+  revalidatePath("/");
+}
