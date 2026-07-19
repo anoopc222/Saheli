@@ -10,9 +10,10 @@ import { RatingStars } from "@/components/RatingStars";
 import { HeartIcon } from "@/components/icons";
 
 export function ProductCard({ product }: { product: Product }) {
-  const { addItem } = useCart();
+  const { addItem, setQuantity, lines } = useCart();
   const { isWishlisted, toggle } = useWishlist();
   const wishlisted = isWishlisted(product.id);
+  const quantityInCart = lines.find((l) => l.product.id === product.id)?.quantity ?? 0;
   const discountPct = product.compare_at_price_cents
     ? Math.round(
         ((product.compare_at_price_cents - product.price_cents) / product.compare_at_price_cents) * 100
@@ -71,13 +72,44 @@ export function ProductCard({ product }: { product: Product }) {
             <p className="text-xs font-medium text-accent">{discountPct}% off</p>
           )}
         </div>
-        <button
-          onClick={() => addItem(product)}
-          disabled={product.stock <= 0}
-          className="mt-2 rounded-md bg-brand px-3 py-2 text-xs font-medium text-white transition-colors hover:bg-brand-dark disabled:opacity-40"
-        >
-          {product.stock > 0 ? "Add to cart" : "Sold Out"}
-        </button>
+        {product.stock <= 0 ? (
+          <button
+            disabled
+            className="mt-2 rounded-md bg-brand px-3 py-2 text-xs font-medium text-white opacity-40"
+          >
+            Sold Out
+          </button>
+        ) : quantityInCart > 0 ? (
+          <div className="mt-2 flex items-center justify-between rounded-md bg-brand px-1 py-1">
+            <button
+              type="button"
+              onClick={() => setQuantity(product.id, quantityInCart - 1)}
+              aria-label="Decrease quantity"
+              className="flex h-7 w-7 shrink-0 items-center justify-center rounded text-sm font-medium text-white transition-colors hover:bg-brand-dark"
+            >
+              &minus;
+            </button>
+            <span className="text-xs font-medium tabular-nums text-white">
+              {quantityInCart}
+            </span>
+            <button
+              type="button"
+              onClick={() => addItem(product, 1)}
+              disabled={quantityInCart >= product.stock}
+              aria-label="Increase quantity"
+              className="flex h-7 w-7 shrink-0 items-center justify-center rounded text-sm font-medium text-white transition-colors hover:bg-brand-dark disabled:opacity-40"
+            >
+              +
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={() => addItem(product)}
+            className="mt-2 rounded-md bg-brand px-3 py-2 text-xs font-medium text-white transition-colors hover:bg-brand-dark"
+          >
+            Add to cart
+          </button>
+        )}
       </div>
     </div>
   );
