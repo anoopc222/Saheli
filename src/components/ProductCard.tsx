@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { Product } from "@/types/product";
 import { formatPrice } from "@/lib/format";
@@ -14,6 +15,16 @@ export function ProductCard({ product }: { product: Product }) {
   const { isWishlisted, toggle } = useWishlist();
   const wishlisted = isWishlisted(product.id);
   const quantityInCart = lines.find((l) => l.product.id === product.id)?.quantity ?? 0;
+  const [limitMessage, setLimitMessage] = useState(false);
+
+  function handleIncrement() {
+    if (quantityInCart >= product.stock) {
+      setLimitMessage(true);
+      setTimeout(() => setLimitMessage(false), 2000);
+      return;
+    }
+    addItem(product, 1);
+  }
   const discountPct = product.compare_at_price_cents
     ? Math.round(
         ((product.compare_at_price_cents - product.price_cents) / product.compare_at_price_cents) * 100
@@ -80,27 +91,35 @@ export function ProductCard({ product }: { product: Product }) {
             Sold Out
           </button>
         ) : quantityInCart > 0 ? (
-          <div className="mt-2 flex items-center justify-between rounded-md bg-brand px-1 py-1">
-            <button
-              type="button"
-              onClick={() => setQuantity(product.id, quantityInCart - 1)}
-              aria-label="Decrease quantity"
-              className="flex h-7 w-7 shrink-0 items-center justify-center rounded text-sm font-medium text-white transition-colors hover:bg-brand-dark"
-            >
-              &minus;
-            </button>
-            <span className="text-xs font-medium tabular-nums text-white">
-              {quantityInCart}
-            </span>
-            <button
-              type="button"
-              onClick={() => addItem(product, 1)}
-              disabled={quantityInCart >= product.stock}
-              aria-label="Increase quantity"
-              className="flex h-7 w-7 shrink-0 items-center justify-center rounded text-sm font-medium text-white transition-colors hover:bg-brand-dark disabled:opacity-40"
-            >
-              +
-            </button>
+          <div>
+            <div className="mt-2 flex items-center justify-between rounded-md bg-brand px-1 py-1">
+              <button
+                type="button"
+                onClick={() => setQuantity(product.id, quantityInCart - 1)}
+                aria-label="Decrease quantity"
+                className="flex h-7 w-7 shrink-0 items-center justify-center rounded text-sm font-medium text-white transition-colors hover:bg-brand-dark"
+              >
+                &minus;
+              </button>
+              <span className="text-xs font-medium tabular-nums text-white">
+                {quantityInCart}
+              </span>
+              <button
+                type="button"
+                onClick={handleIncrement}
+                aria-label="Increase quantity"
+                className={`flex h-7 w-7 shrink-0 items-center justify-center rounded text-sm font-medium text-white transition-colors hover:bg-brand-dark ${
+                  quantityInCart >= product.stock ? "opacity-40" : ""
+                }`}
+              >
+                +
+              </button>
+            </div>
+            {limitMessage && (
+              <p className="mt-1 text-[10px] text-accent">
+                Only {product.stock} in stock
+              </p>
+            )}
           </div>
         ) : (
           <button
