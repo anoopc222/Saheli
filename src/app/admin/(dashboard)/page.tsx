@@ -99,6 +99,27 @@ export default async function AdminHomePage() {
       </section>
 
       <section className="rounded-2xl border border-line bg-paper-raised p-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
+              Product ratings
+            </h2>
+            <p className="mt-1 text-sm text-ink-muted">
+              Shows the star rating and review count on product cards and the product
+              page. Turn off to hide ratings everywhere on the store.
+            </p>
+          </div>
+          <VisibilityToggle
+            id={settings.id}
+            checked={settings.show_ratings}
+            action={updateProductSettingsAction}
+            label={settings.show_ratings ? "Hide product ratings" : "Show product ratings"}
+            field="show_ratings"
+          />
+        </div>
+      </section>
+
+      <section className="rounded-2xl border border-line bg-paper-raised p-4">
         <h2 className="mb-1 text-xs font-semibold uppercase tracking-wide text-ink-muted">
           Shipping zones
         </h2>

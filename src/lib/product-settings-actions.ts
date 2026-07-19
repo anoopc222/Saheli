@@ -11,6 +11,7 @@ type SettingsRow = {
   gst_low_rate_percent: number;
   gst_high_rate_percent: number;
   gstin_field_enabled: boolean;
+  show_ratings: boolean;
 };
 
 const DEFAULTS: SettingsRow = {
@@ -21,6 +22,7 @@ const DEFAULTS: SettingsRow = {
   gst_low_rate_percent: 5,
   gst_high_rate_percent: 18,
   gstin_field_enabled: true,
+  show_ratings: true,
 };
 
 // Each settings section on the Dashboard submits only the field(s) it owns —
@@ -30,7 +32,7 @@ export async function updateProductSettingsAction(formData: FormData) {
   const { data: existing } = await supabase
     .from("product_settings")
     .select(
-      "id, new_badge_days, bestseller_count, gst_enabled, gst_threshold_cents, gst_low_rate_percent, gst_high_rate_percent, gstin_field_enabled"
+      "id, new_badge_days, bestseller_count, gst_enabled, gst_threshold_cents, gst_low_rate_percent, gst_high_rate_percent, gstin_field_enabled, show_ratings"
     )
     .limit(1)
     .maybeSingle<SettingsRow & { id: string }>();
@@ -59,6 +61,9 @@ export async function updateProductSettingsAction(formData: FormData) {
     gstin_field_enabled: formData.has("gstin_field_enabled")
       ? formData.get("gstin_field_enabled") === "true"
       : current.gstin_field_enabled,
+    show_ratings: formData.has("show_ratings")
+      ? formData.get("show_ratings") === "true"
+      : current.show_ratings,
   };
 
   if (existing) {

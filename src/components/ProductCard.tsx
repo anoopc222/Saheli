@@ -9,10 +9,12 @@ import { useWishlist } from "@/lib/wishlist-context";
 import { ProductBadge } from "@/components/ProductBadge";
 import { RatingStars } from "@/components/RatingStars";
 import { HeartIcon } from "@/components/icons";
+import { useShowRatings } from "@/lib/product-settings-context";
 
 export function ProductCard({ product }: { product: Product }) {
   const { addItem, setQuantity, lines } = useCart();
   const { isWishlisted, toggle } = useWishlist();
+  const showRatings = useShowRatings();
   const wishlisted = isWishlisted(product.id);
   const quantityInCart = lines.find((l) => l.product.id === product.id)?.quantity ?? 0;
   const [limitMessage, setLimitMessage] = useState(false);
@@ -71,7 +73,7 @@ export function ProductCard({ product }: { product: Product }) {
         <p className="text-[11px] uppercase tracking-wide text-ink-muted">
           {product.fabric}
         </p>
-        <RatingStars rating={product.rating} count={product.rating_count} />
+        {showRatings && <RatingStars rating={product.rating} count={product.rating_count} />}
         <div className="mt-0.5 flex items-baseline gap-2">
           <p className="text-sm font-semibold tabular-nums text-accent">
             {formatPrice(product.price_cents)}

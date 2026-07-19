@@ -10,6 +10,7 @@ import { ProductRail } from "@/components/ProductRail";
 import { RecordRecentlyViewed } from "@/components/RecordRecentlyViewed";
 import { RecentlyViewedRail } from "@/components/RecentlyViewedRail";
 import { sweepExpiredNewBadges, sweepBestsellerBadges } from "@/lib/badge-sweep";
+import { getProductSettings } from "@/lib/product-settings-data";
 
 export default async function ProductPage({
   params,
@@ -40,6 +41,7 @@ export default async function ProductPage({
     ? relatedQuery.eq("category_id", product.category_id)
     : relatedQuery.eq("fabric", product.fabric);
   const { data: related } = await relatedQuery.returns<Product[]>();
+  const settings = await getProductSettings();
 
   return (
     <div className="mx-auto max-w-[480px] px-4 py-6">
@@ -63,9 +65,11 @@ export default async function ProductPage({
           <h1 className="mt-1 font-heading text-2xl font-semibold text-ink">
             {product.name}
           </h1>
-          <div className="mt-3">
-            <RatingStars rating={product.rating} count={product.rating_count} />
-          </div>
+          {settings.show_ratings && (
+            <div className="mt-3">
+              <RatingStars rating={product.rating} count={product.rating_count} />
+            </div>
+          )}
           <div className="mt-4 flex items-baseline gap-3">
             <p className="text-xl font-semibold tabular-nums text-accent">
               {formatPrice(product.price_cents)}

@@ -4,6 +4,7 @@ import "../globals.css";
 import { CartProvider } from "@/lib/cart-context";
 import { WishlistProvider } from "@/lib/wishlist-context";
 import { RecentlyViewedProvider } from "@/lib/recently-viewed-context";
+import { ProductSettingsProvider } from "@/lib/product-settings-context";
 import { AppShell } from "@/components/AppShell";
 
 const inter = Inter({
@@ -46,7 +47,9 @@ export default function ShopLayout({
         <CartProvider>
           <WishlistProvider>
             <RecentlyViewedProvider>
-              <AppShell>{children}</AppShell>
+              <ProductSettingsProvider>
+                <AppShell>{children}</AppShell>
+              </ProductSettingsProvider>
             </RecentlyViewedProvider>
           </WishlistProvider>
         </CartProvider>
