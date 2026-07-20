@@ -30,7 +30,11 @@ export default function SignupPage() {
 
     setSubmitting(true);
     const supabase = createBrowserSupabaseClient();
-    const { error: signUpError } = await supabase.auth.signUp({ email, password });
+    const { error: signUpError } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { emailRedirectTo: `${window.location.origin}/account/login` },
+    });
     setSubmitting(false);
 
     if (signUpError) {
