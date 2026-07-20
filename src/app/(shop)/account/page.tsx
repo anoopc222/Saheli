@@ -37,33 +37,41 @@ export default function AccountPage() {
     const supabase = createBrowserSupabaseClient();
 
     async function load() {
-      const { data: orderRows } = await supabase
-        .from("orders")
-        .select("id, status, amount_total_cents, created_at")
-        .order("created_at", { ascending: false })
-        .returns<{ id: string; status: string; amount_total_cents: number; created_at: string }[]>();
+      try {
+        const { data: orderRows } = await supabase
+          .from("orders")
+          .select("id, status, amount_total_cents, created_at")
+          .order("created_at", { ascending: false })
+          .returns<
+            { id: string; status: string; amount_total_cents: number; created_at: string }[]
+          >();
 
-      const orderIds = (orderRows ?? []).map((o) => o.id);
-      const { data: itemRows } =
-        orderIds.length > 0
-          ? await supabase
-              .from("order_items")
-              .select("order_id")
-              .in("order_id", orderIds)
-              .returns<{ order_id: string }[]>()
-          : { data: [] as { order_id: string }[] };
+        const orderIds = (orderRows ?? []).map((o) => o.id);
+        const { data: itemRows } =
+          orderIds.length > 0
+            ? await supabase
+                .from("order_items")
+                .select("order_id")
+                .in("order_id", orderIds)
+                .returns<{ order_id: string }[]>()
+            : { data: [] as { order_id: string }[] };
 
-      const countByOrder = new Map<string, number>();
-      for (const item of itemRows ?? []) {
-        countByOrder.set(item.order_id, (countByOrder.get(item.order_id) ?? 0) + 1);
+        const countByOrder = new Map<string, number>();
+        for (const item of itemRows ?? []) {
+          countByOrder.set(item.order_id, (countByOrder.get(item.order_id) ?? 0) + 1);
+        }
+
+        setOrders(
+          (orderRows ?? []).map((o) => ({
+            ...o,
+            item_count: countByOrder.get(o.id) ?? 0,
+          }))
+        );
+      } catch {
+        // Never leave the page stuck on "Loading..." — treat a failed
+        // fetch the same as "nothing to show" rather than hanging forever.
+        setOrders([]);
       }
-
-      setOrders(
-        (orderRows ?? []).map((o) => ({
-          ...o,
-          item_count: countByOrder.get(o.id) ?? 0,
-        }))
-      );
     }
     load();
   }, [user]);
