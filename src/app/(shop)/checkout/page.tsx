@@ -58,6 +58,24 @@ type ShippingForm = {
   gstin: string;
 };
 
+type BillingForm = {
+  name: string;
+  addressLine1: string;
+  addressLine2: string;
+  city: string;
+  state: string;
+  postalCode: string;
+};
+
+const EMPTY_BILLING: BillingForm = {
+  name: "",
+  addressLine1: "",
+  addressLine2: "",
+  city: "",
+  state: "",
+  postalCode: "",
+};
+
 export default function CheckoutPage() {
   return (
     <Suspense fallback={null}>
@@ -89,6 +107,8 @@ function CheckoutForm() {
     postalCode: "",
     gstin: "",
   });
+  const [billingSameAsShipping, setBillingSameAsShipping] = useState(true);
+  const [billingForm, setBillingForm] = useState<BillingForm>(EMPTY_BILLING);
 
   useEffect(() => {
     getProductSettings().then(setSettings);
@@ -153,6 +173,10 @@ function CheckoutForm() {
     setForm((f) => ({ ...f, [field]: value }));
   }
 
+  function updateBillingField(field: keyof BillingForm, value: string) {
+    setBillingForm((f) => ({ ...f, [field]: value }));
+  }
+
   async function handlePay(e: React.FormEvent) {
     e.preventDefault();
     if (lines.length === 0) return;
@@ -167,6 +191,7 @@ function CheckoutForm() {
           items: lines.map((l) => ({ productId: l.product.id, quantity: l.quantity })),
           couponCode: discount?.code,
           shipping: form,
+          billing: billingSameAsShipping ? null : billingForm,
         }),
       });
 
@@ -358,6 +383,69 @@ function CheckoutForm() {
             onChange={(e) => updateField("gstin", e.target.value.toUpperCase())}
             className={`${inputClasses} uppercase`}
           />
+        )}
+
+        <h2 className="mt-2 text-xs font-semibold uppercase tracking-wide text-ink-muted">
+          Billing address
+        </h2>
+        <label className="flex items-center gap-2 text-sm text-ink">
+          <input
+            type="checkbox"
+            checked={billingSameAsShipping}
+            onChange={(e) => setBillingSameAsShipping(e.target.checked)}
+            className="h-4 w-4 rounded border-line accent-accent"
+          />
+          Same as shipping address
+        </label>
+
+        {!billingSameAsShipping && (
+          <>
+            <input
+              required
+              placeholder="Full name"
+              value={billingForm.name}
+              onChange={(e) => updateBillingField("name", e.target.value)}
+              className={inputClasses}
+            />
+            <input
+              required
+              placeholder="Address line 1"
+              value={billingForm.addressLine1}
+              onChange={(e) => updateBillingField("addressLine1", e.target.value)}
+              className={inputClasses}
+            />
+            <input
+              placeholder="Address line 2 (optional)"
+              value={billingForm.addressLine2}
+              onChange={(e) => updateBillingField("addressLine2", e.target.value)}
+              className={inputClasses}
+            />
+            <div className="grid grid-cols-2 gap-3">
+              <input
+                required
+                placeholder="City"
+                value={billingForm.city}
+                onChange={(e) => updateBillingField("city", e.target.value)}
+                className={inputClasses}
+              />
+              <input
+                required
+                placeholder="State"
+                value={billingForm.state}
+                onChange={(e) => updateBillingField("state", e.target.value)}
+                className={inputClasses}
+              />
+            </div>
+            <input
+              required
+              inputMode="numeric"
+              maxLength={6}
+              placeholder="Pincode"
+              value={billingForm.postalCode}
+              onChange={(e) => updateBillingField("postalCode", e.target.value.replace(/\D/g, ""))}
+              className={inputClasses}
+            />
+          </>
         )}
 
         {error && (

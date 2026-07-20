@@ -54,6 +54,25 @@ export default async function CheckoutSuccessPage({
               </p>
             </div>
           )}
+          {order.billing && (
+            <div className="mt-3 border-t border-line pt-3">
+              <p className="text-xs font-medium uppercase tracking-wide text-ink-muted">
+                Billing address
+              </p>
+              <p className="mt-1 text-sm text-ink">{order.billing.name}</p>
+              <p className="text-xs text-ink-muted">
+                {[
+                  order.billing.address_line1,
+                  order.billing.address_line2,
+                  order.billing.city,
+                  order.billing.state,
+                  order.billing.postal_code,
+                ]
+                  .filter(Boolean)
+                  .join(", ")}
+              </p>
+            </div>
+          )}
         </div>
       ) : order_id ? (
         <p className="mt-2 text-xs text-ink-muted">

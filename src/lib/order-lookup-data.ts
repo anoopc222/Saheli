@@ -17,6 +17,15 @@ export type ShippingDetail = {
   country: string | null;
 };
 
+export type BillingDetail = {
+  name: string | null;
+  address_line1: string | null;
+  address_line2: string | null;
+  city: string | null;
+  state: string | null;
+  postal_code: string | null;
+};
+
 export type OrderDetail = {
   id: string;
   status: string;
@@ -28,12 +37,17 @@ export type OrderDetail = {
   created_at: string;
   items: OrderItemDetail[];
   shipping: ShippingDetail | null;
+  billingSameAsShipping: boolean;
+  billing: BillingDetail | null;
 };
 
 type ServiceClient = ReturnType<typeof createServiceRoleSupabaseClient>;
 
 const SHIPPING_COLUMNS =
   "shipping_name, shipping_phone, shipping_address_line1, shipping_address_line2, shipping_city, shipping_state, shipping_postal_code, shipping_country";
+
+const BILLING_COLUMNS =
+  "billing_same_as_shipping, billing_name, billing_address_line1, billing_address_line2, billing_city, billing_state, billing_postal_code";
 
 type ShippingRow = {
   shipping_name: string | null;
@@ -44,6 +58,16 @@ type ShippingRow = {
   shipping_state: string | null;
   shipping_postal_code: string | null;
   shipping_country: string | null;
+};
+
+type BillingRow = {
+  billing_same_as_shipping: boolean;
+  billing_name: string | null;
+  billing_address_line1: string | null;
+  billing_address_line2: string | null;
+  billing_city: string | null;
+  billing_state: string | null;
+  billing_postal_code: string | null;
 };
 
 function toShippingDetail(row: ShippingRow): ShippingDetail | null {
@@ -57,6 +81,18 @@ function toShippingDetail(row: ShippingRow): ShippingDetail | null {
     state: row.shipping_state,
     postal_code: row.shipping_postal_code,
     country: row.shipping_country,
+  };
+}
+
+function toBillingDetail(row: BillingRow): BillingDetail | null {
+  if (row.billing_same_as_shipping || !row.billing_address_line1) return null;
+  return {
+    name: row.billing_name,
+    address_line1: row.billing_address_line1,
+    address_line2: row.billing_address_line2,
+    city: row.billing_city,
+    state: row.billing_state,
+    postal_code: row.billing_postal_code,
   };
 }
 
@@ -82,7 +118,7 @@ export async function getOrderByReference(
   const { data: order } = await supabase
     .from("orders")
     .select(
-      `id, status, amount_total_cents, shipping_fee_cents, shipping_zone_name, gst_amount_cents, customer_gstin, created_at, customer_email, ${SHIPPING_COLUMNS}`
+      `id, status, amount_total_cents, shipping_fee_cents, shipping_zone_name, gst_amount_cents, customer_gstin, created_at, customer_email, ${SHIPPING_COLUMNS}, ${BILLING_COLUMNS}`
     )
     .eq("id", orderId)
     .maybeSingle<
@@ -96,7 +132,8 @@ export async function getOrderByReference(
         customer_gstin: string | null;
         created_at: string;
         customer_email: string | null;
-      } & ShippingRow
+      } & ShippingRow &
+        BillingRow
     >();
 
   if (!order || !order.customer_email) return null;
@@ -115,6 +152,8 @@ export async function getOrderByReference(
     created_at: order.created_at,
     items: await loadItems(supabase, order.id),
     shipping: toShippingDetail(order),
+    billingSameAsShipping: order.billing_same_as_shipping,
+    billing: toBillingDetail(order),
   };
 }
 
@@ -123,7 +162,7 @@ export async function getOrderById(id: string): Promise<OrderDetail | null> {
   const { data: order } = await supabase
     .from("orders")
     .select(
-      `id, status, amount_total_cents, shipping_fee_cents, shipping_zone_name, gst_amount_cents, customer_gstin, created_at, ${SHIPPING_COLUMNS}`
+      `id, status, amount_total_cents, shipping_fee_cents, shipping_zone_name, gst_amount_cents, customer_gstin, created_at, ${SHIPPING_COLUMNS}, ${BILLING_COLUMNS}`
     )
     .eq("id", id)
     .maybeSingle<
@@ -136,7 +175,8 @@ export async function getOrderById(id: string): Promise<OrderDetail | null> {
         gst_amount_cents: number;
         customer_gstin: string | null;
         created_at: string;
-      } & ShippingRow
+      } & ShippingRow &
+        BillingRow
     >();
 
   if (!order) return null;
@@ -152,5 +192,7 @@ export async function getOrderById(id: string): Promise<OrderDetail | null> {
     created_at: order.created_at,
     items: await loadItems(supabase, order.id),
     shipping: toShippingDetail(order),
+    billingSameAsShipping: order.billing_same_as_shipping,
+    billing: toBillingDetail(order),
   };
 }

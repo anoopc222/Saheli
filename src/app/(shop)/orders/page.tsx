@@ -107,6 +107,26 @@ export default async function TrackOrderPage({
             </div>
           )}
 
+          {order.billing && (
+            <div className="rounded-2xl border border-line bg-paper-raised p-4">
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-muted">
+                Billing address
+              </p>
+              <p className="text-sm text-ink">{order.billing.name}</p>
+              <p className="mt-1 text-xs text-ink-muted">
+                {[
+                  order.billing.address_line1,
+                  order.billing.address_line2,
+                  order.billing.city,
+                  order.billing.state,
+                  order.billing.postal_code,
+                ]
+                  .filter(Boolean)
+                  .join(", ")}
+              </p>
+            </div>
+          )}
+
           <div className="rounded-2xl border border-line bg-paper-raised p-4">
             <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-ink-muted">
               Items

@@ -23,13 +23,22 @@ type ShippingDetails = {
   country?: string;
   gstin?: string;
 };
+type BillingDetails = {
+  name: string;
+  addressLine1: string;
+  addressLine2?: string;
+  city: string;
+  state: string;
+  postalCode: string;
+};
 
 export async function POST(request: Request) {
   try {
-    const { items, couponCode, shipping } = (await request.json()) as {
+    const { items, couponCode, shipping, billing } = (await request.json()) as {
       items: CheckoutItem[];
       couponCode?: string;
       shipping: ShippingDetails;
+      billing: BillingDetails | null;
     };
 
     if (!items || items.length === 0) {
@@ -62,6 +71,22 @@ export async function POST(request: Request) {
     if (gstin && !GSTIN_PATTERN.test(gstin)) {
       return NextResponse.json(
         { error: "That GSTIN doesn't look right. Double-check it or leave it blank." },
+        { status: 400 }
+      );
+    }
+
+    const billingSameAsShipping = !billing;
+    if (
+      billing &&
+      (!billing.name?.trim() ||
+        !billing.addressLine1?.trim() ||
+        !billing.city?.trim() ||
+        !billing.state?.trim() ||
+        !billing.postalCode?.trim() ||
+        !/^[0-9]{6}$/.test(billing.postalCode.trim()))
+    ) {
+      return NextResponse.json(
+        { error: "Please fill in all the required billing details." },
         { status: 400 }
       );
     }
@@ -178,6 +203,19 @@ export async function POST(request: Request) {
         shipping_state: shipping.state.trim(),
         shipping_postal_code: shipping.postalCode.trim(),
         shipping_country: shipping.country?.trim() || "IN",
+        billing_same_as_shipping: billingSameAsShipping,
+        billing_name: billingSameAsShipping ? shipping.name.trim() : billing!.name.trim(),
+        billing_address_line1: billingSameAsShipping
+          ? shipping.addressLine1.trim()
+          : billing!.addressLine1.trim(),
+        billing_address_line2: billingSameAsShipping
+          ? shipping.addressLine2?.trim() || null
+          : billing!.addressLine2?.trim() || null,
+        billing_city: billingSameAsShipping ? shipping.city.trim() : billing!.city.trim(),
+        billing_state: billingSameAsShipping ? shipping.state.trim() : billing!.state.trim(),
+        billing_postal_code: billingSameAsShipping
+          ? shipping.postalCode.trim()
+          : billing!.postalCode.trim(),
       })
       .select("id")
       .single<{ id: string }>();
