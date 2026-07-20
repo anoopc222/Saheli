@@ -1,4 +1,5 @@
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/server";
+import { sendOrderConfirmationEmail } from "@/lib/order-email";
 
 type ServiceClient = ReturnType<typeof createServiceRoleSupabaseClient>;
 
@@ -44,6 +45,14 @@ export async function finalizePaidOrder(
         .update({ stock: Math.max(product.stock - item.quantity, 0) })
         .eq("id", item.product_id);
     }
+  }
+
+  // A failed send here shouldn't fail the payment confirmation the
+  // customer is waiting on — log and move on.
+  try {
+    await sendOrderConfirmationEmail(supabase, orderId);
+  } catch (err) {
+    console.error("Order confirmation email failed:", err);
   }
 
   return { alreadyPaid: false };
