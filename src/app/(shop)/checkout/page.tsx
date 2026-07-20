@@ -184,9 +184,16 @@ function CheckoutForm() {
     setError(null);
 
     try {
+      const supabase = createBrowserSupabaseClient();
+      const { data: sessionData } = await supabase.auth.getSession();
+      const headers: HeadersInit = { "Content-Type": "application/json" };
+      if (sessionData.session) {
+        headers.Authorization = `Bearer ${sessionData.session.access_token}`;
+      }
+
       const res = await fetch("/api/checkout", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({
           items: lines.map((l) => ({ productId: l.product.id, quantity: l.quantity })),
           couponCode: discount?.code,

@@ -5,6 +5,7 @@ import { CartProvider } from "@/lib/cart-context";
 import { WishlistProvider } from "@/lib/wishlist-context";
 import { RecentlyViewedProvider } from "@/lib/recently-viewed-context";
 import { ProductSettingsProvider } from "@/lib/product-settings-context";
+import { AuthProvider } from "@/lib/auth-context";
 import { AppShell } from "@/components/AppShell";
 
 const inter = Inter({
@@ -44,15 +45,17 @@ export default function ShopLayout({
       className={`${inter.variable} ${playfairDisplay.variable} ${dancingScript.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <CartProvider>
-          <WishlistProvider>
-            <RecentlyViewedProvider>
-              <ProductSettingsProvider>
-                <AppShell>{children}</AppShell>
-              </ProductSettingsProvider>
-            </RecentlyViewedProvider>
-          </WishlistProvider>
-        </CartProvider>
+        <AuthProvider>
+          <CartProvider>
+            <WishlistProvider>
+              <RecentlyViewedProvider>
+                <ProductSettingsProvider>
+                  <AppShell>{children}</AppShell>
+                </ProductSettingsProvider>
+              </RecentlyViewedProvider>
+            </WishlistProvider>
+          </CartProvider>
+        </AuthProvider>
       </body>
     </html>
   );

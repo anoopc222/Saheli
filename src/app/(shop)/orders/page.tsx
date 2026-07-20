@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getOrderByReference } from "@/lib/order-lookup-data";
+import { getOrdersByContact } from "@/lib/order-lookup-data";
 import { formatPrice } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
@@ -13,38 +13,32 @@ const STATUS_LABELS: Record<string, string> = {
 export default async function TrackOrderPage({
   searchParams,
 }: {
-  searchParams: Promise<{ order_id?: string; email?: string }>;
+  searchParams: Promise<{ contact?: string }>;
 }) {
-  const { order_id, email } = await searchParams;
-  const searched = Boolean(order_id?.trim() && email?.trim());
-  const order = searched ? await getOrderByReference(order_id!.trim(), email!.trim()) : null;
+  const { contact } = await searchParams;
+  const searched = Boolean(contact?.trim());
+  const orders = searched ? await getOrdersByContact(contact!.trim()) : [];
 
   return (
     <div className="mx-auto max-w-[480px] px-4 py-6">
-      <h1 className="mb-1 font-heading text-2xl font-semibold text-ink">Track your order</h1>
+      <h1 className="mb-1 font-heading text-2xl font-semibold text-ink">Track your orders</h1>
       <p className="mb-5 text-xs text-ink-muted">
-        Enter the order reference and email you used at checkout.
+        Enter the email or phone number you used at checkout to see every order placed with it.
+        Have an account?{" "}
+        <Link href="/account" className="text-accent hover:underline">
+          Log in instead
+        </Link>
+        .
       </p>
 
       <form className="mb-6 flex flex-col gap-3">
         <div>
-          <label className="mb-1.5 block text-sm font-medium text-ink">Order reference</label>
+          <label className="mb-1.5 block text-sm font-medium text-ink">Email or phone</label>
           <input
             type="text"
-            name="order_id"
-            defaultValue={order_id}
-            placeholder="From your confirmation page"
-            required
-            className="w-full rounded-xl border border-line bg-paper-raised px-3 py-2.5 text-sm outline-none focus:border-accent"
-          />
-        </div>
-        <div>
-          <label className="mb-1.5 block text-sm font-medium text-ink">Email</label>
-          <input
-            type="email"
-            name="email"
-            defaultValue={email}
-            placeholder="you@example.com"
+            name="contact"
+            defaultValue={contact}
+            placeholder="you@example.com or 9876543210"
             required
             className="w-full rounded-xl border border-line bg-paper-raised px-3 py-2.5 text-sm outline-none focus:border-accent"
           />
@@ -53,125 +47,41 @@ export default async function TrackOrderPage({
           type="submit"
           className="rounded-full bg-ink px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-accent"
         >
-          Find my order
+          Find my orders
         </button>
       </form>
 
-      {searched && !order && (
+      {searched && orders.length === 0 && (
         <div className="rounded-2xl border border-line bg-paper-raised p-6 text-center">
           <p className="text-sm text-ink-muted">
-            No order found for that reference and email. Double-check both and try again.
+            No orders found for that email or phone. Double-check it and try again.
           </p>
         </div>
       )}
 
-      {order && (
-        <div className="flex flex-col gap-4">
-          <div className="rounded-2xl border border-line bg-paper-raised p-4">
-            <div className="flex items-center justify-between gap-2">
-              <p className="text-sm font-medium text-ink">Order reference</p>
-              <p className="shrink-0 text-xs text-ink-muted">
-                {new Date(order.created_at).toLocaleDateString("en-IN", { dateStyle: "medium" })}
-              </p>
-            </div>
-            <p className="mt-0.5 break-all text-xs text-ink-muted">{order.id}</p>
-            <p className="mt-3 inline-flex items-center rounded-full bg-accent-soft px-3 py-1 text-xs font-medium text-accent">
-              {STATUS_LABELS[order.status] ?? order.status}
-            </p>
-          </div>
-
-          {order.shipping && (
-            <div className="rounded-2xl border border-line bg-paper-raised p-4">
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-muted">
-                Shipping to
-              </p>
-              <p className="text-sm text-ink">{order.shipping.name}</p>
-              {order.shipping.phone && (
-                <p className="text-xs text-ink-muted">{order.shipping.phone}</p>
-              )}
-              <p className="mt-1 text-xs text-ink-muted">
-                {[
-                  order.shipping.address_line1,
-                  order.shipping.address_line2,
-                  order.shipping.city,
-                  order.shipping.state,
-                  order.shipping.postal_code,
-                  order.shipping.country,
-                ]
-                  .filter(Boolean)
-                  .join(", ")}
-              </p>
-              {order.customer_gstin && (
-                <p className="mt-1 text-xs text-ink-muted">GSTIN: {order.customer_gstin}</p>
-              )}
-            </div>
-          )}
-
-          {order.billing && (
-            <div className="rounded-2xl border border-line bg-paper-raised p-4">
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-muted">
-                Billing address
-              </p>
-              <p className="text-sm text-ink">{order.billing.name}</p>
-              <p className="mt-1 text-xs text-ink-muted">
-                {[
-                  order.billing.address_line1,
-                  order.billing.address_line2,
-                  order.billing.city,
-                  order.billing.state,
-                  order.billing.postal_code,
-                ]
-                  .filter(Boolean)
-                  .join(", ")}
-              </p>
-            </div>
-          )}
-
-          <div className="rounded-2xl border border-line bg-paper-raised p-4">
-            <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-ink-muted">
-              Items
-            </p>
-            <div className="flex flex-col gap-3">
-              {order.items.map((item, index) => (
-                <div key={index} className="flex items-center justify-between gap-3 text-sm">
-                  <div className="min-w-0">
-                    <p className="truncate text-ink">{item.product_name}</p>
-                    <p className="text-xs text-ink-muted">Qty {item.quantity}</p>
-                  </div>
-                  <p className="shrink-0 tabular-nums text-ink">
-                    {formatPrice(item.unit_price_cents * item.quantity)}
-                  </p>
-                </div>
-              ))}
-            </div>
-            <div className="mt-3 flex flex-col gap-1 border-t border-line pt-3 text-sm">
-              {order.gst_amount_cents > 0 && (
-                <div className="flex items-center justify-between">
-                  <p className="text-ink-muted">GST</p>
-                  <p className="tabular-nums text-ink">{formatPrice(order.gst_amount_cents)}</p>
-                </div>
-              )}
-              <div className="flex items-center justify-between">
-                <p className="text-ink-muted">
-                  Shipping{order.shipping_zone_name ? ` (${order.shipping_zone_name})` : ""}
+      {orders.length > 0 && (
+        <div className="flex flex-col gap-2">
+          {orders.map((order) => (
+            <Link
+              key={order.id}
+              href={`/orders/${order.id}?contact=${encodeURIComponent(contact!.trim())}`}
+              className="flex items-center justify-between gap-3 rounded-xl border border-line bg-paper-raised p-4 transition-colors hover:border-accent"
+            >
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-ink">
+                  {STATUS_LABELS[order.status] ?? order.status}
                 </p>
-                <p className="tabular-nums text-ink">
-                  {order.shipping_fee_cents > 0 ? formatPrice(order.shipping_fee_cents) : "Free"}
+                <p className="text-xs text-ink-muted">
+                  {new Date(order.created_at).toLocaleDateString("en-IN", { dateStyle: "medium" })}
+                  {" · "}
+                  {order.item_count} item{order.item_count === 1 ? "" : "s"}
                 </p>
               </div>
-              <div className="flex items-center justify-between font-semibold">
-                <p className="text-ink">Total</p>
-                <p className="tabular-nums text-ink">{formatPrice(order.amount_total_cents)}</p>
-              </div>
-            </div>
-          </div>
-
-          <Link
-            href="/contact"
-            className="text-center text-sm text-accent hover:underline"
-          >
-            Need help with this order? Contact us
-          </Link>
+              <p className="shrink-0 text-sm font-semibold tabular-nums text-ink">
+                {formatPrice(order.amount_total_cents)}
+              </p>
+            </Link>
+          ))}
         </div>
       )}
     </div>

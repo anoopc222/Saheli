@@ -92,6 +92,19 @@ export async function POST(request: Request) {
     }
 
     const supabase = createServiceRoleSupabaseClient();
+
+    // Optional — a guest checkout has no session at all. When one is
+    // present, verify it server-side rather than trusting a client-supplied
+    // user id, so an order can only ever be tagged with the requester's
+    // own real account.
+    let userId: string | null = null;
+    const authHeader = request.headers.get("authorization");
+    const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null;
+    if (token) {
+      const { data: userData } = await supabase.auth.getUser(token);
+      userId = userData.user?.id ?? null;
+    }
+
     const productIds = items.map((i) => i.productId);
     const { data: products, error } = await supabase
       .from("products")
@@ -188,6 +201,7 @@ export async function POST(request: Request) {
       .insert({
         status: "pending",
         source: "razorpay",
+        user_id: userId,
         amount_total_cents: amountTotalCents,
         shipping_fee_cents: shippingFeeCents,
         shipping_zone_name: matchedZone?.name ?? null,

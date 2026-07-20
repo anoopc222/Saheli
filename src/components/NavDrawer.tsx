@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useNavDrawer } from "@/lib/nav-drawer-context";
+import { useAuth } from "@/lib/auth-context";
 import { MenuMainCategory } from "@/lib/categories-data";
 import { MenuItemRow } from "@/lib/menu-items-data";
 import {
@@ -101,6 +102,7 @@ export function NavDrawer({
   menuItems: MenuItemRow[];
 }) {
   const { isOpen, close } = useNavDrawer();
+  const { user, signOut } = useAuth();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [shopOpen, setShopOpen] = useState(true);
@@ -138,6 +140,7 @@ export function NavDrawer({
     !searchParams.get("filter");
   const isWishlistActive = pathname === "/wishlist";
   const isOrdersActive = pathname === "/orders";
+  const isAccountActive = pathname.startsWith("/account");
   const isAboutActive = pathname === "/about";
   const isContactActive = pathname === "/contact";
 
@@ -372,6 +375,36 @@ export function NavDrawer({
             onClick={close}
             active={isOrdersActive}
           />
+          {user ? (
+            <>
+              <NavLink
+                href="/account"
+                icon={<UserIcon className="h-5 w-5" />}
+                label="My Account"
+                onClick={close}
+                active={isAccountActive}
+              />
+              <button
+                type="button"
+                onClick={async () => {
+                  await signOut();
+                  close();
+                }}
+                className="flex w-full items-center gap-3 border-b border-line py-3.5 text-left text-sm font-medium text-ink transition-colors hover:text-accent"
+              >
+                <UserIcon className="h-5 w-5 text-ink-muted" />
+                Log out
+              </button>
+            </>
+          ) : (
+            <NavLink
+              href="/account/login"
+              icon={<UserIcon className="h-5 w-5" />}
+              label="Sign in"
+              onClick={close}
+              active={isAccountActive}
+            />
+          )}
           <NavLink
             href="/about"
             icon={<UserIcon className="h-5 w-5" />}
