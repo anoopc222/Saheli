@@ -1,12 +1,14 @@
+import { after } from "next/server";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/server";
-import { getProductSettings } from "@/lib/product-settings-data";
+import { getProductSettings, ProductSettings } from "@/lib/product-settings-data";
 
 // Flips any product still marked "new" past the configured age into
 // "sale", so the transition needs no cron job — it happens the next
 // time a shop or admin page reads the products table.
-export async function sweepExpiredNewBadges() {
-  const { new_badge_days } = await getProductSettings();
-  const cutoff = new Date(Date.now() - new_badge_days * 24 * 60 * 60 * 1000).toISOString();
+async function sweepExpiredNewBadges(settings: ProductSettings) {
+  const cutoff = new Date(
+    Date.now() - settings.new_badge_days * 24 * 60 * 60 * 1000
+  ).toISOString();
 
   const supabase = createServiceRoleSupabaseClient();
   await supabase
@@ -28,8 +30,8 @@ type ProductBadgeRow = { id: string; badge: string | null };
 // badge a product had before it became a top seller (and before it
 // fell out again), the same way the new->sale sweep is a one-way,
 // fully-computed transition.
-export async function sweepBestsellerBadges() {
-  const { bestseller_count } = await getProductSettings();
+async function sweepBestsellerBadges(settings: ProductSettings) {
+  const { bestseller_count } = settings;
   if (bestseller_count <= 0) return;
 
   const supabase = createServiceRoleSupabaseClient();
@@ -72,4 +74,17 @@ export async function sweepBestsellerBadges() {
     ),
     ...toDemote.map((p) => supabase.from("products").update({ badge: null }).eq("id", p.id)),
   ]);
+}
+
+// Entry point for pages: schedules both sweeps to run after the response
+// has already been sent, so this maintenance work never blocks a page
+// transition, while still running automatically on every page view.
+export function scheduleBadgeSweep() {
+  after(async () => {
+    const settings = await getProductSettings();
+    await Promise.all([
+      sweepExpiredNewBadges(settings),
+      sweepBestsellerBadges(settings),
+    ]);
+  });
 }

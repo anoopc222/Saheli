@@ -12,7 +12,7 @@ import { getCategories, getMainCategories } from "@/lib/categories-data";
 import { getHeroBanners, getActivePromoBanner } from "@/lib/homepage-data";
 import { getFeatureItems, getFeatureRowSettings } from "@/lib/feature-items-data";
 import { getMenuItems } from "@/lib/menu-items-data";
-import { sweepExpiredNewBadges, sweepBestsellerBadges } from "@/lib/badge-sweep";
+import { scheduleBadgeSweep } from "@/lib/badge-sweep";
 import { RecentlyViewedRail } from "@/components/RecentlyViewedRail";
 
 const FILTER_LABELS: Record<string, string> = {
@@ -34,8 +34,7 @@ export default async function Home({
   }>;
 }) {
   const { filter, fabric, category, main_category: mainCategoryId, tag, sort } = await searchParams;
-  await sweepExpiredNewBadges();
-  await sweepBestsellerBadges();
+  scheduleBadgeSweep();
   const supabase = createBrowserSupabaseClient();
 
   const hasFilter = Boolean(
