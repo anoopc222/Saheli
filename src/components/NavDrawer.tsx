@@ -101,7 +101,7 @@ export function NavDrawer({
   menuItems: MenuItemRow[];
 }) {
   const { isOpen, close } = useNavDrawer();
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [shopOpen, setShopOpen] = useState(true);
@@ -367,26 +367,13 @@ export function NavDrawer({
             active={isWishlistActive}
           />
           {user ? (
-            <>
-              <NavLink
-                href="/account"
-                icon={<UserIcon className="h-5 w-5" />}
-                label="My Account"
-                onClick={close}
-                active={isAccountActive}
-              />
-              <button
-                type="button"
-                onClick={async () => {
-                  await signOut();
-                  close();
-                }}
-                className="flex w-full items-center gap-3 border-b border-line py-3.5 text-left text-sm font-medium text-ink transition-colors hover:text-accent"
-              >
-                <UserIcon className="h-5 w-5 text-ink-muted" />
-                Log out
-              </button>
-            </>
+            <NavLink
+              href="/account"
+              icon={<UserIcon className="h-5 w-5" />}
+              label="My Account"
+              onClick={close}
+              active={isAccountActive}
+            />
           ) : (
             <NavLink
               href="/account/login"
