@@ -1,6 +1,8 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import { logoutAction } from "@/lib/admin-actions";
 import { AdminBottomNav } from "@/components/admin/AdminBottomNav";
+import { PageTransition } from "@/components/PageTransition";
 
 export default function AdminDashboardLayout({
   children,
@@ -19,7 +21,9 @@ export default function AdminDashboardLayout({
           </button>
         </form>
       </div>
-      {children}
+      <Suspense fallback={children}>
+        <PageTransition>{children}</PageTransition>
+      </Suspense>
       <AdminBottomNav />
     </div>
   );

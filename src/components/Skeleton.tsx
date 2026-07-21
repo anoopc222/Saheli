@@ -28,6 +28,29 @@ export function ProductGridSkeleton({ count = 6 }: { count?: number }) {
   );
 }
 
+export function SectionCardSkeleton() {
+  return (
+    <div className="rounded-2xl border border-line bg-paper-raised p-4">
+      <Skeleton className="h-3.5 w-32" />
+      <Skeleton className="mt-3 h-3 w-full" />
+      <Skeleton className="mt-1.5 h-3 w-2/3" />
+      <Skeleton className="mt-4 h-9 w-28 rounded-full" />
+    </div>
+  );
+}
+
+export function ListRowSkeleton() {
+  return (
+    <div className="flex items-center gap-3 rounded-xl border border-line bg-paper-raised p-3">
+      <Skeleton className="h-10 w-10 shrink-0 rounded-lg" />
+      <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+        <Skeleton className="h-3.5 w-2/3" />
+        <Skeleton className="h-3 w-1/3" />
+      </div>
+    </div>
+  );
+}
+
 export function Spinner({ className = "h-5 w-5" }: { className?: string }) {
   return (
     <div

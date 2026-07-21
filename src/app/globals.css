@@ -40,13 +40,15 @@ body {
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
 }
 
-/* Tap/click feedback for buttons — scoped to .shop-shell so the admin
-   dashboard (a separate root layout, never carries this class) is
-   unaffected even though both share this stylesheet. */
-.shop-shell button:not(:disabled) {
+/* Tap/click feedback for buttons — scoped to .shop-shell/.admin-shell
+   (each a separate root layout) rather than a bare `button` selector,
+   so neither surface's styling leaks into the other. */
+.shop-shell button:not(:disabled),
+.admin-shell button:not(:disabled) {
   transition: transform 0.15s ease;
 }
-.shop-shell button:not(:disabled):active {
+.shop-shell button:not(:disabled):active,
+.admin-shell button:not(:disabled):active {
   transform: scale(0.95);
 }
 
