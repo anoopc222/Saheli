@@ -2,8 +2,6 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { Product } from "@/types/product";
-import { useAuth } from "@/lib/auth-context";
-import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 
 export type CartLine = {
   product: Product;
@@ -25,7 +23,6 @@ const CartContext = createContext<CartContextValue | null>(null);
 const STORAGE_KEY = "shopping-cart-app:cart";
 
 export function CartProvider({ children }: { children: ReactNode }) {
-  const { user } = useAuth();
   const [lines, setLines] = useState<CartLine[]>([]);
   const [hydrated, setHydrated] = useState(false);
 
@@ -46,38 +43,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(lines));
     }
   }, [lines, hydrated]);
-
-  // Mirror a logged-in customer's cart server-side so an abandoned-cart
-  // reminder email can be sent later — guests have no email on file at
-  // this stage, so this only applies once someone's signed in. Clearing
-  // the cart (checkout, or emptying it manually) removes the row instead
-  // of leaving a stale reminder queued.
-  useEffect(() => {
-    if (!hydrated || !user) return;
-    const supabase = createBrowserSupabaseClient();
-
-    if (lines.length === 0) {
-      supabase.from("abandoned_carts").delete().eq("user_id", user.id).then(() => {});
-      return;
-    }
-
-    const snapshot = lines.map((l) => ({
-      product_id: l.product.id,
-      name: l.product.name,
-      quantity: l.quantity,
-      price_cents: l.product.price_cents,
-      image_url: l.product.image_url,
-    }));
-    supabase
-      .from("abandoned_carts")
-      .upsert({
-        user_id: user.id,
-        cart_snapshot: snapshot,
-        updated_at: new Date().toISOString(),
-        reminder_sent_at: null,
-      })
-      .then(() => {});
-  }, [lines, hydrated, user]);
 
   function addItem(product: Product, quantity = 1) {
     setLines((prev) => {

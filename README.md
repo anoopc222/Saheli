@@ -22,7 +22,6 @@ Next.js (App Router) storefront with a Supabase-backed product catalog and Razor
    - `RESEND_API_KEY` — from [resend.com](https://resend.com) → API Keys, for the order confirmation email sent when an order is paid.
    - `ORDER_EMAIL_FROM` — the "from" address for that email (e.g. `orders@yourdomain.com`). Requires verifying your domain in Resend; until then, sending is skipped (no `ORDER_EMAIL_FROM` set) or you can use a Resend test address.
    - `STORE_NOTIFICATION_EMAIL` (optional) — CC'd on every order confirmation so you're notified too, without sending a second email.
-   - `CRON_SECRET` — any random string you choose (e.g. `openssl rand -hex 32`); required by `/api/cron/abandoned-cart-emails`, see below.
 3. Run the dev server:
    ```
    npm run dev
@@ -43,33 +42,9 @@ pinned as a devDependency). To deploy:
      `src/lib/admin-auth.ts`)
    - `RESEND_API_KEY`, `ORDER_EMAIL_FROM`, `STORE_NOTIFICATION_EMAIL` (optional) —
      order confirmation email
-   - `CRON_SECRET` — see "Abandoned cart emails" below
 3. Point your domain at the Netlify site (Domain management → Add a domain), then update
    the Razorpay webhook URL and any Supabase auth redirect URLs to the new domain.
 4. Every push to the connected branch triggers a new build automatically.
-
-## Abandoned cart emails
-
-For a logged-in customer, the cart is mirrored to the `abandoned_carts` table on every
-change (see `src/lib/cart-context.tsx`) and cleared when the cart empties. Nothing sends
-on its own, though — Next.js has no built-in cron, so something outside the app has to
-call `POST /api/cron/abandoned-cart-emails` on a schedule with:
-
-```
-Authorization: Bearer <CRON_SECRET>
-```
-
-It emails anyone whose cart has sat unchanged for 24+ hours and hasn't already gotten a
-reminder for that cart, then marks it sent. Two ways to trigger it on Netlify:
-
-- **Netlify Scheduled Functions** — add a function under `netlify/functions/` with a
-  `schedule` export (e.g. hourly) that calls this route with the header above.
-- **A free external cron** (e.g. [cron-job.org](https://cron-job.org)) hitting the full
-  URL (`https://yourdomain.com/api/cron/abandoned-cart-emails`) with that header, once an
-  hour or so.
-
-Guest checkouts aren't tracked here — there's no email on file until checkout, so this
-only applies to signed-in customers.
 
 ## Data model
 
