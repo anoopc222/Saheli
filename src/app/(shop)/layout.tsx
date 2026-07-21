@@ -6,6 +6,7 @@ import { WishlistProvider } from "@/lib/wishlist-context";
 import { RecentlyViewedProvider } from "@/lib/recently-viewed-context";
 import { ProductSettingsProvider } from "@/lib/product-settings-context";
 import { AuthProvider } from "@/lib/auth-context";
+import { ToastProvider } from "@/lib/toast-context";
 import { AppShell } from "@/components/AppShell";
 
 const inter = Inter({
@@ -28,10 +29,21 @@ const dancingScript = Dancing_Script({
 export const metadata: Metadata = {
   title: "Saheli Sarees",
   description: "Handloom and silk sarees, curated with care.",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    title: "Saheli",
+    statusBarStyle: "default",
+  },
+  icons: {
+    icon: "/logo.jpg",
+    apple: "/logo.jpg",
+  },
 };
 
 export const viewport: Viewport = {
   colorScheme: "light",
+  themeColor: "#5b003a",
 };
 
 export default function ShopLayout({
@@ -50,7 +62,9 @@ export default function ShopLayout({
             <WishlistProvider>
               <RecentlyViewedProvider>
                 <ProductSettingsProvider>
-                  <AppShell>{children}</AppShell>
+                  <ToastProvider>
+                    <AppShell>{children}</AppShell>
+                  </ToastProvider>
                 </ProductSettingsProvider>
               </RecentlyViewedProvider>
             </WishlistProvider>

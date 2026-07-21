@@ -12,6 +12,7 @@ import { Product } from "@/types/product";
 import { EmptyState } from "@/components/EmptyState";
 import { BagIcon } from "@/components/icons";
 import { FadeImage } from "@/components/FadeImage";
+import { useToast } from "@/lib/toast-context";
 
 type AppliedCoupon = {
   code: string;
@@ -22,6 +23,7 @@ type AppliedCoupon = {
 export default function CartPage() {
   const router = useRouter();
   const { lines, setQuantity, removeItem, totalCents, syncWithLiveProducts } = useCart();
+  const { showToast } = useToast();
   const [settings, setSettings] = useState<ProductSettings | null>(null);
   const [stockAdjusted, setStockAdjusted] = useState(false);
 
@@ -167,7 +169,10 @@ export default function CartPage() {
                   {line.product.name}
                 </Link>
                 <button
-                  onClick={() => removeItem(line.product.id)}
+                  onClick={() => {
+                    removeItem(line.product.id);
+                    showToast("Removed from cart");
+                  }}
                   className="shrink-0 text-xs font-medium text-accent hover:underline"
                 >
                   Remove

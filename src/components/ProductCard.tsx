@@ -11,10 +11,12 @@ import { RatingStars } from "@/components/RatingStars";
 import { HeartIcon, BagIcon } from "@/components/icons";
 import { FadeImage } from "@/components/FadeImage";
 import { useShowRatings } from "@/lib/product-settings-context";
+import { useToast } from "@/lib/toast-context";
 
 export function ProductCard({ product }: { product: Product }) {
   const { addItem, setQuantity, lines } = useCart();
   const { isWishlisted, toggle } = useWishlist();
+  const { showToast } = useToast();
   const showRatings = useShowRatings();
   const wishlisted = isWishlisted(product.id);
   const quantityInCart = lines.find((l) => l.product.id === product.id)?.quantity ?? 0;
@@ -43,6 +45,7 @@ export function ProductCard({ product }: { product: Product }) {
           onClick={(e) => {
             e.preventDefault();
             toggle(product.id);
+            showToast(wishlisted ? "Removed from wishlist" : "Added to wishlist");
           }}
           aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
           aria-pressed={wishlisted}
