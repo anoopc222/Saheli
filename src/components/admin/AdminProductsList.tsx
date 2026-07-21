@@ -22,6 +22,7 @@ export function AdminProductsList({
   const [tab, setTab] = useState<"active" | "hidden">("active");
   const [categoryId, setCategoryId] = useState("all");
   const [subcategoryId, setSubcategoryId] = useState("all");
+  const [search, setSearch] = useState("");
 
   const subcategoryOptions =
     categoryId === "all"
@@ -37,6 +38,12 @@ export function AdminProductsList({
     if (categoryId !== "all" && product.category_id !== categoryId) return false;
     if (subcategoryId !== "all" && product.subcategory_id !== subcategoryId) {
       return false;
+    }
+    if (search.trim()) {
+      const q = search.trim().toLowerCase();
+      const matchesCode = product.product_code?.toLowerCase().includes(q);
+      const matchesName = product.name.toLowerCase().includes(q);
+      if (!matchesCode && !matchesName) return false;
     }
     return true;
   });
@@ -63,6 +70,14 @@ export function AdminProductsList({
           Hidden ({hiddenCount})
         </button>
       </div>
+
+      <input
+        type="text"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        placeholder="Search by code or name"
+        className="mb-2 w-full rounded-xl border border-line bg-paper-raised px-3 py-2 text-sm outline-none transition-colors focus:border-accent"
+      />
 
       <div className="mb-4 flex flex-wrap gap-2">
         <select

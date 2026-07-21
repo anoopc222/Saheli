@@ -60,6 +60,7 @@ export default async function AdminOrdersPage({
             id: p.id,
             name: p.name,
             price_cents: p.price_cents,
+            product_code: p.product_code,
           }))}
         />
       )}

@@ -23,6 +23,20 @@ async function uploadImages(files: File[]): Promise<string[]> {
 
 const deleteManagedImages = deleteStoredImages;
 
+async function assertUniqueProductCode(
+  supabase: ReturnType<typeof createServiceRoleSupabaseClient>,
+  code: string | null,
+  excludeId?: string
+) {
+  if (!code) return;
+  let query = supabase.from("products").select("id").eq("product_code", code).limit(1);
+  if (excludeId) query = query.neq("id", excludeId);
+  const { data } = await query.maybeSingle<{ id: string }>();
+  if (data) {
+    throw new Error(`Product code "${code}" is already in use by another product.`);
+  }
+}
+
 function parseProductFields(formData: FormData) {
   const comparePrice = formData.get("compare_price");
   const costPrice = formData.get("cost_price");
@@ -61,6 +75,7 @@ function parseProductFields(formData: FormData) {
 export async function createProductAction(formData: FormData) {
   const supabase = createServiceRoleSupabaseClient();
   const fields = parseProductFields(formData);
+  await assertUniqueProductCode(supabase, fields.product_code);
   const files = formData.getAll("images") as File[];
   const imageUrls = await uploadImages(files);
 
@@ -84,6 +99,7 @@ export async function updateProductAction(
 ) {
   const supabase = createServiceRoleSupabaseClient();
   const fields = parseProductFields(formData);
+  await assertUniqueProductCode(supabase, fields.product_code, productId);
 
   const keepUrls = formData.getAll("keep_images").map(String);
   const removedUrls = oldImageUrls.filter((url) => !keepUrls.includes(url));

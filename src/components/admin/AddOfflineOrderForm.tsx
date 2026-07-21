@@ -7,7 +7,7 @@ import { formatPrice } from "@/lib/format";
 const inputClasses =
   "w-full rounded-xl border border-line bg-paper px-3 py-2 text-sm outline-none focus:border-accent";
 
-type Product = { id: string; name: string; price_cents: number };
+type Product = { id: string; name: string; price_cents: number; product_code: string | null };
 
 type Line = { key: number; productId: string; quantity: number; unitPrice: number };
 
@@ -116,6 +116,7 @@ export function AddOfflineOrderForm({ products }: { products: Product[] }) {
                     {products.map((p) => (
                       <option key={p.id} value={p.id}>
                         {p.name}
+                        {p.product_code ? ` (${p.product_code})` : ""}
                       </option>
                     ))}
                   </select>
