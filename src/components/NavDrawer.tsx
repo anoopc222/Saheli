@@ -5,6 +5,7 @@ import { useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useNavDrawer } from "@/lib/nav-drawer-context";
 import { useAuth } from "@/lib/auth-context";
+import { INSTAGRAM_URL } from "@/lib/social-links";
 import { MenuMainCategory } from "@/lib/categories-data";
 import { MenuItemRow } from "@/lib/menu-items-data";
 import {
@@ -401,7 +402,11 @@ export function NavDrawer({
         </div>
 
         <div className="flex items-center justify-center gap-8 bg-brand py-3.5">
-          <SocialButton icon={<InstagramIcon className="h-5 w-5" />} label="Instagram" />
+          <SocialButton
+            icon={<InstagramIcon className="h-5 w-5" />}
+            label="Instagram"
+            href={INSTAGRAM_URL}
+          />
           <SocialButton icon={<WhatsAppIcon className="h-5 w-5" />} label="WhatsApp" />
           <SocialButton icon={<FacebookIcon className="h-5 w-5" />} label="Facebook" />
         </div>
@@ -444,14 +449,28 @@ function NavLink({
   );
 }
 
-function SocialButton({ icon, label }: { icon: React.ReactNode; label: string }) {
+function SocialButton({
+  icon,
+  label,
+  href,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  href?: string;
+}) {
+  const className =
+    "flex h-9 w-9 items-center justify-center rounded-full border border-white/50 text-white/90 transition-colors hover:bg-white/10";
+
+  if (href) {
+    return (
+      <a href={href} target="_blank" rel="noopener noreferrer" aria-label={label} className={className}>
+        {icon}
+      </a>
+    );
+  }
+
   return (
-    <button
-      type="button"
-      title={`${label} — coming soon`}
-      aria-label={label}
-      className="flex h-9 w-9 items-center justify-center rounded-full border border-white/50 text-white/90 transition-colors hover:bg-white/10"
-    >
+    <button type="button" title={`${label} — coming soon`} aria-label={label} className={className}>
       {icon}
     </button>
   );

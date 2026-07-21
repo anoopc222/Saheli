@@ -12,6 +12,8 @@ import { matchShippingZone, ShippingZone } from "@/lib/shipping-zones";
 import { computeOrderTotals } from "@/lib/pricing";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { Product } from "@/types/product";
+import { INSTAGRAM_URL } from "@/lib/social-links";
+import { InstagramIcon } from "@/components/icons";
 
 type Discount = {
   code: string;
@@ -317,6 +319,19 @@ function CheckoutForm() {
           </p>
         </div>
       </div>
+
+      <a
+        href={INSTAGRAM_URL}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="mb-6 flex items-center gap-3 rounded-xl border border-line bg-accent-soft p-3 text-sm text-ink transition-colors hover:border-accent"
+      >
+        <InstagramIcon className="h-5 w-5 shrink-0 text-accent" />
+        <span>
+          We currently ship only within India. For orders outside India,{" "}
+          <span className="font-medium text-accent underline">DM us on Instagram</span>.
+        </span>
+      </a>
 
       <form onSubmit={handlePay} className="flex flex-col gap-3">
         <h2 className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
