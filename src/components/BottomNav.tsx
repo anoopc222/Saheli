@@ -5,6 +5,7 @@ import { usePathname, useSearchParams } from "next/navigation";
 import { useCart } from "@/lib/cart-context";
 import { useWishlist } from "@/lib/wishlist-context";
 import { useNavDrawer } from "@/lib/nav-drawer-context";
+import { useBumpOnIncrease } from "@/lib/use-bump";
 import { HomeIcon, GridIcon, SparkleIcon, HeartIcon, BagIcon } from "@/components/icons";
 
 export function BottomNav() {
@@ -13,6 +14,7 @@ export function BottomNav() {
   const { totalItems } = useCart();
   const { count: wishlistCount } = useWishlist();
   const { isOpen, open } = useNavDrawer();
+  const cartBumping = useBumpOnIncrease(totalItems);
 
   const fabric = searchParams.get("fabric");
   const filter = searchParams.get("filter");
@@ -54,7 +56,7 @@ export function BottomNav() {
           Wishlist
         </Link>
         <Link href="/cart" className={tabClass(isCart)}>
-          <span className="relative">
+          <span className={`relative ${cartBumping ? "animate-bump" : ""}`}>
             <BagIcon className="h-5 w-5" />
             {totalItems > 0 && (
               <span className="absolute -right-2 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 text-[8px] font-semibold text-white">

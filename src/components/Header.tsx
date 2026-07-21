@@ -4,12 +4,14 @@ import Link from "next/link";
 import { useCart } from "@/lib/cart-context";
 import { useWishlist } from "@/lib/wishlist-context";
 import { useNavDrawer } from "@/lib/nav-drawer-context";
+import { useBumpOnIncrease } from "@/lib/use-bump";
 import { BagIcon, MenuIcon, SearchIcon, HeartIcon } from "@/components/icons";
 
 export function Header() {
   const { totalItems } = useCart();
   const { count: wishlistCount } = useWishlist();
   const { open } = useNavDrawer();
+  const cartBumping = useBumpOnIncrease(totalItems);
 
   return (
     <header className="sticky top-0 z-30 border-b border-line bg-paper/95 backdrop-blur">
@@ -58,7 +60,9 @@ export function Header() {
           <Link
             href="/cart"
             aria-label="Cart"
-            className="relative flex h-10 w-10 items-center justify-center rounded-full border border-line text-ink transition-colors hover:border-accent hover:bg-accent-soft"
+            className={`relative flex h-10 w-10 items-center justify-center rounded-full border border-line text-ink transition-colors hover:border-accent hover:bg-accent-soft ${
+              cartBumping ? "animate-bump" : ""
+            }`}
           >
             <BagIcon className="h-6 w-6" />
             {totalItems > 0 && (

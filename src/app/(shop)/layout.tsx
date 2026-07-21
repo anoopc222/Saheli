@@ -44,7 +44,7 @@ export default function ShopLayout({
       lang="en"
       className={`${inter.variable} ${playfairDisplay.variable} ${dancingScript.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">
+      <body className="shop-shell min-h-full flex flex-col">
         <AuthProvider>
           <CartProvider>
             <WishlistProvider>

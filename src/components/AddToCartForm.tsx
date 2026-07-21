@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Product } from "@/types/product";
 import { useCart } from "@/lib/cart-context";
+import { CheckIcon } from "@/components/icons";
 
 export function AddToCartForm({ product }: { product: Product }) {
   const { addItem } = useCart();
@@ -50,9 +51,20 @@ export function AddToCartForm({ product }: { product: Product }) {
             setTimeout(() => setAdded(false), 1500);
           }}
           disabled={product.stock <= 0}
-          className="flex-1 rounded-full bg-ink px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-accent disabled:opacity-40"
+          className={`flex-1 rounded-full bg-ink px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-accent disabled:opacity-40 ${
+            added ? "animate-bump" : ""
+          }`}
         >
-          {product.stock <= 0 ? "Sold Out" : added ? "Added!" : "Add to cart"}
+          {product.stock <= 0 ? (
+            "Sold Out"
+          ) : added ? (
+            <span className="flex items-center justify-center gap-1.5">
+              <CheckIcon className="h-4 w-4 animate-pop-in" />
+              Added!
+            </span>
+          ) : (
+            "Add to cart"
+          )}
         </button>
       </div>
       {limitMessage && (
