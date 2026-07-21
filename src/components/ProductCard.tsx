@@ -8,7 +8,7 @@ import { useCart } from "@/lib/cart-context";
 import { useWishlist } from "@/lib/wishlist-context";
 import { ProductBadge } from "@/components/ProductBadge";
 import { RatingStars } from "@/components/RatingStars";
-import { HeartIcon } from "@/components/icons";
+import { HeartIcon, BagIcon } from "@/components/icons";
 import { FadeImage } from "@/components/FadeImage";
 import { useShowRatings } from "@/lib/product-settings-context";
 
@@ -91,29 +91,29 @@ export function ProductCard({ product }: { product: Product }) {
           {product.stock <= 0 ? (
             <button
               disabled
-              className="rounded-md bg-brand px-3 py-2 text-xs font-medium text-white opacity-40"
+              className="flex items-center gap-1.5 rounded-full bg-brand px-3.5 py-2 text-xs font-medium text-white opacity-40 shadow-sm"
             >
               Sold Out
             </button>
           ) : quantityInCart > 0 ? (
             <div>
-              <div className="flex items-center justify-between rounded-md bg-brand px-1 py-1">
+              <div className="flex items-center justify-between rounded-full bg-brand p-1 shadow-sm">
                 <button
                   type="button"
                   onClick={() => setQuantity(product.id, quantityInCart - 1)}
                   aria-label="Decrease quantity"
-                  className="flex h-7 w-7 shrink-0 items-center justify-center rounded text-sm font-medium text-white transition-colors hover:bg-brand-dark"
+                  className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white/15 text-sm font-medium text-white transition-colors hover:bg-white/25"
                 >
                   &minus;
                 </button>
-                <span className="text-xs font-medium tabular-nums text-white">
+                <span className="px-1 text-xs font-semibold tabular-nums text-white">
                   {quantityInCart}
                 </span>
                 <button
                   type="button"
                   onClick={handleIncrement}
                   aria-label="Increase quantity"
-                  className={`flex h-7 w-7 shrink-0 items-center justify-center rounded text-sm font-medium text-white transition-colors hover:bg-brand-dark ${
+                  className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white/15 text-sm font-medium text-white transition-colors hover:bg-white/25 ${
                     quantityInCart >= product.stock ? "opacity-40" : ""
                   }`}
                 >
@@ -129,8 +129,9 @@ export function ProductCard({ product }: { product: Product }) {
           ) : (
             <button
               onClick={() => addItem(product)}
-              className="rounded-md bg-brand px-3 py-2 text-xs font-medium text-white transition-colors hover:bg-brand-dark"
+              className="flex items-center gap-1.5 rounded-full bg-brand px-3.5 py-2 text-xs font-medium text-white shadow-sm transition-colors hover:bg-brand-dark"
             >
+              <BagIcon className="h-3.5 w-3.5" />
               Add to cart
             </button>
           )}
