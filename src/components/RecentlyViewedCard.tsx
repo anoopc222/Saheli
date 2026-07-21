@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Product } from "@/types/product";
 import { formatPrice } from "@/lib/format";
 import { useCart } from "@/lib/cart-context";
+import { FadeImage } from "@/components/FadeImage";
 
 export function RecentlyViewedCard({ product }: { product: Product }) {
   const { addItem, lines } = useCart();
@@ -19,8 +20,7 @@ export function RecentlyViewedCard({ product }: { product: Product }) {
         )}
         <div className="aspect-square w-full overflow-hidden rounded-md bg-line">
           {product.image_url && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
+            <FadeImage
               src={product.image_url}
               alt={product.name}
               className={`h-full w-full object-cover ${product.stock <= 0 ? "grayscale" : ""}`}

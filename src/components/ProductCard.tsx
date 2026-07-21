@@ -9,6 +9,7 @@ import { useWishlist } from "@/lib/wishlist-context";
 import { ProductBadge } from "@/components/ProductBadge";
 import { RatingStars } from "@/components/RatingStars";
 import { HeartIcon } from "@/components/icons";
+import { FadeImage } from "@/components/FadeImage";
 import { useShowRatings } from "@/lib/product-settings-context";
 
 export function ProductCard({ product }: { product: Product }) {
@@ -53,8 +54,7 @@ export function ProductCard({ product }: { product: Product }) {
         </button>
         <div className="aspect-[164/180] w-full overflow-hidden bg-line">
           {product.image_url && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
+            <FadeImage
               src={product.image_url}
               alt={product.name}
               className={`h-full w-full object-cover transition-transform duration-300 group-hover:scale-105 ${

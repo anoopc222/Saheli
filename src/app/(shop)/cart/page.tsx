@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/lib/cart-context";
 import { formatPrice } from "@/lib/format";
@@ -9,6 +8,8 @@ import { getProductSettings, ProductSettings } from "@/lib/product-settings-data
 import { computeOrderTotals } from "@/lib/pricing";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { Product } from "@/types/product";
+import { EmptyState } from "@/components/EmptyState";
+import { BagIcon } from "@/components/icons";
 
 type AppliedCoupon = {
   code: string;
@@ -117,13 +118,12 @@ export default function CartPage() {
         <h1 className="mb-4 font-heading text-2xl font-semibold text-ink">
           Your cart
         </h1>
-        <p className="text-ink-muted">
-          Your cart is empty.{" "}
-          <Link href="/" className="text-accent underline">
-            Continue shopping
-          </Link>
-          .
-        </p>
+        <EmptyState
+          icon={<BagIcon className="h-9 w-9" />}
+          title="Your cart is empty."
+          actionHref="/"
+          actionLabel="Continue shopping"
+        />
       </div>
     );
   }

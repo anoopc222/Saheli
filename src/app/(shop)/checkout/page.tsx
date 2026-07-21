@@ -8,6 +8,8 @@ import { useCart } from "@/lib/cart-context";
 import { formatPrice } from "@/lib/format";
 import { getProductSettings, ProductSettings } from "@/lib/product-settings-data";
 import { getShippingZones } from "@/lib/shipping-zones-data";
+import { getFeatureItems, FeatureItemRow } from "@/lib/feature-items-data";
+import { IconFeatureRow } from "@/components/IconFeatureRow";
 import { matchShippingZone, ShippingZone } from "@/lib/shipping-zones";
 import { computeOrderTotals } from "@/lib/pricing";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
@@ -95,6 +97,7 @@ function CheckoutForm() {
   const [discount, setDiscount] = useState<Discount>(null);
   const [settings, setSettings] = useState<ProductSettings | null>(null);
   const [shippingZones, setShippingZones] = useState<ShippingZone[]>([]);
+  const [featureItems, setFeatureItems] = useState<FeatureItemRow[]>([]);
   const [scriptReady, setScriptReady] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -115,6 +118,7 @@ function CheckoutForm() {
   useEffect(() => {
     getProductSettings().then(setSettings);
     getShippingZones().then(setShippingZones);
+    getFeatureItems().then(setFeatureItems);
   }, []);
 
   // Same staleness guard as the cart page — a customer can land here
@@ -484,6 +488,11 @@ function CheckoutForm() {
           {submitting ? "Processing..." : `Pay ${formatPrice(payableCents)}`}
         </button>
       </form>
+      {featureItems.length > 0 && (
+        <div className="-mx-4 mt-2">
+          <IconFeatureRow items={featureItems} />
+        </div>
+      )}
     </div>
   );
 }

@@ -40,6 +40,15 @@ body {
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
 }
 
+/* Inputs/buttons across the app remove the default outline for a cleaner
+   look on mouse click, but that also silently drops it for keyboard focus.
+   Restore a visible ring for keyboard navigation without reintroducing the
+   ring on mouse/touch interaction. */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 /* Tap/click feedback for buttons — scoped to .shop-shell/.admin-shell
    (each a separate root layout) rather than a bare `button` selector,
    so neither surface's styling leaks into the other. */

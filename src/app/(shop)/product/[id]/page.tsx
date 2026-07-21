@@ -11,6 +11,8 @@ import { RecordRecentlyViewed } from "@/components/RecordRecentlyViewed";
 import { RecentlyViewedRail } from "@/components/RecentlyViewedRail";
 import { scheduleBadgeSweep } from "@/lib/badge-sweep";
 import { getProductSettings } from "@/lib/product-settings-data";
+import { getFeatureItems } from "@/lib/feature-items-data";
+import { IconFeatureRow } from "@/components/IconFeatureRow";
 import { SITE_URL } from "@/lib/site-url";
 
 export default async function ProductPage({
@@ -42,6 +44,7 @@ export default async function ProductPage({
     : relatedQuery.eq("fabric", product.fabric);
   const { data: related } = await relatedQuery.returns<Product[]>();
   const settings = await getProductSettings();
+  const featureItems = await getFeatureItems();
 
   const images = product.image_urls?.length ? product.image_urls : [product.image_url].filter(Boolean);
   const structuredData = {
@@ -128,6 +131,11 @@ export default async function ProductPage({
           </p>
           <AddToCartForm product={product} />
         </div>
+        {featureItems.length > 0 && (
+          <div className="-mx-4">
+            <IconFeatureRow items={featureItems} />
+          </div>
+        )}
         <ProductRail title="You may also like" products={related ?? []} />
         <RecentlyViewedRail excludeId={product.id} />
       </div>
