@@ -1,17 +1,43 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { ProductCard } from "@/components/ProductCard";
+import { EmptyState } from "@/components/EmptyState";
 import { Product } from "@/types/product";
 import { SearchIcon, XIcon } from "@/components/icons";
+
+const RECENT_SEARCHES_KEY = "shopping-cart-app:recent-searches";
+const MAX_RECENT = 6;
+
+function loadRecentSearches(): string[] {
+  try {
+    const stored = window.localStorage.getItem(RECENT_SEARCHES_KEY);
+    return stored ? JSON.parse(stored) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveRecentSearch(term: string) {
+  const existing = loadRecentSearches().filter(
+    (t) => t.toLowerCase() !== term.toLowerCase()
+  );
+  const updated = [term, ...existing].slice(0, MAX_RECENT);
+  window.localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(updated));
+  return updated;
+}
 
 export default function SearchPage() {
   const [query, setQuery] = useState("");
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
+  const [recentSearches, setRecentSearches] = useState<string[]>([]);
+
+  useEffect(() => {
+    setRecentSearches(loadRecentSearches());
+  }, []);
 
   useEffect(() => {
     const term = query.trim();
@@ -39,6 +65,9 @@ export default function SearchPage() {
         setProducts(data ?? []);
         setLoading(false);
         setSearched(true);
+        if ((data ?? []).length > 0) {
+          setRecentSearches(saveRecentSearch(term));
+        }
       }
     }, 350);
 
@@ -47,6 +76,11 @@ export default function SearchPage() {
       clearTimeout(timeout);
     };
   }, [query]);
+
+  function clearRecentSearches() {
+    window.localStorage.removeItem(RECENT_SEARCHES_KEY);
+    setRecentSearches([]);
+  }
 
   return (
     <div className="mx-auto max-w-[480px] px-4 py-6">
@@ -75,22 +109,46 @@ export default function SearchPage() {
         )}
       </div>
 
+      {!query.trim() && recentSearches.length > 0 && (
+        <div className="mb-6">
+          <div className="mb-2 flex items-center justify-between">
+            <h2 className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
+              Recent searches
+            </h2>
+            <button
+              type="button"
+              onClick={clearRecentSearches}
+              className="text-xs text-accent hover:underline"
+            >
+              Clear
+            </button>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {recentSearches.map((term) => (
+              <button
+                key={term}
+                type="button"
+                onClick={() => setQuery(term)}
+                className="rounded-full border border-line bg-paper-raised px-3.5 py-1.5 text-xs font-medium text-ink transition-colors hover:border-accent hover:text-accent"
+              >
+                {term}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {loading && (
         <p className="py-8 text-center text-sm text-ink-muted">Searching...</p>
       )}
 
       {!loading && searched && products.length === 0 && (
-        <div className="rounded-2xl border border-line bg-paper-raised p-6 text-center">
-          <p className="text-sm text-ink-muted">
-            No results for &ldquo;{query.trim()}&rdquo;.
-          </p>
-          <Link
-            href="/"
-            className="mt-3 inline-flex items-center gap-2 rounded-full bg-ink px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-accent"
-          >
-            Browse sarees
-          </Link>
-        </div>
+        <EmptyState
+          icon={<SearchIcon className="h-9 w-9" />}
+          title={`No results for "${query.trim()}".`}
+          actionHref="/"
+          actionLabel="Browse sarees"
+        />
       )}
 
       {!loading && products.length > 0 && (

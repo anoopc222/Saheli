@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/lib/cart-context";
 import { formatPrice } from "@/lib/format";
@@ -10,6 +11,7 @@ import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { Product } from "@/types/product";
 import { EmptyState } from "@/components/EmptyState";
 import { BagIcon } from "@/components/icons";
+import { FadeImage } from "@/components/FadeImage";
 
 type AppliedCoupon = {
   code: string;
@@ -142,53 +144,70 @@ export default function CartPage() {
         {lines.map((line) => (
           <div
             key={line.product.id}
-            className="flex flex-col gap-3 rounded-2xl border border-line bg-paper-raised p-4"
+            className="flex gap-3 rounded-2xl border border-line bg-paper-raised p-4"
           >
-            <div className="flex items-center justify-between gap-3">
-              <p className="text-sm font-medium text-ink">
-                {line.product.name}
-              </p>
-              <button
-                onClick={() => removeItem(line.product.id)}
-                className="shrink-0 text-xs font-medium text-accent hover:underline"
-              >
-                Remove
-              </button>
-            </div>
-            <div className="flex items-center justify-between gap-3">
-              <p className="text-xs text-ink-muted">
-                {formatPrice(line.product.price_cents)} each
-              </p>
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-1 rounded-full border border-line">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setQuantity(line.product.id, line.quantity - 1)
-                    }
-                    aria-label="Decrease quantity"
-                    className="flex h-7 w-7 items-center justify-center rounded-full text-ink transition-colors hover:bg-accent-soft hover:text-accent"
-                  >
-                    &minus;
-                  </button>
-                  <span className="w-5 text-center text-sm tabular-nums">
-                    {line.quantity}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setQuantity(line.product.id, line.quantity + 1)
-                    }
-                    disabled={line.quantity >= line.product.stock}
-                    aria-label="Increase quantity"
-                    className="flex h-7 w-7 items-center justify-center rounded-full text-ink transition-colors hover:bg-accent-soft hover:text-accent disabled:opacity-30"
-                  >
-                    +
-                  </button>
-                </div>
-                <p className="w-20 text-right text-sm font-semibold tabular-nums text-ink">
-                  {formatPrice(line.product.price_cents * line.quantity)}
+            <Link href={`/product/${line.product.id}`} className="shrink-0">
+              <div className="h-20 w-16 overflow-hidden rounded-xl bg-line">
+                {line.product.image_url && (
+                  <FadeImage
+                    src={line.product.image_url}
+                    alt={line.product.name}
+                    lazy={false}
+                    className="h-full w-full object-cover"
+                  />
+                )}
+              </div>
+            </Link>
+            <div className="flex flex-1 flex-col gap-3">
+              <div className="flex items-center justify-between gap-3">
+                <Link
+                  href={`/product/${line.product.id}`}
+                  className="text-sm font-medium text-ink transition-colors hover:text-accent"
+                >
+                  {line.product.name}
+                </Link>
+                <button
+                  onClick={() => removeItem(line.product.id)}
+                  className="shrink-0 text-xs font-medium text-accent hover:underline"
+                >
+                  Remove
+                </button>
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-xs text-ink-muted">
+                  {formatPrice(line.product.price_cents)} each
                 </p>
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-1 rounded-full border border-line">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setQuantity(line.product.id, line.quantity - 1)
+                      }
+                      aria-label="Decrease quantity"
+                      className="flex h-7 w-7 items-center justify-center rounded-full text-ink transition-colors hover:bg-accent-soft hover:text-accent"
+                    >
+                      &minus;
+                    </button>
+                    <span className="w-5 text-center text-sm tabular-nums">
+                      {line.quantity}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setQuantity(line.product.id, line.quantity + 1)
+                      }
+                      disabled={line.quantity >= line.product.stock}
+                      aria-label="Increase quantity"
+                      className="flex h-7 w-7 items-center justify-center rounded-full text-ink transition-colors hover:bg-accent-soft hover:text-accent disabled:opacity-30"
+                    >
+                      +
+                    </button>
+                  </div>
+                  <p className="w-20 text-right text-sm font-semibold tabular-nums text-ink">
+                    {formatPrice(line.product.price_cents * line.quantity)}
+                  </p>
+                </div>
               </div>
             </div>
           </div>

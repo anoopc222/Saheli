@@ -116,14 +116,14 @@ export default async function ProductPage({
               </p>
             )}
             {product.compare_at_price_cents && (
-              <p className="text-sm font-medium text-accent">
+              <span className="rounded-full bg-accent px-2 py-0.5 text-xs font-semibold text-white">
                 {Math.round(
                   ((product.compare_at_price_cents - product.price_cents) /
                     product.compare_at_price_cents) *
                     100
                 )}
                 % off
-              </p>
+              </span>
             )}
           </div>
           <p className="mt-4 text-sm leading-relaxed text-ink-muted">

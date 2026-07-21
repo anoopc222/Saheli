@@ -84,7 +84,9 @@ export function ProductCard({ product }: { product: Product }) {
             </p>
           )}
           {discountPct > 0 && (
-            <p className="text-xs font-medium text-accent">{discountPct}% off</p>
+            <span className="rounded-full bg-accent-soft px-1.5 py-0.5 text-[10px] font-semibold text-accent">
+              {discountPct}% off
+            </span>
           )}
         </div>
         <div className="mt-auto pt-2">

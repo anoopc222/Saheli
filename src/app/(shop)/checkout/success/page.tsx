@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ClearCartOnLoad } from "@/components/ClearCartOnLoad";
 import { getOrderById } from "@/lib/order-lookup-data";
+import { CheckIcon } from "@/components/icons";
 
 export const dynamic = "force-dynamic";
 
@@ -15,7 +16,10 @@ export default async function CheckoutSuccessPage({
   return (
     <div className="mx-auto max-w-2xl px-4 py-16 text-center">
       <ClearCartOnLoad />
-      <h1 className="font-heading text-2xl font-semibold text-ink">
+      <div className="mx-auto flex h-16 w-16 animate-pop-in items-center justify-center rounded-full bg-accent-soft text-accent">
+        <CheckIcon className="h-8 w-8" />
+      </div>
+      <h1 className="mt-4 font-heading text-2xl font-semibold text-ink">
         Payment successful
       </h1>
       <p className="mt-3 text-ink-muted">

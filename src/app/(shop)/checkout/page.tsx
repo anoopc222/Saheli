@@ -48,6 +48,15 @@ declare global {
 const inputClasses =
   "w-full rounded-xl border border-line bg-paper-raised px-3 py-2.5 text-sm outline-none focus:border-accent";
 
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <label className="mb-1 block text-xs font-medium text-ink-muted">{label}</label>
+      {children}
+    </div>
+  );
+}
+
 type ShippingForm = {
   name: string;
   email: string;
@@ -337,74 +346,83 @@ function CheckoutForm() {
         <h2 className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
           Shipping details
         </h2>
-        <input
-          required
-          placeholder="Full name"
-          value={form.name}
-          onChange={(e) => updateField("name", e.target.value)}
-          className={inputClasses}
-        />
-        <input
-          required
-          type="email"
-          placeholder="Email"
-          value={form.email}
-          onChange={(e) => updateField("email", e.target.value)}
-          className={inputClasses}
-        />
-        <input
-          required
-          type="tel"
-          placeholder="Phone number"
-          value={form.phone}
-          onChange={(e) => updateField("phone", e.target.value)}
-          className={inputClasses}
-        />
-        <input
-          required
-          placeholder="Address line 1"
-          value={form.addressLine1}
-          onChange={(e) => updateField("addressLine1", e.target.value)}
-          className={inputClasses}
-        />
-        <input
-          placeholder="Address line 2 (optional)"
-          value={form.addressLine2}
-          onChange={(e) => updateField("addressLine2", e.target.value)}
-          className={inputClasses}
-        />
+        <Field label="Full name">
+          <input
+            required
+            value={form.name}
+            onChange={(e) => updateField("name", e.target.value)}
+            className={inputClasses}
+          />
+        </Field>
+        <Field label="Email">
+          <input
+            required
+            type="email"
+            value={form.email}
+            onChange={(e) => updateField("email", e.target.value)}
+            className={inputClasses}
+          />
+        </Field>
+        <Field label="Phone number">
+          <input
+            required
+            type="tel"
+            value={form.phone}
+            onChange={(e) => updateField("phone", e.target.value)}
+            className={inputClasses}
+          />
+        </Field>
+        <Field label="Address line 1">
+          <input
+            required
+            value={form.addressLine1}
+            onChange={(e) => updateField("addressLine1", e.target.value)}
+            className={inputClasses}
+          />
+        </Field>
+        <Field label="Address line 2 (optional)">
+          <input
+            value={form.addressLine2}
+            onChange={(e) => updateField("addressLine2", e.target.value)}
+            className={inputClasses}
+          />
+        </Field>
         <div className="grid grid-cols-2 gap-3">
-          <input
-            required
-            placeholder="City"
-            value={form.city}
-            onChange={(e) => updateField("city", e.target.value)}
-            className={inputClasses}
-          />
-          <input
-            required
-            placeholder="State"
-            value={form.state}
-            onChange={(e) => updateField("state", e.target.value)}
-            className={inputClasses}
-          />
+          <Field label="City">
+            <input
+              required
+              value={form.city}
+              onChange={(e) => updateField("city", e.target.value)}
+              className={inputClasses}
+            />
+          </Field>
+          <Field label="State">
+            <input
+              required
+              value={form.state}
+              onChange={(e) => updateField("state", e.target.value)}
+              className={inputClasses}
+            />
+          </Field>
         </div>
-        <input
-          required
-          inputMode="numeric"
-          maxLength={6}
-          placeholder="Pincode"
-          value={form.postalCode}
-          onChange={(e) => updateField("postalCode", e.target.value.replace(/\D/g, ""))}
-          className={inputClasses}
-        />
-        {(settings?.gstin_field_enabled ?? true) && (
+        <Field label="Pincode">
           <input
-            placeholder="GSTIN (optional, for a business invoice)"
-            value={form.gstin}
-            onChange={(e) => updateField("gstin", e.target.value.toUpperCase())}
-            className={`${inputClasses} uppercase`}
+            required
+            inputMode="numeric"
+            maxLength={6}
+            value={form.postalCode}
+            onChange={(e) => updateField("postalCode", e.target.value.replace(/\D/g, ""))}
+            className={inputClasses}
           />
+        </Field>
+        {(settings?.gstin_field_enabled ?? true) && (
+          <Field label="GSTIN (optional, for a business invoice)">
+            <input
+              value={form.gstin}
+              onChange={(e) => updateField("gstin", e.target.value.toUpperCase())}
+              className={`${inputClasses} uppercase`}
+            />
+          </Field>
         )}
 
         <h2 className="mt-2 text-xs font-semibold uppercase tracking-wide text-ink-muted">
@@ -422,51 +440,57 @@ function CheckoutForm() {
 
         {!billingSameAsShipping && (
           <>
-            <input
-              required
-              placeholder="Full name"
-              value={billingForm.name}
-              onChange={(e) => updateBillingField("name", e.target.value)}
-              className={inputClasses}
-            />
-            <input
-              required
-              placeholder="Address line 1"
-              value={billingForm.addressLine1}
-              onChange={(e) => updateBillingField("addressLine1", e.target.value)}
-              className={inputClasses}
-            />
-            <input
-              placeholder="Address line 2 (optional)"
-              value={billingForm.addressLine2}
-              onChange={(e) => updateBillingField("addressLine2", e.target.value)}
-              className={inputClasses}
-            />
+            <Field label="Full name">
+              <input
+                required
+                value={billingForm.name}
+                onChange={(e) => updateBillingField("name", e.target.value)}
+                className={inputClasses}
+              />
+            </Field>
+            <Field label="Address line 1">
+              <input
+                required
+                value={billingForm.addressLine1}
+                onChange={(e) => updateBillingField("addressLine1", e.target.value)}
+                className={inputClasses}
+              />
+            </Field>
+            <Field label="Address line 2 (optional)">
+              <input
+                value={billingForm.addressLine2}
+                onChange={(e) => updateBillingField("addressLine2", e.target.value)}
+                className={inputClasses}
+              />
+            </Field>
             <div className="grid grid-cols-2 gap-3">
-              <input
-                required
-                placeholder="City"
-                value={billingForm.city}
-                onChange={(e) => updateBillingField("city", e.target.value)}
-                className={inputClasses}
-              />
-              <input
-                required
-                placeholder="State"
-                value={billingForm.state}
-                onChange={(e) => updateBillingField("state", e.target.value)}
-                className={inputClasses}
-              />
+              <Field label="City">
+                <input
+                  required
+                  value={billingForm.city}
+                  onChange={(e) => updateBillingField("city", e.target.value)}
+                  className={inputClasses}
+                />
+              </Field>
+              <Field label="State">
+                <input
+                  required
+                  value={billingForm.state}
+                  onChange={(e) => updateBillingField("state", e.target.value)}
+                  className={inputClasses}
+                />
+              </Field>
             </div>
-            <input
-              required
-              inputMode="numeric"
-              maxLength={6}
-              placeholder="Pincode"
-              value={billingForm.postalCode}
-              onChange={(e) => updateBillingField("postalCode", e.target.value.replace(/\D/g, ""))}
-              className={inputClasses}
-            />
+            <Field label="Pincode">
+              <input
+                required
+                inputMode="numeric"
+                maxLength={6}
+                value={billingForm.postalCode}
+                onChange={(e) => updateBillingField("postalCode", e.target.value.replace(/\D/g, ""))}
+                className={inputClasses}
+              />
+            </Field>
           </>
         )}
 
