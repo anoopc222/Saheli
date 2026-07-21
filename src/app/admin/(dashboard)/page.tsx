@@ -29,6 +29,19 @@ export default async function AdminHomePage() {
   return (
     <div className="flex flex-col gap-6">
       <Link
+        href="/admin/analytics"
+        className="flex items-center justify-between rounded-2xl border border-line bg-paper-raised p-4 transition-colors hover:border-accent"
+      >
+        <div>
+          <p className="font-heading text-lg font-semibold text-ink">Analytics</p>
+          <p className="mt-1 text-sm text-ink-muted">
+            Revenue trends, best-selling categories, repeat customers
+          </p>
+        </div>
+        <p className="font-heading text-2xl font-semibold text-accent">→</p>
+      </Link>
+
+      <Link
         href="/admin/customers"
         className="flex items-center justify-between rounded-2xl border border-line bg-paper-raised p-4 transition-colors hover:border-accent"
       >

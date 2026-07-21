@@ -11,6 +11,7 @@ import { RecordRecentlyViewed } from "@/components/RecordRecentlyViewed";
 import { RecentlyViewedRail } from "@/components/RecentlyViewedRail";
 import { scheduleBadgeSweep } from "@/lib/badge-sweep";
 import { getProductSettings } from "@/lib/product-settings-data";
+import { SITE_URL } from "@/lib/site-url";
 
 export default async function ProductPage({
   params,
@@ -42,8 +43,41 @@ export default async function ProductPage({
   const { data: related } = await relatedQuery.returns<Product[]>();
   const settings = await getProductSettings();
 
+  const images = product.image_urls?.length ? product.image_urls : [product.image_url].filter(Boolean);
+  const structuredData = {
+    "@context": "https://schema.org/",
+    "@type": "Product",
+    name: product.name,
+    image: images,
+    description: product.description || undefined,
+    sku: product.product_code || undefined,
+    brand: { "@type": "Brand", name: "Saheli" },
+    offers: {
+      "@type": "Offer",
+      url: `${SITE_URL}/product/${product.id}`,
+      priceCurrency: "INR",
+      price: (product.price_cents / 100).toFixed(2),
+      availability:
+        product.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+      itemCondition: "https://schema.org/NewCondition",
+    },
+    ...(settings.show_ratings && product.rating && product.rating_count > 0
+      ? {
+          aggregateRating: {
+            "@type": "AggregateRating",
+            ratingValue: product.rating,
+            reviewCount: product.rating_count,
+          },
+        }
+      : {}),
+  };
+
   return (
     <div className="mx-auto max-w-[480px] px-4 py-6">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      />
       <RecordRecentlyViewed productId={product.id} />
       <div className="flex flex-col gap-6">
         <div className="relative aspect-[3/4] w-full overflow-hidden rounded-2xl bg-line">
