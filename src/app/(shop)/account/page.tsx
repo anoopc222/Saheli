@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { formatPrice } from "@/lib/format";
+import { Spinner } from "@/components/Skeleton";
 
 type OrderSummary = {
   id: string;
@@ -77,7 +78,11 @@ export default function AccountPage() {
   }, [user]);
 
   if (loading || !user) {
-    return <div className="mx-auto max-w-[480px] px-4 py-10" />;
+    return (
+      <div className="mx-auto flex max-w-[480px] justify-center px-4 py-10">
+        <Spinner />
+      </div>
+    );
   }
 
   return (
@@ -102,7 +107,9 @@ export default function AccountPage() {
         Your orders
       </h2>
       {orders === null ? (
-        <p className="text-sm text-ink-muted">Loading...</p>
+        <div className="flex justify-center py-6">
+          <Spinner />
+        </div>
       ) : orders.length === 0 ? (
         <p className="rounded-2xl border border-line bg-paper-raised p-6 text-center text-sm text-ink-muted">
           No orders yet.

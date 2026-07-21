@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { OrderDetail } from "@/lib/order-lookup-data";
 import { OrderDetailCard } from "@/components/OrderDetailCard";
+import { Spinner } from "@/components/Skeleton";
 
 export default function OrderDetailPage({
   params,
@@ -71,7 +72,11 @@ export default function OrderDetailPage({
         &larr; Back to orders
       </Link>
 
-      {status === "loading" && <p className="text-sm text-ink-muted">Loading...</p>}
+      {status === "loading" && (
+        <div className="flex justify-center py-10">
+          <Spinner />
+        </div>
+      )}
 
       {status === "not-found" && (
         <div className="rounded-2xl border border-line bg-paper-raised p-6 text-center">
