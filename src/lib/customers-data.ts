@@ -42,10 +42,11 @@ export type CustomerDetail = {
   orders: CustomerOrder[];
 };
 
-// Customers are tracked by the phone number collected at checkout —
-// offline sales (recorded from the Stock page) have no customer_email or
-// shipping_phone, so they never show up here; this is customer history,
-// not a general sales ledger (that's what the Stock page is for).
+// Customers are tracked by the phone number collected at checkout — an
+// offline sale (recorded from the Orders page) shows up here too if a
+// phone number was entered for it, unifying online + offline history per
+// customer. Offline sales with no phone captured stay out of this view;
+// see the Orders page for a full, unfiltered ledger of every sale.
 async function getPaidOrdersWithPhone(supabase: ReturnType<typeof createServiceRoleSupabaseClient>) {
   const { data } = await supabase
     .from("orders")

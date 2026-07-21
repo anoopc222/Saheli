@@ -29,6 +29,7 @@ export type BillingDetail = {
 export type OrderDetail = {
   id: string;
   status: string;
+  source: string;
   amount_total_cents: number;
   shipping_fee_cents: number;
   shipping_zone_name: string | null;
@@ -200,6 +201,7 @@ export async function getOrdersByContact(rawContact: string): Promise<OrderSumma
 type RawOrderRow = {
   id: string;
   status: string;
+  source: string;
   amount_total_cents: number;
   shipping_fee_cents: number;
   shipping_zone_name: string | null;
@@ -218,7 +220,7 @@ async function fetchOrderRow(
   const { data } = await supabase
     .from("orders")
     .select(
-      `id, status, amount_total_cents, shipping_fee_cents, shipping_zone_name, gst_amount_cents, customer_gstin, created_at, customer_email, user_id, ${SHIPPING_COLUMNS}, ${BILLING_COLUMNS}`
+      `id, status, source, amount_total_cents, shipping_fee_cents, shipping_zone_name, gst_amount_cents, customer_gstin, created_at, customer_email, user_id, ${SHIPPING_COLUMNS}, ${BILLING_COLUMNS}`
     )
     .eq("id", orderId)
     .maybeSingle<RawOrderRow>();
@@ -232,6 +234,7 @@ async function shapeOrderDetail(
   return {
     id: order.id,
     status: order.status,
+    source: order.source,
     amount_total_cents: order.amount_total_cents,
     shipping_fee_cents: order.shipping_fee_cents,
     shipping_zone_name: order.shipping_zone_name,
