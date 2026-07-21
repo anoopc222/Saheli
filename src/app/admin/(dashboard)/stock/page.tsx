@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getStockOverview, getRecentStockAdjustments } from "@/lib/stock-data";
 import { getPurchaseOrders } from "@/lib/purchase-orders-data";
 import { formatPrice } from "@/lib/format";
@@ -26,7 +27,12 @@ export default async function AdminStockPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="font-heading text-xl font-semibold text-ink">Stock &amp; Sales</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="font-heading text-xl font-semibold text-ink">Stock &amp; Sales</h1>
+        <Link href="/admin/analytics" className="text-sm text-accent hover:underline">
+          Analytics →
+        </Link>
+      </div>
 
       <section className="grid grid-cols-2 gap-2.5">
         <StatCard label="Items sold" value={overview.totalSoldQty.toString()} />
