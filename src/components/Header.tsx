@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useCart } from "@/lib/cart-context";
 import { useWishlist } from "@/lib/wishlist-context";
 import { useNavDrawer } from "@/lib/nav-drawer-context";
@@ -26,10 +27,12 @@ export function Header() {
             <MenuIcon className="h-6 w-6" />
           </button>
           <Link href="/" className="flex items-center gap-3">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
+            <Image
               src="/logo.jpg"
               alt="Saheli"
+              width={44}
+              height={44}
+              priority
               className="h-11 w-11 rounded-full object-cover"
             />
             <span className="font-heading text-lg font-semibold text-ink">

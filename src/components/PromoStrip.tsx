@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { PromoBanner } from "@/lib/homepage-data";
 
 export function PromoStrip({ promo }: { promo: PromoBanner | null }) {
@@ -8,11 +9,12 @@ export function PromoStrip({ promo }: { promo: PromoBanner | null }) {
     <div className="mx-auto max-w-[480px] px-4 pb-4">
       <div className="relative aspect-[343/90] w-full overflow-hidden rounded-md bg-line">
         {promo.image_url ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
+          <Image
             src={promo.image_url}
             alt=""
-            className="absolute inset-0 h-full w-full object-cover"
+            fill
+            sizes="480px"
+            className="object-cover"
           />
         ) : (
           <div className="absolute inset-0 bg-accent-soft" />

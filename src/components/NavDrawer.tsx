@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useNavDrawer } from "@/lib/nav-drawer-context";
@@ -162,10 +163,11 @@ export function NavDrawer({
           >
             <XIcon className="h-4.5 w-4.5" />
           </button>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
+          <Image
             src="/logo.jpg"
             alt="Saheli"
+            width={64}
+            height={64}
             className="h-16 w-16 rounded-full border-2 border-white/70 object-cover"
           />
           <p className="font-heading text-2xl font-semibold">Saheli</p>

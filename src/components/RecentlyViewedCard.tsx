@@ -18,12 +18,13 @@ export function RecentlyViewedCard({ product }: { product: Product }) {
             Sold Out
           </span>
         )}
-        <div className="aspect-square w-full overflow-hidden rounded-md bg-line">
+        <div className="relative aspect-square w-full overflow-hidden rounded-md bg-line">
           {product.image_url && (
             <FadeImage
               src={product.image_url}
               alt={product.name}
-              className={`h-full w-full object-cover ${product.stock <= 0 ? "grayscale" : ""}`}
+              sizes="96px"
+              className={`object-cover ${product.stock <= 0 ? "grayscale" : ""}`}
             />
           )}
         </div>

@@ -55,12 +55,13 @@ export function ProductCard({ product }: { product: Product }) {
         >
           <HeartIcon className="h-[1.375rem] w-[1.375rem]" filled={wishlisted} />
         </button>
-        <div className="aspect-[164/180] w-full overflow-hidden bg-line">
+        <div className="relative aspect-[164/180] w-full overflow-hidden bg-line">
           {product.image_url && (
             <FadeImage
               src={product.image_url}
               alt={product.name}
-              className={`h-full w-full object-cover transition-transform duration-300 group-hover:scale-105 ${
+              sizes="(min-width: 1024px) 220px, 50vw"
+              className={`object-cover transition-transform duration-300 group-hover:scale-105 ${
                 product.stock <= 0 ? "grayscale" : ""
               }`}
             />

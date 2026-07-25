@@ -86,13 +86,15 @@ export function ProductGallery({
           className="flex h-full w-full cursor-zoom-in snap-x snap-mandatory overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         >
           {images.map((url, index) => (
-            <FadeImage
-              key={url}
-              src={url}
-              alt={`${alt} ${index + 1}`}
-              lazy={index !== 0}
-              className="h-full w-full shrink-0 snap-center object-cover"
-            />
+            <div key={url} className="relative h-full w-full shrink-0 snap-center">
+              <FadeImage
+                src={url}
+                alt={`${alt} ${index + 1}`}
+                lazy={index !== 0}
+                sizes="480px"
+                className="object-cover"
+              />
+            </div>
           ))}
         </div>
         {images.length > 1 && (

@@ -149,13 +149,14 @@ export default function CartPage() {
             className="flex gap-3 rounded-2xl border border-line bg-paper-raised p-4"
           >
             <Link href={`/product/${line.product.id}`} className="shrink-0">
-              <div className="h-20 w-16 overflow-hidden rounded-xl bg-line">
+              <div className="relative h-20 w-16 overflow-hidden rounded-xl bg-line">
                 {line.product.image_url && (
                   <FadeImage
                     src={line.product.image_url}
                     alt={line.product.name}
                     lazy={false}
-                    className="h-full w-full object-cover"
+                    sizes="64px"
+                    className="object-cover"
                   />
                 )}
               </div>

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { ChevronRightIcon } from "@/components/icons";
 
 const SLIDE_INTERVAL_MS = 3000;
@@ -51,12 +52,15 @@ export function Hero({ slides }: { slides: HeroSlide[] }) {
       onTouchEnd={handleTouchEnd}
     >
       {slides.map((slide, i) => (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
+        <Image
           key={slide.image_url}
           src={slide.image_url}
           alt=""
-          className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ${
+          fill
+          sizes="480px"
+          priority={i === 0}
+          {...(i === 0 ? {} : { loading: "lazy" as const })}
+          className={`object-cover transition-opacity duration-700 ${
             i === index ? "opacity-100" : "opacity-0"
           }`}
         />
