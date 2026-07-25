@@ -2,8 +2,8 @@ import { Skeleton } from "@/components/Skeleton";
 
 export default function ProductLoading() {
   return (
-    <div className="mx-auto max-w-[480px] px-4 py-6">
-      <div className="flex flex-col gap-6">
+    <div className="mx-auto max-w-[480px] px-4 py-6 lg:max-w-5xl">
+      <div className="flex flex-col gap-6 lg:grid lg:grid-cols-2 lg:items-start lg:gap-x-10">
         <Skeleton className="aspect-[3/4] w-full rounded-2xl" />
         <div>
           <Skeleton className="h-3 w-20" />

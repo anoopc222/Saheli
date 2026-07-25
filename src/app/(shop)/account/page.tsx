@@ -79,14 +79,14 @@ export default function AccountPage() {
 
   if (loading || !user) {
     return (
-      <div className="mx-auto flex max-w-[480px] justify-center px-4 py-10">
+      <div className="mx-auto flex max-w-[480px] justify-center px-4 py-10 lg:max-w-2xl">
         <Spinner />
       </div>
     );
   }
 
   return (
-    <div className="mx-auto max-w-[480px] px-4 py-6">
+    <div className="mx-auto max-w-[480px] px-4 py-6 lg:max-w-2xl">
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="font-heading text-2xl font-semibold text-ink">My account</h1>

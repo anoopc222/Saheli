@@ -76,14 +76,14 @@ export default async function ProductPage({
   };
 
   return (
-    <div className="mx-auto max-w-[480px] px-4 py-6">
+    <div className="mx-auto max-w-[480px] px-4 py-6 lg:max-w-5xl">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
       />
       <RecordRecentlyViewed productId={product.id} />
-      <div className="flex flex-col gap-6">
-        <div className="relative aspect-[3/4] w-full overflow-hidden rounded-2xl bg-line">
+      <div className="flex flex-col gap-6 lg:grid lg:grid-cols-2 lg:items-start lg:gap-x-10 lg:gap-y-8">
+        <div className="relative aspect-[3/4] w-full overflow-hidden rounded-2xl bg-line lg:sticky lg:top-24">
           <ProductBadge badge={product.badge} stock={product.stock} />
           <ProductGallery
             images={
@@ -132,12 +132,16 @@ export default async function ProductPage({
           <AddToCartForm product={product} />
         </div>
         {featureItems.length > 0 && (
-          <div className="-mx-4">
+          <div className="-mx-4 lg:col-span-2 lg:mx-0">
             <IconFeatureRow items={featureItems} />
           </div>
         )}
-        <ProductRail title="You may also like" products={related ?? []} />
-        <RecentlyViewedRail excludeId={product.id} />
+        <div className="lg:col-span-2">
+          <ProductRail title="You may also like" products={related ?? []} />
+        </div>
+        <div className="lg:col-span-2">
+          <RecentlyViewedRail excludeId={product.id} />
+        </div>
       </div>
     </div>
   );

@@ -138,7 +138,7 @@ export default async function Home({
           <PromoStrip promo={activePromo} />
         </>
       )}
-      <div id="shop" className="mx-auto max-w-[480px] scroll-mt-16 px-4 pb-8 pt-[1.125rem]">
+      <div id="shop" className="mx-auto max-w-[480px] scroll-mt-16 px-4 pb-8 pt-[1.125rem] lg:max-w-6xl">
         <div className="mb-3 flex items-center justify-between">
           <h2 className="font-heading text-xl font-semibold text-ink">{heading}</h2>
           <Link
@@ -157,7 +157,7 @@ export default async function Home({
         {products.length === 0 ? (
           <p className="text-ink-muted">No sarees found for this filter.</p>
         ) : (
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-5">
             {products.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}

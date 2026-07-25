@@ -60,7 +60,7 @@ export function ProductCard({ product }: { product: Product }) {
             <FadeImage
               src={product.image_url}
               alt={product.name}
-              sizes="(min-width: 1024px) 220px, 50vw"
+              sizes="(min-width: 1024px) 260px, 50vw"
               className={`object-cover transition-transform duration-300 group-hover:scale-105 ${
                 product.stock <= 0 ? "grayscale" : ""
               }`}

@@ -18,7 +18,7 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <NavDrawerProvider>
       <Header />
-      <main className="flex-1 pb-20">
+      <main className="flex-1 pb-20 lg:pb-0">
         <Suspense fallback={children}>
           <PageTransition>{children}</PageTransition>
         </Suspense>

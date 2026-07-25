@@ -64,7 +64,7 @@ export default function OrderDetailPage({
   }, [id, contact]);
 
   return (
-    <div className="mx-auto max-w-[480px] px-4 py-6">
+    <div className="mx-auto max-w-[480px] px-4 py-6 lg:max-w-2xl">
       <Link
         href={contact ? `/orders?contact=${encodeURIComponent(contact)}` : "/account"}
         className="mb-4 inline-block text-sm text-accent hover:underline"

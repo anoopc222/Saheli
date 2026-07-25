@@ -16,13 +16,13 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-30 border-b border-line bg-paper/95 backdrop-blur">
-      <div className="mx-auto flex min-h-[3.5875rem] max-w-[480px] items-center justify-between px-4">
+      <div className="mx-auto flex min-h-[3.5875rem] max-w-[480px] items-center justify-between px-4 lg:max-w-6xl">
         <div className="flex items-center gap-3">
           <button
             type="button"
             onClick={open}
             aria-label="Open menu"
-            className="flex h-6 w-6 items-center justify-center text-ink transition-colors hover:text-accent"
+            className="flex h-6 w-6 items-center justify-center text-ink transition-colors hover:text-accent lg:hidden"
           >
             <MenuIcon className="h-6 w-6" />
           </button>
@@ -39,6 +39,33 @@ export function Header() {
               Saheli
             </span>
           </Link>
+          <nav className="hidden items-center gap-6 pl-6 lg:flex">
+            <Link
+              href="/"
+              className="text-sm font-medium text-ink transition-colors hover:text-accent"
+            >
+              Home
+            </Link>
+            <button
+              type="button"
+              onClick={open}
+              className="text-sm font-medium text-ink transition-colors hover:text-accent"
+            >
+              Collections
+            </button>
+            <Link
+              href="/?filter=new"
+              className="text-sm font-medium text-ink transition-colors hover:text-accent"
+            >
+              New Arrivals
+            </Link>
+            <Link
+              href="/about"
+              className="text-sm font-medium text-ink transition-colors hover:text-accent"
+            >
+              About
+            </Link>
+          </nav>
         </div>
         <div className="flex items-center gap-5">
           <Link

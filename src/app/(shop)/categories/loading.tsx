@@ -2,7 +2,7 @@ import { Skeleton, ProductGridSkeleton } from "@/components/Skeleton";
 
 export default function CategoriesLoading() {
   return (
-    <div className="mx-auto max-w-[480px] px-4 py-6">
+    <div className="mx-auto max-w-[480px] px-4 py-6 lg:max-w-6xl">
       <div className="mb-3 flex items-center justify-between">
         <Skeleton className="h-7 w-40" />
       </div>

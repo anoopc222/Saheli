@@ -272,7 +272,7 @@ function CheckoutForm() {
 
   if (lines.length === 0) {
     return (
-      <div className="mx-auto max-w-[480px] px-4 py-10">
+      <div className="mx-auto max-w-[480px] px-4 py-10 lg:max-w-2xl">
         <p className="text-ink-muted">
           Your cart is empty.{" "}
           <Link href="/" className="text-accent underline">
@@ -285,7 +285,7 @@ function CheckoutForm() {
   }
 
   return (
-    <div className="mx-auto max-w-[480px] px-4 py-10">
+    <div className="mx-auto max-w-[480px] px-4 py-10 lg:max-w-2xl">
       <Script
         src="https://checkout.razorpay.com/v1/checkout.js"
         onLoad={() => setScriptReady(true)}

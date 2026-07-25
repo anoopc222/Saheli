@@ -1,6 +1,6 @@
 export default function ContactPage() {
   return (
-    <div className="mx-auto max-w-[480px] px-4 py-6">
+    <div className="mx-auto max-w-[480px] px-4 py-6 lg:max-w-2xl">
       <h1 className="mb-1 font-heading text-2xl font-semibold text-ink">Contact Us</h1>
       <p className="mb-5 text-xs text-ink-muted">We&apos;d love to hear from you</p>
 

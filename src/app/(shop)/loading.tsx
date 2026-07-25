@@ -2,8 +2,8 @@ import { Skeleton, ProductGridSkeleton } from "@/components/Skeleton";
 
 export default function HomeLoading() {
   return (
-    <div className="mx-auto max-w-[480px] px-4 py-6">
-      <Skeleton className="aspect-[4/3] w-full rounded-2xl" />
+    <div className="mx-auto max-w-[480px] px-4 py-6 lg:max-w-6xl">
+      <Skeleton className="aspect-[4/3] w-full rounded-2xl lg:aspect-[21/9]" />
       <div className="mt-5 grid grid-cols-4 gap-2">
         {Array.from({ length: 4 }).map((_, i) => (
           <Skeleton key={i} className="h-14 w-full rounded-xl" />

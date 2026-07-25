@@ -36,7 +36,7 @@ export default async function CategoriesPage({
   }
 
   return (
-    <div className="mx-auto max-w-[480px] px-4 py-6">
+    <div className="mx-auto max-w-[480px] px-4 py-6 lg:max-w-6xl">
       <div className="mb-3 flex items-center justify-between">
         <h1 className="font-heading text-2xl font-semibold text-ink">All Collections</h1>
       </div>
@@ -48,7 +48,7 @@ export default async function CategoriesPage({
       {products.length === 0 ? (
         <p className="text-ink-muted">No products found.</p>
       ) : (
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-5">
           {products.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}

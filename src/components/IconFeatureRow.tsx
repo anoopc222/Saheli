@@ -25,7 +25,7 @@ export function IconFeatureRow({ items }: { items: FeatureItemRow[] }) {
   if (items.length === 0) return null;
 
   return (
-    <div className="mx-auto max-w-[480px] px-4 pb-3 pt-4">
+    <div className="mx-auto max-w-[480px] px-4 pb-3 pt-4 lg:max-w-6xl">
       <div
         className="grid min-h-[4.05rem] rounded-md bg-paper-raised px-1.5 py-2 shadow-sm"
         style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}

@@ -30,7 +30,7 @@ export function BottomNav() {
     }`;
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-30 min-h-[3.675rem] border-t border-line bg-paper-raised pb-[env(safe-area-inset-bottom)]">
+    <nav className="fixed inset-x-0 bottom-0 z-30 min-h-[3.675rem] border-t border-line bg-paper-raised pb-[env(safe-area-inset-bottom)] lg:hidden">
       <div className="mx-auto grid max-w-[480px] grid-cols-5 gap-1 px-2 py-1.5">
         <Link href="/" className={tabClass(isHome)}>
           <HomeIcon className="h-5 w-5" />

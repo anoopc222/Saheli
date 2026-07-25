@@ -35,7 +35,7 @@ export default function WishlistPage() {
   }, [ids]);
 
   return (
-    <div className="mx-auto max-w-[480px] px-4 py-6">
+    <div className="mx-auto max-w-[480px] px-4 py-6 lg:max-w-6xl">
       <h1 className="mb-1 font-heading text-2xl font-semibold text-ink">
         Wishlist
       </h1>
@@ -50,7 +50,7 @@ export default function WishlistPage() {
           actionLabel="Browse sarees"
         />
       ) : (
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-5">
           {products.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}

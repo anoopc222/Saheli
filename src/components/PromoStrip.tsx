@@ -6,7 +6,7 @@ export function PromoStrip({ promo }: { promo: PromoBanner | null }) {
   if (!promo) return null;
 
   return (
-    <div className="mx-auto max-w-[480px] px-4 pb-4">
+    <div className="mx-auto max-w-[480px] px-4 pb-4 lg:max-w-6xl">
       <div className="relative aspect-[343/90] w-full overflow-hidden rounded-md bg-line">
         {promo.image_url ? (
           <Image

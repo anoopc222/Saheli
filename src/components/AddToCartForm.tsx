@@ -90,7 +90,7 @@ export function AddToCartForm({ product }: { product: Product }) {
       </div>
 
       {showSticky && product.stock > 0 && (
-        <div className="fixed inset-x-0 bottom-[3.675rem] z-20 border-t border-line bg-paper-raised/95 px-4 py-3 shadow-[0_-2px_8px_rgba(0,0,0,0.06)] backdrop-blur">
+        <div className="fixed inset-x-0 bottom-[3.675rem] z-20 border-t border-line bg-paper-raised/95 px-4 py-3 shadow-[0_-2px_8px_rgba(0,0,0,0.06)] backdrop-blur lg:hidden">
           <div className="mx-auto flex max-w-[480px] items-center gap-3">
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-medium text-ink">{product.name}</p>

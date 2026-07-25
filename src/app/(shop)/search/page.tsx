@@ -83,76 +83,78 @@ export default function SearchPage() {
   }
 
   return (
-    <div className="mx-auto max-w-[480px] px-4 py-6">
+    <div className="mx-auto max-w-[480px] px-4 py-6 lg:max-w-6xl">
       <h1 className="mb-4 font-heading text-2xl font-semibold text-ink">
         Search
       </h1>
-      <div className="relative mb-5">
-        <SearchIcon className="pointer-events-none absolute left-4 top-1/2 h-4.5 w-4.5 -translate-y-1/2 text-ink-muted" />
-        <input
-          type="text"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search sarees, fabrics..."
-          autoFocus
-          className="w-full rounded-full border border-line bg-paper-raised py-3 pl-11 pr-11 text-sm text-ink outline-none transition-colors focus:border-accent"
-        />
-        {query && (
-          <button
-            type="button"
-            onClick={() => setQuery("")}
-            aria-label="Clear search"
-            className="absolute right-3 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full text-ink-muted hover:text-ink"
-          >
-            <XIcon className="h-4 w-4" />
-          </button>
+      <div className="lg:mx-auto lg:max-w-xl">
+        <div className="relative mb-5">
+          <SearchIcon className="pointer-events-none absolute left-4 top-1/2 h-4.5 w-4.5 -translate-y-1/2 text-ink-muted" />
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search sarees, fabrics..."
+            autoFocus
+            className="w-full rounded-full border border-line bg-paper-raised py-3 pl-11 pr-11 text-sm text-ink outline-none transition-colors focus:border-accent"
+          />
+          {query && (
+            <button
+              type="button"
+              onClick={() => setQuery("")}
+              aria-label="Clear search"
+              className="absolute right-3 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full text-ink-muted hover:text-ink"
+            >
+              <XIcon className="h-4 w-4" />
+            </button>
+          )}
+        </div>
+
+        {!query.trim() && recentSearches.length > 0 && (
+          <div className="mb-6">
+            <div className="mb-2 flex items-center justify-between">
+              <h2 className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
+                Recent searches
+              </h2>
+              <button
+                type="button"
+                onClick={clearRecentSearches}
+                className="text-xs text-accent hover:underline"
+              >
+                Clear
+              </button>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {recentSearches.map((term) => (
+                <button
+                  key={term}
+                  type="button"
+                  onClick={() => setQuery(term)}
+                  className="rounded-full border border-line bg-paper-raised px-3.5 py-1.5 text-xs font-medium text-ink transition-colors hover:border-accent hover:text-accent"
+                >
+                  {term}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {loading && (
+          <p className="py-8 text-center text-sm text-ink-muted">Searching...</p>
+        )}
+
+        {!loading && searched && products.length === 0 && (
+          <EmptyState
+            icon={<SearchIcon className="h-9 w-9" />}
+            title={`No results for "${query.trim()}".`}
+            actionHref="/"
+            actionLabel="Browse sarees"
+          />
         )}
       </div>
 
-      {!query.trim() && recentSearches.length > 0 && (
-        <div className="mb-6">
-          <div className="mb-2 flex items-center justify-between">
-            <h2 className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
-              Recent searches
-            </h2>
-            <button
-              type="button"
-              onClick={clearRecentSearches}
-              className="text-xs text-accent hover:underline"
-            >
-              Clear
-            </button>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {recentSearches.map((term) => (
-              <button
-                key={term}
-                type="button"
-                onClick={() => setQuery(term)}
-                className="rounded-full border border-line bg-paper-raised px-3.5 py-1.5 text-xs font-medium text-ink transition-colors hover:border-accent hover:text-accent"
-              >
-                {term}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {loading && (
-        <p className="py-8 text-center text-sm text-ink-muted">Searching...</p>
-      )}
-
-      {!loading && searched && products.length === 0 && (
-        <EmptyState
-          icon={<SearchIcon className="h-9 w-9" />}
-          title={`No results for "${query.trim()}".`}
-          actionHref="/"
-          actionLabel="Browse sarees"
-        />
-      )}
-
       {!loading && products.length > 0 && (
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-5">
           {products.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}

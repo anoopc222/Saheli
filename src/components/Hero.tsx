@@ -47,7 +47,7 @@ export function Hero({ slides }: { slides: HeroSlide[] }) {
 
   return (
     <section
-      className="relative mx-auto aspect-[343/231] max-w-[480px] touch-pan-y overflow-hidden border-b border-line bg-line"
+      className="relative mx-auto aspect-[343/231] max-w-[480px] touch-pan-y overflow-hidden border-b border-line bg-line lg:aspect-[21/9] lg:max-w-6xl"
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
