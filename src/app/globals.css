@@ -17,6 +17,11 @@
 }
 
 @theme inline {
+  /* Lowered from Tailwind's 64rem (1024px) default: mobile browsers'
+     "Request desktop site" mode renders at a virtual viewport around
+     980px, which is below the stock lg breakpoint and would otherwise
+     never pick up the desktop shop layout. */
+  --breakpoint-lg: 56.25rem;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-ink: var(--ink);
