@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useNavDrawer } from "@/lib/nav-drawer-context";
@@ -155,25 +154,15 @@ export function NavDrawer({
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        <div className="relative flex flex-col items-center gap-1.5 bg-brand px-6 pb-5 pt-11 text-center text-white">
+        <div className="flex items-center justify-between bg-brand px-4 py-4 text-white">
+          <p className="font-heading text-xl font-semibold">Menu</p>
           <button
             onClick={close}
             aria-label="Close menu"
-            className="absolute left-3.5 top-3.5 flex h-7 w-7 items-center justify-center rounded-full text-white/90 transition-colors hover:bg-white/10"
+            className="flex h-8 w-8 items-center justify-center rounded-full text-white/90 transition-colors hover:bg-white/10"
           >
-            <XIcon className="h-4.5 w-4.5" />
+            <XIcon className="h-5 w-5" />
           </button>
-          <Image
-            src="/logo.jpg"
-            alt="Saheli"
-            width={64}
-            height={64}
-            className="h-16 w-16 rounded-full border-2 border-white/70 object-cover"
-          />
-          <p className="font-heading text-2xl font-semibold">Saheli</p>
-          <p className="text-[10px] font-medium uppercase tracking-[0.15em] text-white/75">
-            A dream shared by two friends
-          </p>
         </div>
 
         <div className="flex-1 overflow-y-auto px-4">
