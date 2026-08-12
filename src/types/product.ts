@@ -1,5 +1,11 @@
 export type ProductBadge = "bestseller" | "new" | "sale";
 
+export type ProductSize = {
+  size: string;
+  stock: number;
+  sort_order: number;
+};
+
 export type Product = {
   id: string;
   name: string;
@@ -19,4 +25,5 @@ export type Product = {
   subcategory_id: string | null;
   tags: string[];
   show_on_store: boolean;
+  sizes?: ProductSize[];
 };

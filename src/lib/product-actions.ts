@@ -37,6 +37,39 @@ async function assertUniqueProductCode(
   }
 }
 
+function parseSizes(formData: FormData): { size: string; stock: number }[] {
+  const raw = String(formData.get("sizes_json") || "[]");
+  try {
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .map((s) => ({
+        size: String(s?.size ?? "").trim(),
+        stock: Math.max(0, Math.round(Number(s?.stock) || 0)),
+      }))
+      .filter((s) => s.size.length > 0);
+  } catch {
+    return [];
+  }
+}
+
+async function replaceSizes(
+  supabase: ReturnType<typeof createServiceRoleSupabaseClient>,
+  productId: string,
+  sizes: { size: string; stock: number }[]
+) {
+  await supabase.from("product_sizes").delete().eq("product_id", productId);
+  if (sizes.length === 0) return;
+  await supabase.from("product_sizes").insert(
+    sizes.map((s, index) => ({
+      product_id: productId,
+      size: s.size,
+      stock: s.stock,
+      sort_order: index,
+    }))
+  );
+}
+
 function parseProductFields(formData: FormData) {
   const comparePrice = formData.get("compare_price");
   const costPrice = formData.get("cost_price");
@@ -75,16 +108,29 @@ function parseProductFields(formData: FormData) {
 export async function createProductAction(formData: FormData) {
   const supabase = createServiceRoleSupabaseClient();
   const fields = parseProductFields(formData);
+  const sizes = parseSizes(formData);
+  // Sizes are the source of truth once any are set — the plain stock
+  // field on the form becomes a read-only sum in that case, but never
+  // trust the client for the actual number.
+  if (sizes.length > 0) {
+    fields.stock = sizes.reduce((sum, s) => sum + s.stock, 0);
+  }
   await assertUniqueProductCode(supabase, fields.product_code);
   const files = formData.getAll("images") as File[];
   const imageUrls = await uploadImages(files);
 
-  const { error } = await supabase.from("products").insert({
-    ...fields,
-    image_url: imageUrls[0] || "",
-    image_urls: imageUrls,
-  });
+  const { data: created, error } = await supabase
+    .from("products")
+    .insert({
+      ...fields,
+      image_url: imageUrls[0] || "",
+      image_urls: imageUrls,
+    })
+    .select("id")
+    .single<{ id: string }>();
   if (error) throw new Error(error.message);
+
+  if (created) await replaceSizes(supabase, created.id, sizes);
 
   revalidatePath("/admin/products");
   revalidatePath("/");
@@ -99,6 +145,10 @@ export async function updateProductAction(
 ) {
   const supabase = createServiceRoleSupabaseClient();
   const fields = parseProductFields(formData);
+  const sizes = parseSizes(formData);
+  if (sizes.length > 0) {
+    fields.stock = sizes.reduce((sum, s) => sum + s.stock, 0);
+  }
   await assertUniqueProductCode(supabase, fields.product_code, productId);
 
   const keepUrls = formData.getAll("keep_images").map(String);
@@ -120,6 +170,7 @@ export async function updateProductAction(
     .eq("id", productId);
   if (error) throw new Error(error.message);
 
+  await replaceSizes(supabase, productId, sizes);
   await deleteManagedImages(removedUrls);
 
   revalidatePath("/admin/products");

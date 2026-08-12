@@ -14,6 +14,7 @@ import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { Product } from "@/types/product";
 import { INSTAGRAM_URL } from "@/lib/social-links";
 import { InstagramIcon } from "@/components/icons";
+import { SIZES_SELECT } from "@/lib/product-sizes";
 
 type Discount = {
   code: string;
@@ -135,7 +136,7 @@ function CheckoutForm() {
     const supabase = createBrowserSupabaseClient();
     supabase
       .from("products")
-      .select("*")
+      .select(`*, ${SIZES_SELECT}`)
       .in("id", ids)
       .returns<Product[]>()
       .then(({ data }) => {
@@ -206,7 +207,11 @@ function CheckoutForm() {
         method: "POST",
         headers,
         body: JSON.stringify({
-          items: lines.map((l) => ({ productId: l.product.id, quantity: l.quantity })),
+          items: lines.map((l) => ({
+            productId: l.product.id,
+            quantity: l.quantity,
+            selectedSize: l.selectedSize,
+          })),
           couponCode: discount?.code,
           shipping: form,
           billing: billingSameAsShipping ? null : billingForm,

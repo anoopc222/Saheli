@@ -6,6 +6,7 @@ import { Product } from "@/types/product";
 import { CategoryRow, MainCategoryRow } from "@/lib/categories-data";
 import { compressImageFile } from "@/lib/client-image-compression";
 import { TagChipInput } from "@/components/admin/TagChipInput";
+import { COMMON_SIZES, sortSizes } from "@/lib/product-sizes";
 
 const MAX_IMAGES = 4;
 
@@ -102,6 +103,27 @@ export function ProductForm({
 
   const [priceError, setPriceError] = useState<string | null>(null);
   const [showOnStore, setShowOnStore] = useState(product?.show_on_store ?? true);
+
+  const [sizes, setSizes] = useState<{ size: string; stock: number }[]>(() =>
+    sortSizes(product?.sizes).map((s) => ({ size: s.size, stock: s.stock }))
+  );
+  const [customSize, setCustomSize] = useState("");
+  const hasSizes = sizes.length > 0;
+  const sizesTotal = sizes.reduce((sum, s) => sum + s.stock, 0);
+  const [stockManual, setStockManual] = useState(product?.stock ?? 0);
+
+  function addSize(size: string) {
+    if (!size.trim() || sizes.some((s) => s.size === size)) return;
+    setSizes((prev) => [...prev, { size, stock: 0 }]);
+  }
+
+  function removeSize(size: string) {
+    setSizes((prev) => prev.filter((s) => s.size !== size));
+  }
+
+  function updateSizeStock(size: string, stock: number) {
+    setSizes((prev) => prev.map((s) => (s.size === size ? { ...s, stock } : s)));
+  }
 
   const [costPrice, setCostPrice] = useState(
     product?.cost_price_cents ? product.cost_price_cents / 100 : 0
@@ -387,11 +409,88 @@ export function ProductForm({
             type="number"
             min="0"
             name="stock"
-            defaultValue={product?.stock ?? 0}
+            value={hasSizes ? sizesTotal : stockManual}
+            onChange={(e) => setStockManual(Number(e.target.value) || 0)}
+            readOnly={hasSizes}
             required
-            className={inputClasses}
+            className={`${inputClasses} ${hasSizes ? "bg-paper text-ink-muted" : ""}`}
           />
+          {hasSizes && (
+            <p className="mt-1.5 text-xs text-ink-muted">
+              Total across all sizes below — edit stock per size instead.
+            </p>
+          )}
         </div>
+      </Section>
+
+      <Section title="Sizes">
+        <p className="text-xs text-ink-muted">
+          Add sizes with their own stock — e.g. S/M/L/XL/XXL for a churidar. Leave
+          empty for one-size items like sarees; no size picker will show for
+          customers.
+        </p>
+        <div className="flex flex-wrap gap-1.5">
+          {COMMON_SIZES.filter((s) => !sizes.some((row) => row.size === s)).map((s) => (
+            <button
+              key={s}
+              type="button"
+              onClick={() => addSize(s)}
+              className="rounded-full border border-line px-3 py-1 text-xs font-medium text-ink transition-colors hover:border-accent hover:text-accent"
+            >
+              + {s}
+            </button>
+          ))}
+        </div>
+        {hasSizes && (
+          <div className="flex flex-col gap-2">
+            {sizes.map((row) => (
+              <div key={row.size} className="flex items-center gap-2">
+                <span className="w-16 shrink-0 truncate text-sm font-medium text-ink">
+                  {row.size}
+                </span>
+                <input
+                  type="number"
+                  min="0"
+                  value={row.stock}
+                  onChange={(e) => updateSizeStock(row.size, Math.max(0, Number(e.target.value) || 0))}
+                  placeholder="Stock"
+                  className={`${inputClasses} flex-1`}
+                />
+                <button
+                  type="button"
+                  onClick={() => removeSize(row.size)}
+                  aria-label={`Remove ${row.size}`}
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-ink-muted transition-colors hover:bg-accent-soft hover:text-accent"
+                >
+                  &times;
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+        <div className="flex items-center gap-2">
+          <input
+            type="text"
+            value={customSize}
+            onChange={(e) => setCustomSize(e.target.value)}
+            placeholder="Custom size (e.g. Free Size)"
+            className={`${inputClasses} flex-1`}
+          />
+          <button
+            type="button"
+            onClick={() => {
+              addSize(customSize.trim());
+              setCustomSize("");
+            }}
+            className="shrink-0 rounded-full border border-line px-3 py-2 text-xs font-medium text-ink transition-colors hover:border-accent hover:text-accent"
+          >
+            Add
+          </button>
+        </div>
+        <input type="hidden" name="sizes_json" value={JSON.stringify(sizes)} />
+      </Section>
+
+      <Section title="Visibility">
         <div className="flex items-center justify-between rounded-xl border border-line bg-paper px-3 py-2.5">
           <div>
             <p className="text-sm font-medium text-ink">Show on store</p>

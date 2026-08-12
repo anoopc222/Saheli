@@ -12,6 +12,7 @@ import { RecentlyViewedRail } from "@/components/RecentlyViewedRail";
 import { scheduleBadgeSweep } from "@/lib/badge-sweep";
 import { getProductSettings } from "@/lib/product-settings-data";
 import { SITE_URL } from "@/lib/site-url";
+import { SIZES_SELECT } from "@/lib/product-sizes";
 
 export default async function ProductPage({
   params,
@@ -23,7 +24,7 @@ export default async function ProductPage({
   const supabase = createBrowserSupabaseClient();
   const { data: product, error } = await supabase
     .from("products")
-    .select("*")
+    .select(`*, ${SIZES_SELECT}`)
     .eq("id", id)
     .maybeSingle<Product>();
 
@@ -33,7 +34,7 @@ export default async function ProductPage({
 
   let relatedQuery = supabase
     .from("products")
-    .select("*")
+    .select(`*, ${SIZES_SELECT}`)
     .eq("show_on_store", true)
     .neq("id", id)
     .limit(8);

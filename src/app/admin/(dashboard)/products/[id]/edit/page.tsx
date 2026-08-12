@@ -5,6 +5,7 @@ import { updateProductAction } from "@/lib/product-actions";
 import { getCategories, getMainCategories } from "@/lib/categories-data";
 import { getAllTags } from "@/lib/tags-data";
 import { Product } from "@/types/product";
+import { SIZES_SELECT } from "@/lib/product-sizes";
 
 export const dynamic = "force-dynamic";
 
@@ -16,7 +17,11 @@ export default async function EditProductPage({
   const { id } = await params;
   const supabase = createBrowserSupabaseClient();
   const [{ data: product }, categories, mainCategories, tagSuggestions] = await Promise.all([
-    supabase.from("products").select("*").eq("id", id).maybeSingle<Product>(),
+    supabase
+      .from("products")
+      .select(`*, ${SIZES_SELECT}`)
+      .eq("id", id)
+      .maybeSingle<Product>(),
     getCategories(),
     getMainCategories(),
     getAllTags(),

@@ -4,6 +4,7 @@ export type OrderItemDetail = {
   product_name: string;
   unit_price_cents: number;
   quantity: number;
+  selected_size: string | null;
 };
 
 export type ShippingDetail = {
@@ -100,7 +101,7 @@ function toBillingDetail(row: BillingRow): BillingDetail | null {
 async function loadItems(supabase: ServiceClient, orderId: string) {
   const { data } = await supabase
     .from("order_items")
-    .select("product_name, unit_price_cents, quantity")
+    .select("product_name, unit_price_cents, quantity, selected_size")
     .eq("order_id", orderId)
     .returns<OrderItemDetail[]>();
   return data ?? [];

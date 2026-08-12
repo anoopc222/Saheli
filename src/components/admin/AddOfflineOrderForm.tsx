@@ -3,18 +3,32 @@
 import { useState } from "react";
 import { createOfflineOrderAction } from "@/lib/admin-orders-actions";
 import { formatPrice } from "@/lib/format";
+import { ProductSize } from "@/types/product";
+import { sortSizes } from "@/lib/product-sizes";
 
 const inputClasses =
   "w-full rounded-xl border border-line bg-paper px-3 py-2 text-sm outline-none focus:border-accent";
 
-type Product = { id: string; name: string; price_cents: number; product_code: string | null };
+type Product = {
+  id: string;
+  name: string;
+  price_cents: number;
+  product_code: string | null;
+  sizes: ProductSize[];
+};
 
-type Line = { key: number; productId: string; quantity: number; unitPrice: number };
+type Line = {
+  key: number;
+  productId: string;
+  quantity: number;
+  unitPrice: number;
+  selectedSize: string;
+};
 
 let nextKey = 1;
 
 function emptyLine(): Line {
-  return { key: nextKey++, productId: "", quantity: 1, unitPrice: 0 };
+  return { key: nextKey++, productId: "", quantity: 1, unitPrice: 0, selectedSize: "" };
 }
 
 export function AddOfflineOrderForm({ products }: { products: Product[] }) {
@@ -93,76 +107,115 @@ export function AddOfflineOrderForm({ products }: { products: Product[] }) {
           </div>
 
           <div className="flex flex-col gap-2">
-            {lines.map((line) => (
-              <div key={line.key} className="flex items-end gap-2">
-                <div className="min-w-0 flex-1">
-                  <label className="mb-1.5 block text-sm font-medium text-ink">Product</label>
-                  <select
-                    name={`product_id__${line.key}`}
-                    required
-                    value={line.productId}
-                    onChange={(e) => {
-                      const product = products.find((p) => p.id === e.target.value);
-                      updateLine(line.key, {
-                        productId: e.target.value,
-                        unitPrice: product ? product.price_cents / 100 : line.unitPrice,
-                      });
-                    }}
-                    className={inputClasses}
-                  >
-                    <option value="" disabled>
-                      Select a product
-                    </option>
-                    {products.map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.name}
-                        {p.product_code ? ` (${p.product_code})` : ""}
-                      </option>
-                    ))}
-                  </select>
+            {lines.map((line) => {
+              const product = products.find((p) => p.id === line.productId);
+              const sizes = sortSizes(product?.sizes);
+              return (
+                <div
+                  key={line.key}
+                  className="flex flex-col gap-2 rounded-xl border border-line p-2"
+                >
+                  <div className="flex items-end gap-2">
+                    <div className="min-w-0 flex-1">
+                      <label className="mb-1.5 block text-sm font-medium text-ink">
+                        Product
+                      </label>
+                      <select
+                        name={`product_id__${line.key}`}
+                        required
+                        value={line.productId}
+                        onChange={(e) => {
+                          const next = products.find((p) => p.id === e.target.value);
+                          updateLine(line.key, {
+                            productId: e.target.value,
+                            unitPrice: next ? next.price_cents / 100 : line.unitPrice,
+                            selectedSize: "",
+                          });
+                        }}
+                        className={inputClasses}
+                      >
+                        <option value="" disabled>
+                          Select a product
+                        </option>
+                        {products.map((p) => (
+                          <option key={p.id} value={p.id}>
+                            {p.name}
+                            {p.product_code ? ` (${p.product_code})` : ""}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    {lines.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => setLines((prev) => prev.filter((l) => l.key !== line.key))}
+                        aria-label="Remove product"
+                        className="mb-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-ink-muted transition-colors hover:bg-accent-soft hover:text-accent"
+                      >
+                        &times;
+                      </button>
+                    )}
+                  </div>
+                  <div className="flex items-end gap-2">
+                    {sizes.length > 0 && (
+                      <div className="min-w-0 flex-1">
+                        <label className="mb-1.5 block text-sm font-medium text-ink">Size</label>
+                        <select
+                          name={`size__${line.key}`}
+                          required
+                          value={line.selectedSize}
+                          onChange={(e) => updateLine(line.key, { selectedSize: e.target.value })}
+                          className={inputClasses}
+                        >
+                          <option value="" disabled>
+                            Select size
+                          </option>
+                          {sizes.map((s) => (
+                            <option key={s.size} value={s.size} disabled={s.stock <= 0}>
+                              {s.size} {s.stock <= 0 ? "(sold out)" : `(${s.stock} left)`}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+                    <div className="w-20 shrink-0">
+                      <label className="mb-1.5 block text-sm font-medium text-ink">Qty</label>
+                      <input
+                        type="number"
+                        name={`quantity__${line.key}`}
+                        min={1}
+                        step={1}
+                        required
+                        value={line.quantity}
+                        onChange={(e) =>
+                          updateLine(line.key, {
+                            quantity: Math.max(1, Number(e.target.value) || 1),
+                          })
+                        }
+                        className={inputClasses}
+                      />
+                    </div>
+                    <div className="w-24 shrink-0">
+                      <label className="mb-1.5 block text-sm font-medium text-ink">
+                        Price (&#8377;)
+                      </label>
+                      <input
+                        type="number"
+                        name={`unit_price__${line.key}`}
+                        min={0}
+                        step="0.01"
+                        required
+                        value={line.unitPrice}
+                        onChange={(e) =>
+                          updateLine(line.key, { unitPrice: Number(e.target.value) || 0 })
+                        }
+                        className={inputClasses}
+                      />
+                    </div>
+                  </div>
                 </div>
-                <div className="w-20 shrink-0">
-                  <label className="mb-1.5 block text-sm font-medium text-ink">Qty</label>
-                  <input
-                    type="number"
-                    name={`quantity__${line.key}`}
-                    min={1}
-                    step={1}
-                    required
-                    value={line.quantity}
-                    onChange={(e) =>
-                      updateLine(line.key, { quantity: Math.max(1, Number(e.target.value) || 1) })
-                    }
-                    className={inputClasses}
-                  />
-                </div>
-                <div className="w-24 shrink-0">
-                  <label className="mb-1.5 block text-sm font-medium text-ink">
-                    Price (&#8377;)
-                  </label>
-                  <input
-                    type="number"
-                    name={`unit_price__${line.key}`}
-                    min={0}
-                    step="0.01"
-                    required
-                    value={line.unitPrice}
-                    onChange={(e) => updateLine(line.key, { unitPrice: Number(e.target.value) || 0 })}
-                    className={inputClasses}
-                  />
-                </div>
-                {lines.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => setLines((prev) => prev.filter((l) => l.key !== line.key))}
-                    aria-label="Remove product"
-                    className="mb-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-ink-muted transition-colors hover:bg-accent-soft hover:text-accent"
-                  >
-                    &times;
-                  </button>
-                )}
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           <button

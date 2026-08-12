@@ -37,14 +37,23 @@ export function RecentlyViewedCard({ product }: { product: Product }) {
       <p className="text-xs font-semibold tabular-nums text-accent">
         {formatPrice(product.price_cents)}
       </p>
-      {product.stock > 0 && (
-        <button
-          onClick={() => addItem(product, 1)}
-          disabled={quantityInCart >= product.stock}
-          className="mt-1 w-full rounded-full bg-brand px-2 py-1 text-[11px] font-medium text-white shadow-sm transition-colors hover:bg-brand-dark disabled:opacity-40"
+      {product.stock > 0 && product.sizes && product.sizes.length > 0 ? (
+        <Link
+          href={`/product/${product.id}`}
+          className="mt-1 block w-full rounded-full bg-brand px-2 py-1 text-center text-[11px] font-medium text-white shadow-sm transition-colors hover:bg-brand-dark"
         >
-          {quantityInCart > 0 ? `In cart (${quantityInCart})` : "Add to cart"}
-        </button>
+          Select size
+        </Link>
+      ) : (
+        product.stock > 0 && (
+          <button
+            onClick={() => addItem(product, 1)}
+            disabled={quantityInCart >= product.stock}
+            className="mt-1 w-full rounded-full bg-brand px-2 py-1 text-[11px] font-medium text-white shadow-sm transition-colors hover:bg-brand-dark disabled:opacity-40"
+          >
+            {quantityInCart > 0 ? `In cart (${quantityInCart})` : "Add to cart"}
+          </button>
+        )
       )}
     </div>
   );

@@ -30,6 +30,7 @@ type OrderItemRow = {
   product_name: string;
   unit_price_cents: number;
   quantity: number;
+  selected_size: string | null;
 };
 
 const ORDER_COLUMNS =
@@ -53,7 +54,7 @@ function buildEmailHtml(order: OrderRow, items: OrderItemRow[]): string {
     .map(
       (item) => `
       <tr>
-        <td style="padding:8px 0;">${item.product_name} &times;${item.quantity}</td>
+        <td style="padding:8px 0;">${item.product_name}${item.selected_size ? ` (${item.selected_size})` : ""} &times;${item.quantity}</td>
         <td style="padding:8px 0;text-align:right;">${formatPrice(item.unit_price_cents * item.quantity)}</td>
       </tr>`
     )
@@ -124,7 +125,7 @@ export async function sendOrderConfirmationEmail(supabase: ServiceClient, orderI
 
   const { data: items } = await supabase
     .from("order_items")
-    .select("product_name, unit_price_cents, quantity")
+    .select("product_name, unit_price_cents, quantity, selected_size")
     .eq("order_id", orderId)
     .returns<OrderItemRow[]>();
 

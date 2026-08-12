@@ -28,9 +28,9 @@ export async function finalizePaidOrder(
 
   const { data: items } = await supabase
     .from("order_items")
-    .select("product_id, quantity")
+    .select("product_id, quantity, selected_size")
     .eq("order_id", orderId)
-    .returns<{ product_id: string | null; quantity: number }[]>();
+    .returns<{ product_id: string | null; quantity: number; selected_size: string | null }[]>();
 
   for (const item of items ?? []) {
     if (!item.product_id) continue;
@@ -39,11 +39,29 @@ export async function finalizePaidOrder(
       .select("id, stock")
       .eq("id", item.product_id)
       .maybeSingle<{ id: string; stock: number }>();
-    if (product) {
-      await supabase
-        .from("products")
-        .update({ stock: Math.max(product.stock - item.quantity, 0) })
-        .eq("id", item.product_id);
+    if (!product) continue;
+
+    await supabase
+      .from("products")
+      .update({ stock: Math.max(product.stock - item.quantity, 0) })
+      .eq("id", item.product_id);
+
+    // The aggregate above always moves in step with the sale; a sized
+    // product additionally needs its specific size row decremented so
+    // the size picker reflects what's actually left.
+    if (item.selected_size) {
+      const { data: sizeRow } = await supabase
+        .from("product_sizes")
+        .select("id, stock")
+        .eq("product_id", item.product_id)
+        .eq("size", item.selected_size)
+        .maybeSingle<{ id: string; stock: number }>();
+      if (sizeRow) {
+        await supabase
+          .from("product_sizes")
+          .update({ stock: Math.max(sizeRow.stock - item.quantity, 0) })
+          .eq("id", sizeRow.id);
+      }
     }
   }
 

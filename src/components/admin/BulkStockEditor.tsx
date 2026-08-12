@@ -6,9 +6,20 @@ import { bulkAdjustStockAction } from "@/lib/stock-actions";
 import { StockAdjustModal } from "@/components/admin/StockAdjustModal";
 import { ProductStockRow } from "@/lib/stock-data";
 
+function hasSizes(product: ProductStockRow) {
+  return product.sizes.length > 0;
+}
+
+function sizesSummary(product: ProductStockRow) {
+  return product.sizes.map((s) => `${s.size}: ${s.stock}`).join(" · ");
+}
+
 export function BulkStockEditor({ products }: { products: ProductStockRow[] }) {
   const [bulkMode, setBulkMode] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  const bulkEditable = products.filter((p) => !hasSizes(p));
+  const sizedCount = products.length - bulkEditable.length;
 
   return (
     <div className="flex flex-col gap-2.5">
@@ -42,7 +53,13 @@ export function BulkStockEditor({ products }: { products: ProductStockRow[] }) {
           }}
           className="flex flex-col gap-2"
         >
-          {products.map((product) => (
+          {sizedCount > 0 && (
+            <p className="rounded-xl border border-line bg-paper px-3 py-2 text-xs text-ink-muted">
+              {sizedCount} sized {sizedCount === 1 ? "product isn&apos;t" : "products aren&apos;t"} shown
+              here — edit their stock per size on the product&apos;s edit page instead.
+            </p>
+          )}
+          {bulkEditable.map((product) => (
             <div
               key={product.id}
               className="flex items-center gap-3 rounded-xl border border-line bg-paper-raised p-3"
@@ -83,19 +100,32 @@ export function BulkStockEditor({ products }: { products: ProductStockRow[] }) {
                 >
                   {product.name}
                 </Link>
-                <p className="text-xs text-ink-muted">
-                  {product.stock} in stock &middot; {product.sold_qty} sold
-                  {product.stock <= 0 && (
-                    <span className="ml-1.5 font-medium text-red-600">Sold out</span>
-                  )}
-                </p>
+                {hasSizes(product) ? (
+                  <p className="truncate text-xs text-ink-muted">{sizesSummary(product)}</p>
+                ) : (
+                  <p className="text-xs text-ink-muted">
+                    {product.stock} in stock &middot; {product.sold_qty} sold
+                    {product.stock <= 0 && (
+                      <span className="ml-1.5 font-medium text-red-600">Sold out</span>
+                    )}
+                  </p>
+                )}
               </div>
-              <StockAdjustModal
-                productId={product.id}
-                productName={product.name}
-                currentStock={product.stock}
-                priceCents={product.price_cents}
-              />
+              {hasSizes(product) ? (
+                <Link
+                  href={`/admin/products/${product.id}/edit`}
+                  className="shrink-0 rounded-full border border-line px-3 py-1.5 text-xs font-medium text-ink transition-colors hover:border-accent hover:text-accent"
+                >
+                  Manage sizes
+                </Link>
+              ) : (
+                <StockAdjustModal
+                  productId={product.id}
+                  productName={product.name}
+                  currentStock={product.stock}
+                  priceCents={product.price_cents}
+                />
+              )}
             </div>
           ))}
         </div>

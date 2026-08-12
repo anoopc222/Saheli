@@ -2,17 +2,19 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { Product } from "@/types/product";
+import { stockForSize } from "@/lib/product-sizes";
 
 export type CartLine = {
   product: Product;
   quantity: number;
+  selectedSize: string | null;
 };
 
 type CartContextValue = {
   lines: CartLine[];
-  addItem: (product: Product, quantity?: number) => void;
-  removeItem: (productId: string) => void;
-  setQuantity: (productId: string, quantity: number) => void;
+  addItem: (product: Product, quantity?: number, selectedSize?: string | null) => void;
+  removeItem: (productId: string, selectedSize?: string | null) => void;
+  setQuantity: (productId: string, quantity: number, selectedSize?: string | null) => void;
   syncWithLiveProducts: (liveProducts: Product[]) => void;
   clear: () => void;
   totalCents: number;
@@ -44,32 +46,49 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   }, [lines, hydrated]);
 
-  function addItem(product: Product, quantity = 1) {
+  // For a sized product, `product.stock` is the aggregate across every
+  // size — not what a single cart line can actually sell. Each line's
+  // `product.stock` is overridden to the selected size's own stock, so
+  // every existing quantity clamp below (and everywhere lines are read
+  // elsewhere) naturally clamps to the right number without needing to
+  // thread size lookups through each of those call sites.
+  function effectiveStock(product: Product, selectedSize: string | null): number {
+    if (!selectedSize) return product.stock;
+    return stockForSize(product.sizes, selectedSize);
+  }
+
+  function addItem(product: Product, quantity = 1, selectedSize: string | null = null) {
+    const stock = effectiveStock(product, selectedSize);
+    const lineProduct = { ...product, stock };
     setLines((prev) => {
-      const existing = prev.find((l) => l.product.id === product.id);
+      const existing = prev.find(
+        (l) => l.product.id === product.id && l.selectedSize === selectedSize
+      );
       if (existing) {
         return prev.map((l) =>
-          l.product.id === product.id
-            ? { ...l, product, quantity: Math.min(l.quantity + quantity, product.stock) }
+          l.product.id === product.id && l.selectedSize === selectedSize
+            ? { ...l, product: lineProduct, quantity: Math.min(l.quantity + quantity, stock) }
             : l
         );
       }
-      return [...prev, { product, quantity: Math.min(quantity, product.stock) }];
+      return [...prev, { product: lineProduct, quantity: Math.min(quantity, stock), selectedSize }];
     });
   }
 
-  function removeItem(productId: string) {
-    setLines((prev) => prev.filter((l) => l.product.id !== productId));
+  function removeItem(productId: string, selectedSize: string | null = null) {
+    setLines((prev) =>
+      prev.filter((l) => !(l.product.id === productId && l.selectedSize === selectedSize))
+    );
   }
 
-  function setQuantity(productId: string, quantity: number) {
+  function setQuantity(productId: string, quantity: number, selectedSize: string | null = null) {
     if (quantity <= 0) {
-      removeItem(productId);
+      removeItem(productId, selectedSize);
       return;
     }
     setLines((prev) =>
       prev.map((l) =>
-        l.product.id === productId
+        l.product.id === productId && l.selectedSize === selectedSize
           ? { ...l, quantity: Math.min(quantity, l.product.stock) }
           : l
       )
@@ -86,7 +105,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
           const live = liveProducts.find((p) => p.id === line.product.id);
           // Missing entirely means the product was deleted — drop it below.
           if (!live) return { ...line, quantity: 0 };
-          return { product: live, quantity: Math.min(line.quantity, live.stock) };
+          const stock = effectiveStock(live, line.selectedSize);
+          return { ...line, product: { ...live, stock }, quantity: Math.min(line.quantity, stock) };
         })
         .filter((line) => line.quantity > 0)
     );

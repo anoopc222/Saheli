@@ -5,14 +5,22 @@ import { Product } from "@/types/product";
 import { useCart } from "@/lib/cart-context";
 import { CheckIcon } from "@/components/icons";
 import { formatPrice } from "@/lib/format";
+import { sortSizes, stockForSize } from "@/lib/product-sizes";
 
 export function AddToCartForm({ product }: { product: Product }) {
   const { addItem } = useCart();
+  const sizes = sortSizes(product.sizes);
+  const hasSizes = sizes.length > 0;
+  const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
   const [limitMessage, setLimitMessage] = useState(false);
+  const [sizeRequiredMessage, setSizeRequiredMessage] = useState(false);
   const [showSticky, setShowSticky] = useState(false);
   const sentinelRef = useRef<HTMLDivElement>(null);
+
+  const stock = hasSizes ? stockForSize(sizes, selectedSize) : product.stock;
+  const canAdd = hasSizes ? selectedSize !== null && stock > 0 : product.stock > 0;
 
   useEffect(() => {
     const el = sentinelRef.current;
@@ -25,8 +33,14 @@ export function AddToCartForm({ product }: { product: Product }) {
     return () => observer.disconnect();
   }, []);
 
+  function handleSelectSize(size: string) {
+    setSelectedSize(size);
+    setQuantity(1);
+    setSizeRequiredMessage(false);
+  }
+
   function handleIncrement() {
-    if (quantity >= product.stock) {
+    if (quantity >= stock) {
       setLimitMessage(true);
       setTimeout(() => setLimitMessage(false), 2000);
       return;
@@ -35,7 +49,12 @@ export function AddToCartForm({ product }: { product: Product }) {
   }
 
   function handleAdd() {
-    addItem(product, quantity);
+    if (hasSizes && !selectedSize) {
+      setSizeRequiredMessage(true);
+      setTimeout(() => setSizeRequiredMessage(false), 2000);
+      return;
+    }
+    addItem(product, quantity, selectedSize);
     setAdded(true);
     setTimeout(() => setAdded(false), 1500);
   }
@@ -43,6 +62,35 @@ export function AddToCartForm({ product }: { product: Product }) {
   return (
     <>
       <div ref={sentinelRef} className="mt-6">
+        {hasSizes && (
+          <div className="mb-3">
+            <p className="mb-1.5 text-xs font-medium uppercase tracking-wide text-ink-muted">
+              Size
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {sizes.map((s) => (
+                <button
+                  key={s.size}
+                  type="button"
+                  disabled={s.stock <= 0}
+                  onClick={() => handleSelectSize(s.size)}
+                  className={`rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors ${
+                    selectedSize === s.size
+                      ? "border-ink bg-ink text-white"
+                      : s.stock <= 0
+                        ? "border-line text-ink-muted line-through opacity-50"
+                        : "border-line text-ink hover:border-accent hover:text-accent"
+                  }`}
+                >
+                  {s.size}
+                </button>
+              ))}
+            </div>
+            {sizeRequiredMessage && (
+              <p className="mt-1.5 text-xs text-accent">Please select a size</p>
+            )}
+          </div>
+        )}
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1 rounded-full border border-line">
             <button
@@ -59,7 +107,7 @@ export function AddToCartForm({ product }: { product: Product }) {
               onClick={handleIncrement}
               aria-label="Increase quantity"
               className={`flex h-9 w-9 items-center justify-center rounded-full text-ink transition-colors hover:bg-accent-soft hover:text-accent ${
-                quantity >= product.stock ? "opacity-30" : ""
+                quantity >= stock ? "opacity-30" : ""
               }`}
             >
               +
@@ -67,12 +115,12 @@ export function AddToCartForm({ product }: { product: Product }) {
           </div>
           <button
             onClick={handleAdd}
-            disabled={product.stock <= 0}
+            disabled={!canAdd}
             className={`flex-1 rounded-full bg-ink px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-accent disabled:opacity-40 ${
               added ? "animate-bump" : ""
             }`}
           >
-            {product.stock <= 0 ? (
+            {!canAdd && !hasSizes ? (
               "Sold Out"
             ) : added ? (
               <span className="flex items-center justify-center gap-1.5">
@@ -85,7 +133,7 @@ export function AddToCartForm({ product }: { product: Product }) {
           </button>
         </div>
         {limitMessage && (
-          <p className="mt-1.5 text-xs text-accent">Only {product.stock} in stock</p>
+          <p className="mt-1.5 text-xs text-accent">Only {stock} in stock</p>
         )}
       </div>
 
@@ -102,7 +150,7 @@ export function AddToCartForm({ product }: { product: Product }) {
               onClick={handleAdd}
               className="shrink-0 rounded-full bg-ink px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-accent"
             >
-              {added ? "Added!" : "Add to cart"}
+              {added ? "Added!" : hasSizes && !selectedSize ? "Select size" : "Add to cart"}
             </button>
           </div>
         </div>

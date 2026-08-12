@@ -13,6 +13,7 @@ import { EmptyState } from "@/components/EmptyState";
 import { BagIcon } from "@/components/icons";
 import { FadeImage } from "@/components/FadeImage";
 import { useToast } from "@/lib/toast-context";
+import { SIZES_SELECT } from "@/lib/product-sizes";
 
 type AppliedCoupon = {
   code: string;
@@ -45,7 +46,7 @@ export default function CartPage() {
     const supabase = createBrowserSupabaseClient();
     supabase
       .from("products")
-      .select("*")
+      .select(`*, ${SIZES_SELECT}`)
       .in("id", ids)
       .returns<Product[]>()
       .then(({ data }) => {
@@ -145,7 +146,7 @@ export default function CartPage() {
       <div className="flex flex-col gap-4">
         {lines.map((line) => (
           <div
-            key={line.product.id}
+            key={`${line.product.id}__${line.selectedSize ?? ""}`}
             className="flex gap-3 rounded-2xl border border-line bg-paper-raised p-4"
           >
             <Link href={`/product/${line.product.id}`} className="shrink-0">
@@ -168,10 +169,15 @@ export default function CartPage() {
                   className="text-sm font-medium text-ink transition-colors hover:text-accent"
                 >
                   {line.product.name}
+                  {line.selectedSize && (
+                    <span className="ml-1.5 text-xs font-normal text-ink-muted">
+                      Size: {line.selectedSize}
+                    </span>
+                  )}
                 </Link>
                 <button
                   onClick={() => {
-                    removeItem(line.product.id);
+                    removeItem(line.product.id, line.selectedSize);
                     showToast("Removed from cart");
                   }}
                   className="shrink-0 text-xs font-medium text-accent hover:underline"
@@ -188,7 +194,7 @@ export default function CartPage() {
                     <button
                       type="button"
                       onClick={() =>
-                        setQuantity(line.product.id, line.quantity - 1)
+                        setQuantity(line.product.id, line.quantity - 1, line.selectedSize)
                       }
                       aria-label="Decrease quantity"
                       className="flex h-7 w-7 items-center justify-center rounded-full text-ink transition-colors hover:bg-accent-soft hover:text-accent"
@@ -201,7 +207,7 @@ export default function CartPage() {
                     <button
                       type="button"
                       onClick={() =>
-                        setQuantity(line.product.id, line.quantity + 1)
+                        setQuantity(line.product.id, line.quantity + 1, line.selectedSize)
                       }
                       disabled={line.quantity >= line.product.stock}
                       aria-label="Increase quantity"

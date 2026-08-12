@@ -6,6 +6,7 @@ import { ProductCard } from "@/components/ProductCard";
 import { EmptyState } from "@/components/EmptyState";
 import { Product } from "@/types/product";
 import { SearchIcon, XIcon } from "@/components/icons";
+import { SIZES_SELECT } from "@/lib/product-sizes";
 
 const RECENT_SEARCHES_KEY = "shopping-cart-app:recent-searches";
 const MAX_RECENT = 6;
@@ -57,7 +58,7 @@ export default function SearchPage() {
       const supabase = createBrowserSupabaseClient();
       const { data } = await supabase
         .from("products")
-        .select("*")
+        .select(`*, ${SIZES_SELECT}`)
         .eq("show_on_store", true)
         .or(`name.ilike.%${term}%,fabric.ilike.%${term}%`)
         .returns<Product[]>();

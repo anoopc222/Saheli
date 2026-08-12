@@ -101,6 +101,14 @@ export function ProductCard({ product }: { product: Product }) {
             >
               Sold Out
             </button>
+          ) : product.sizes && product.sizes.length > 0 ? (
+            <Link
+              href={`/product/${product.id}`}
+              className="flex items-center gap-1.5 rounded-full bg-brand px-3.5 py-2 text-xs font-medium text-white shadow-sm transition-colors hover:bg-brand-dark"
+            >
+              <BagIcon className="h-3.5 w-3.5" />
+              Select size
+            </Link>
           ) : quantityInCart > 0 ? (
             <div>
               <div className="flex items-center justify-between rounded-full bg-brand p-1 shadow-sm">

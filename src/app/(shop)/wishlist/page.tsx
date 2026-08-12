@@ -7,6 +7,7 @@ import { ProductCard } from "@/components/ProductCard";
 import { EmptyState } from "@/components/EmptyState";
 import { HeartIcon } from "@/components/icons";
 import { Product } from "@/types/product";
+import { SIZES_SELECT } from "@/lib/product-sizes";
 
 export default function WishlistPage() {
   const { ids } = useWishlist();
@@ -22,7 +23,7 @@ export default function WishlistPage() {
       const supabase = createBrowserSupabaseClient();
       const { data } = await supabase
         .from("products")
-        .select("*")
+        .select(`*, ${SIZES_SELECT}`)
         .eq("show_on_store", true)
         .in("id", ids)
         .returns<Product[]>();

@@ -14,6 +14,7 @@ import { getFeatureItems, getFeatureRowSettings } from "@/lib/feature-items-data
 import { getMenuItems } from "@/lib/menu-items-data";
 import { scheduleBadgeSweep } from "@/lib/badge-sweep";
 import { RecentlyViewedRail } from "@/components/RecentlyViewedRail";
+import { SIZES_SELECT } from "@/lib/product-sizes";
 
 const FILTER_LABELS: Record<string, string> = {
   new: "New Arrivals",
@@ -47,7 +48,10 @@ export default async function Home({
     getMenuItems(),
   ]);
 
-  let query = supabase.from("products").select("*").eq("show_on_store", true);
+  let query = supabase
+    .from("products")
+    .select(`*, ${SIZES_SELECT}`)
+    .eq("show_on_store", true);
 
   if (fabric) {
     query = query.eq("fabric", fabric);

@@ -4,6 +4,7 @@ import { Product } from "@/types/product";
 import { ProductCard } from "@/components/ProductCard";
 import { SortSelect } from "@/components/SortSelect";
 import { scheduleBadgeSweep } from "@/lib/badge-sweep";
+import { SIZES_SELECT } from "@/lib/product-sizes";
 
 export const dynamic = "force-dynamic";
 
@@ -16,7 +17,10 @@ export default async function CategoriesPage({
   scheduleBadgeSweep();
   const supabase = createBrowserSupabaseClient();
 
-  let query = supabase.from("products").select("*").eq("show_on_store", true);
+  let query = supabase
+    .from("products")
+    .select(`*, ${SIZES_SELECT}`)
+    .eq("show_on_store", true);
   if (sort === "price_asc") {
     query = query.order("price_cents", { ascending: true });
   } else if (sort === "price_desc") {

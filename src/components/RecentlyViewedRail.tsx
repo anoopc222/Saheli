@@ -5,6 +5,7 @@ import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { useRecentlyViewed } from "@/lib/recently-viewed-context";
 import { RecentlyViewedCard } from "@/components/RecentlyViewedCard";
 import { Product } from "@/types/product";
+import { SIZES_SELECT } from "@/lib/product-sizes";
 
 export function RecentlyViewedRail({ excludeId }: { excludeId?: string }) {
   const { ids } = useRecentlyViewed();
@@ -22,7 +23,7 @@ export function RecentlyViewedRail({ excludeId }: { excludeId?: string }) {
       const supabase = createBrowserSupabaseClient();
       const { data } = await supabase
         .from("products")
-        .select("*")
+        .select(`*, ${SIZES_SELECT}`)
         .eq("show_on_store", true)
         .in("id", relevantIds)
         .returns<Product[]>();

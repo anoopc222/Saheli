@@ -1,4 +1,6 @@
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/server";
+import { ProductSize } from "@/types/product";
+import { SIZES_SELECT } from "@/lib/product-sizes";
 
 export type ProductStockRow = {
   id: string;
@@ -11,6 +13,7 @@ export type ProductStockRow = {
   sold_qty: number;
   revenue_cents: number;
   profit_cents: number;
+  sizes: ProductSize[];
 };
 
 export type StockOverview = {
@@ -32,6 +35,7 @@ type ProductRow = {
   stock: number;
   price_cents: number;
   cost_price_cents: number | null;
+  sizes: ProductSize[];
 };
 
 type OrderRow = { id: string; created_at: string };
@@ -52,7 +56,7 @@ export async function getStockOverview(): Promise<StockOverview> {
   const [{ data: products }, { data: orders }, { data: orderItems }] = await Promise.all([
     supabase
       .from("products")
-      .select("id, name, product_code, image_url, stock, price_cents, cost_price_cents")
+      .select(`id, name, product_code, image_url, stock, price_cents, cost_price_cents, ${SIZES_SELECT}`)
       .returns<ProductRow[]>(),
     supabase.from("orders").select("id, created_at").eq("status", "paid").returns<OrderRow[]>(),
     supabase

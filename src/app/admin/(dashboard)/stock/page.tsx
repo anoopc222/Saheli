@@ -80,7 +80,9 @@ export default async function AdminStockPage() {
       <BulkStockEditor products={overview.products} />
 
       <PurchaseOrderManager
-        products={overview.products.map((p) => ({ id: p.id, name: p.name }))}
+        products={overview.products
+          .filter((p) => p.sizes.length === 0)
+          .map((p) => ({ id: p.id, name: p.name }))}
         purchaseOrders={purchaseOrders}
       />
 

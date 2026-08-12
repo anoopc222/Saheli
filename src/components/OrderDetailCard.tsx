@@ -79,7 +79,10 @@ export function OrderDetailCard({ order }: { order: OrderDetail }) {
             <div key={index} className="flex items-center justify-between gap-3 text-sm">
               <div className="min-w-0">
                 <p className="truncate text-ink">{item.product_name}</p>
-                <p className="text-xs text-ink-muted">Qty {item.quantity}</p>
+                <p className="text-xs text-ink-muted">
+                  {item.selected_size && <>Size {item.selected_size} &middot; </>}
+                  Qty {item.quantity}
+                </p>
               </div>
               <p className="shrink-0 tabular-nums text-ink">
                 {formatPrice(item.unit_price_cents * item.quantity)}

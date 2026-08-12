@@ -7,10 +7,11 @@ import { getShippingZones } from "@/lib/shipping-zones-data";
 import { matchShippingZone } from "@/lib/shipping-zones";
 import { applyDiscountToItems, computeOrderTotals } from "@/lib/pricing";
 import { Product } from "@/types/product";
+import { SIZES_SELECT, stockForSize } from "@/lib/product-sizes";
 
 const GSTIN_PATTERN = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/;
 
-type CheckoutItem = { productId: string; quantity: number };
+type CheckoutItem = { productId: string; quantity: number; selectedSize?: string | null };
 type ShippingDetails = {
   name: string;
   email: string;
@@ -108,7 +109,7 @@ export async function POST(request: Request) {
     const productIds = items.map((i) => i.productId);
     const { data: products, error } = await supabase
       .from("products")
-      .select("*")
+      .select(`*, ${SIZES_SELECT}`)
       .in("id", productIds)
       .returns<Product[]>();
 
@@ -138,21 +139,42 @@ export async function POST(request: Request) {
       );
     }
 
+    // A product with sizes must have a size picked — nothing in stock is
+    // sellable without knowing which size's stock to sell from.
+    const missingSize = items.find((item) => {
+      const product = products.find((p) => p.id === item.productId)!;
+      return (product.sizes?.length ?? 0) > 0 && !item.selectedSize;
+    });
+    if (missingSize) {
+      const product = products.find((p) => p.id === missingSize.productId)!;
+      return NextResponse.json(
+        { error: `Please select a size for "${product.name}".` },
+        { status: 400 }
+      );
+    }
+
     // Never trust the client's idea of available stock — the cart is a
     // localStorage snapshot that can go stale (another sale, an admin
-    // adjustment), so this is the actual gate against overselling.
-    const overStockedItem = items.find((item) => {
-      const product = products.find((p) => p.id === item.productId)!;
-      return item.quantity > product.stock;
-    });
+    // adjustment), so this is the actual gate against overselling. For a
+    // sized product, availability is per size, not the product's total.
+    function availableStock(item: CheckoutItem) {
+      const product = products!.find((p) => p.id === item.productId)!;
+      return item.selectedSize ? stockForSize(product.sizes, item.selectedSize) : product.stock;
+    }
+
+    const overStockedItem = items.find((item) => item.quantity > availableStock(item));
     if (overStockedItem) {
       const product = products.find((p) => p.id === overStockedItem.productId)!;
+      const available = availableStock(overStockedItem);
+      const label = overStockedItem.selectedSize
+        ? `"${product.name}" (${overStockedItem.selectedSize})`
+        : `"${product.name}"`;
       return NextResponse.json(
         {
           error:
-            product.stock > 0
-              ? `Only ${product.stock} of "${product.name}" left in stock. Please update the quantity in your cart.`
-              : `"${product.name}" just sold out. Please remove it from your cart.`,
+            available > 0
+              ? `Only ${available} of ${label} left in stock. Please update the quantity in your cart.`
+              : `${label} just sold out. Please remove it from your cart.`,
         },
         { status: 400 }
       );
@@ -172,6 +194,7 @@ export async function POST(request: Request) {
       product: products.find((p) => p.id === item.productId)!,
       quantity: item.quantity,
       unitPriceCents: discountedLines[index].unitPriceCents,
+      selectedSize: item.selectedSize ?? null,
     }));
 
     const [settings, shippingZones] = await Promise.all([
@@ -242,12 +265,13 @@ export async function POST(request: Request) {
       );
     }
 
-    const orderItems = discountedItems.map(({ product, quantity, unitPriceCents }) => ({
+    const orderItems = discountedItems.map(({ product, quantity, unitPriceCents, selectedSize }) => ({
       order_id: order.id,
       product_id: product.id,
       product_name: product.name,
       unit_price_cents: unitPriceCents,
       quantity,
+      selected_size: selectedSize,
     }));
     await supabase.from("order_items").insert(orderItems);
 
